@@ -4,6 +4,8 @@ import { arePeerBoxes } from '../logic/sudoku-logic';
 
 interface GridProps {
     lockBox: (selectedBox: Box, selectedNumber: number) => void;
+    nextSudoku: () => void;
+    previousSudoku: () => void;
     sudoku: Sudoku;
 }
 
@@ -132,22 +134,33 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     </div>
                 ))}
             </div>
-            <button type="button" onClick={lockBoxHandler}>
-                Lock box
-            </button>
-            <button type="button" onClick={displayImpactHandler}>
-                {displayImpact ? 'Show numbers' : 'Show impact'}
-            </button>
-            {displayImpact && (
-                <button type="button" onClick={maximumImpactHandler}>
-                    {maximumImpact.display ? 'Disable' : 'Enable'} maximum impact
+            <div>
+                <button type="button" onClick={lockBoxHandler}>
+                    Lock box
                 </button>
-            )}
-            {!displayImpact && (
-                <button type="button" onClick={displayCandidatesHandler}>
-                    {displayCandidates ? 'Hide' : 'Show'} candidates
+
+                <button type="button" onClick={props.previousSudoku}>
+                    Previous lock
                 </button>
-            )}
+                <button type="button" onClick={props.nextSudoku}>
+                    Next lock
+                </button>
+            </div>
+            <div>
+                <button type="button" onClick={displayImpactHandler}>
+                    {displayImpact ? 'Show numbers' : 'Show impact'}
+                </button>
+                {displayImpact && (
+                    <button type="button" onClick={maximumImpactHandler}>
+                        {maximumImpact.display ? 'Disable' : 'Enable'} maximum impact
+                    </button>
+                )}
+                {!displayImpact && (
+                    <button type="button" onClick={displayCandidatesHandler}>
+                        {displayCandidates ? 'Hide' : 'Show'} candidates
+                    </button>
+                )}
+            </div>
         </React.Fragment>
     );
 };

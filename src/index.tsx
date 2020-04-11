@@ -6,26 +6,44 @@ import { Box, Sudoku } from './types/sudoku';
 
 import './style/main.scss';
 
-const initialSudoku = getEmptySudoku(3);
+const initialSudokuList = [getEmptySudoku(3)];
 
 const App = () => {
-    const [sudoku, setSudoku] = useState<Sudoku>(initialSudoku);
+    const [sudokuIndex, setSudokuIndex] = useState(0);
+    const [sudokuList, setSudokuList] = useState<Sudoku[]>(initialSudokuList);
 
     const lockBoxWrapper = (selectedBox: Box, selectedNumber: number) => {
-        // TODO Stack sudoku and allow time travelling
         if (
             !selectedBox.isLocked &&
             selectedBox.candidates.find(
                 (candidate) => candidate.number === selectedNumber && candidate.isValid
             )
         ) {
-            setSudoku(lockBox(sudoku, selectedBox, selectedNumber));
+            const currentSudoku = sudokuList[sudokuIndex];
+            const nextSudoku = lockBox(currentSudoku, selectedBox, selectedNumber);
+            setSudokuList(sudokuList.splice(0, sudokuIndex + 1).concat([nextSudoku]));
+            setSudokuIndex(sudokuIndex + 1);
         } else {
             console.error("Nah! Can't do that");
         }
     };
 
-    return <SudokuGrid lockBox={lockBoxWrapper} sudoku={sudoku} />;
+    const nextSudoku = () => {
+        setSudokuIndex(Math.min(sudokuIndex + 1, sudokuList.length - 1));
+    };
+
+    const previousSudoku = () => {
+        setSudokuIndex(Math.max(sudokuIndex - 1, 0));
+    };
+
+    return (
+        <SudokuGrid
+            lockBox={lockBoxWrapper}
+            nextSudoku={nextSudoku}
+            previousSudoku={previousSudoku}
+            sudoku={sudokuList[sudokuIndex]}
+        />
+    );
 };
 
 const appPlaceholder = document.getElementById('app-placeholder');
