@@ -51,7 +51,11 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                     return {
                         candidates: box.candidates.map((candidate) => ({
                             impact:
-                                isPeerBox || candidate.number === selectedNumber
+                                candidate.impact === -1
+                                    ? -1
+                                    : isPeerBox && candidate.number === selectedNumber
+                                    ? -1
+                                    : isPeerBox || candidate.number === selectedNumber
                                     ? candidate.impact - 1
                                     : candidate.impact,
                             isValid:

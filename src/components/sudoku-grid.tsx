@@ -14,6 +14,11 @@ interface BoxNumber {
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
+    const [displayImpact, setDisplayImpact] = useState(false);
+
+    const impactHandler = () => {
+        setDisplayImpact(!displayImpact);
+    };
 
     const lockBoxHandler = () => {
         if (selectedBoxNumber !== undefined) {
@@ -72,7 +77,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                       }`}
                                                       onClick={candidateClickHandler}
                                                   >
-                                                      {candidate.number}
+                                                      {displayImpact
+                                                          ? candidate.impact
+                                                          : candidate.number}
                                                   </div>
                                               );
                                           })}
@@ -84,6 +91,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             </div>
             <button type="button" onClick={lockBoxHandler}>
                 Lock box
+            </button>
+            <button type="button" onClick={impactHandler}>
+                {displayImpact ? 'Show numbers' : 'Show impact'}
             </button>
         </React.Fragment>
     );
