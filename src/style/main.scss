@@ -1,3 +1,5 @@
+$candidateSize: 25px;
+
 .sudoku-grid {
     .sudoku-row {
         display: flex;
@@ -7,10 +9,18 @@
             border-top: 1px solid black;
             display: grid;
 
+            &.locked-box {
+                height: $candidateSize * 3;
+                width: $candidateSize * 3;
+                align-items: center;
+                justify-content: center;
+                font-size: 25px;
+            }
+
             .sudoku-candidate {
                 text-align: center;
-                width: 25px;
-                height: 25px;
+                width: $candidateSize;
+                height: $candidateSize;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -22,6 +32,9 @@
 
                 &.highlight {
                     background-color: lightblue;
+                }
+
+                &.invalid-candidate {
                     text-decoration: line-through;
                 }
             }
@@ -41,7 +54,9 @@
     &.size-4 {
         .sudoku-row {
             .sudoku-box {
-                grid-template-columns: repeat(2, 1fr);
+                &.open-box {
+                    grid-template-columns: repeat(2, 1fr);
+                }
 
                 &:nth-child(2n + 3) {
                     border-left: 2px solid black;
@@ -67,7 +82,9 @@
     &.size-9 {
         .sudoku-row {
             .sudoku-box {
-                grid-template-columns: repeat(3, 1fr);
+                &.open-box {
+                    grid-template-columns: repeat(3, 1fr);
+                }
 
                 &:nth-child(3n + 4) {
                     border-left: 2px solid black;

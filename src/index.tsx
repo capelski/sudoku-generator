@@ -1,33 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { SudokuGrid } from './components/sudoku-grid';
+import { getEmptySudoku, lockBox } from './logic/sudoku-logic';
+import { Box, Sudoku } from './types/sudoku';
+
 import './style/main.scss';
-import { Sudoku } from './types/sudoku';
 
-const regionSize = 3;
-const size = regionSize * regionSize;
-const sudoku: Sudoku = {
-    boxes: [...Array(size)].map((_x, rowIndex) =>
-        [...Array(size)].map((_y, columnIndex) => ({
-            candidates: [...Array(size)].map((_z, candidateIndex) => ({
-                number: candidateIndex + 1,
-                impact: 2 * (size - 1) + (regionSize - 1) * (regionSize - 1)
-            })),
-            column: columnIndex,
-            isLocked: false,
-            region:
-                Math.floor(rowIndex / regionSize) * regionSize +
-                Math.floor(columnIndex / regionSize),
-            row: rowIndex
-        }))
-    ),
-    regionSize,
-    size
+const initialSudoku = getEmptySudoku(3);
+
+const App = () => {
+    const [sudoku, setSudoku] = useState<Sudoku>(initialSudoku);
+
+    const lockBoxWrapper = (selectedBox: Box, selectedNumber: number) => {
+        // TODO Stack sudoku and allow time travelling
+        if (
+            !selectedBox.isLocked &&
+            selectedBox.candidates.find(
+                (candidate) => candidate.number === selectedNumber && candidate.isValid
+            )
+        ) {
+            setSudoku(lockBox(sudoku, selectedBox, selectedNumber));
+        } else {
+            console.error("Nah! Can't do that");
+        }
+    };
+
+    return <SudokuGrid lockBox={lockBoxWrapper} sudoku={sudoku} />;
 };
-
-(window as any).sudoku = sudoku;
-
-const App = () => <SudokuGrid sudoku={sudoku} />;
 
 const appPlaceholder = document.getElementById('app-placeholder');
 ReactDOM.render(<App />, appPlaceholder);
