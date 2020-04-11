@@ -39,6 +39,7 @@ const App = () => {
     return (
         <SudokuGrid
             lockBox={lockBoxWrapper}
+            locksNumber={sudokuIndex}
             nextSudoku={nextSudoku}
             previousSudoku={previousSudoku}
             sudoku={sudokuList[sudokuIndex]}

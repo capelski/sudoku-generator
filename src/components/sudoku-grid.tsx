@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
-import { arePeerBoxes } from '../logic/sudoku-logic';
+import {
+    arePeerBoxes,
+    getSudokuMaximumImpact,
+    getRandomElement,
+    getImpactBoxes
+} from '../logic/sudoku-logic';
 
 interface GridProps {
     lockBox: (selectedBox: Box, selectedNumber: number) => void;
+    locksNumber: number;
     nextSudoku: () => void;
     previousSudoku: () => void;
     sudoku: Sudoku;
@@ -37,28 +43,30 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         } else {
             setMaximumImpact({
                 display: true,
-                value: props.sudoku.rows.reduce(
-                    (sudokuReduced, nextRow) =>
-                        nextRow.reduce(
-                            (rowReduced, nextBox) =>
-                                nextBox.candidates.reduce(
-                                    (boxReduced, nextCandidate) =>
-                                        Math.max(boxReduced, nextCandidate.impact),
-                                    rowReduced
-                                ),
-                            sudokuReduced
-                        ),
-                    0
-                )
+                value: getSudokuMaximumImpact(props.sudoku)
             });
         }
     };
 
-    const lockBoxHandler = () => {
+    const lockSelectedBoxHandler = () => {
         if (selectedBoxNumber !== undefined) {
             props.lockBox(selectedBoxNumber.box, selectedBoxNumber.number);
             setSelectedBoxNumber(undefined);
         }
+    };
+
+    const selectRandomMaximumImpactBox = () => {
+        const maximumImpact = getSudokuMaximumImpact(props.sudoku);
+        const maximumImpactBoxes = getImpactBoxes(props.sudoku, maximumImpact);
+        const randomBox = getRandomElement(maximumImpactBoxes);
+        const randomCandidate = getRandomElement(
+            randomBox.candidates.filter((candidate) => candidate.impact === maximumImpact)
+        );
+
+        setSelectedBoxNumber({
+            box: randomBox,
+            number: randomCandidate.number
+        });
     };
 
     return (
@@ -116,7 +124,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           isSelectedCandidate
                                                               ? ' selected'
                                                               : mustHighlightCandidate
-                                                              ? ' highlight invalid-candidate'
+                                                              ? ' highlight'
                                                               : ''
                                                       }`}
                                                       onClick={candidateClickHandler}
@@ -134,11 +142,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     </div>
                 ))}
             </div>
+            <div>{props.locksNumber} locked boxes</div>
             <div>
-                <button type="button" onClick={lockBoxHandler}>
-                    Lock box
+                <button type="button" onClick={lockSelectedBoxHandler}>
+                    Lock selected box
                 </button>
-
+                <button type="button" onClick={selectRandomMaximumImpactBox}>
+                    Select maximum impact box
+                </button>
                 <button type="button" onClick={props.previousSudoku}>
                     Previous lock
                 </button>

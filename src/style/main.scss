@@ -38,13 +38,14 @@ $candidateSize: 25px;
                     background-color: lightgreen;
                 }
 
-                &.invalid-candidate {
+                &.highlight {
+                    background-color: lightblue;
+                }
+
+                &.invalid-candidate,
+                &.invalid-candidate.highlight {
                     font-style: italic;
                     background-color: #efefef;
-
-                    &.highlight {
-                        background-color: lightblue;
-                    }
                 }
             }
 

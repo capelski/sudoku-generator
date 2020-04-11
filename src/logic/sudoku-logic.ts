@@ -28,6 +28,33 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
     };
 };
 
+export const getImpactBoxes = (sudoku: Sudoku, impact: number): Box[] => {
+    const impactFilteredRows = sudoku.rows
+        .map((row) =>
+            row.filter((box) => box.candidates.find((candidate) => candidate.impact === impact))
+        )
+        .filter((row) => row.length > 0);
+    return impactFilteredRows.reduce((reduced, nextRow) => reduced.concat(nextRow), []);
+};
+
+export const getRandomElement = <T>(array: T[]) =>
+    array[Math.round(Math.random() * (array.length - 1))];
+
+export const getSudokuMaximumImpact = (sudoku: Sudoku): number => {
+    return sudoku.rows.reduce(
+        (sudokuReduced, nextRow) =>
+            nextRow.reduce(
+                (rowReduced, nextBox) =>
+                    nextBox.candidates.reduce(
+                        (boxReduced, nextCandidate) => Math.max(boxReduced, nextCandidate.impact),
+                        rowReduced
+                    ),
+                sudokuReduced
+            ),
+        0
+    );
+};
+
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
     return {
         regionSize: sudoku.regionSize,
