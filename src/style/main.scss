@@ -26,6 +26,10 @@ $candidateSize: 25px;
                 align-items: center;
                 cursor: pointer;
 
+                &.maximum-impact {
+                    background-color: lightcoral;
+                }
+
                 &.selected {
                     background-color: lightgreen;
                 }

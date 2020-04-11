@@ -13,11 +13,38 @@ interface BoxNumber {
 }
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
-    const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
     const [displayImpact, setDisplayImpact] = useState(false);
+    const [maximumImpact, setMaximumImpact] = useState({ display: false, value: -1 });
+    const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
 
-    const impactHandler = () => {
+    const displayImpactHandler = () => {
         setDisplayImpact(!displayImpact);
+    };
+
+    const maximumImpactHandler = () => {
+        if (maximumImpact.display) {
+            setMaximumImpact({
+                display: false,
+                value: -1
+            });
+        } else {
+            setMaximumImpact({
+                display: true,
+                value: props.sudoku.rows.reduce(
+                    (sudokuReduced, nextRow) =>
+                        nextRow.reduce(
+                            (rowReduced, nextBox) =>
+                                nextBox.candidates.reduce(
+                                    (boxReduced, nextCandidate) =>
+                                        Math.max(boxReduced, nextCandidate.impact),
+                                    rowReduced
+                                ),
+                            sudokuReduced
+                        ),
+                    0
+                )
+            });
+        }
     };
 
     const lockBoxHandler = () => {
@@ -69,6 +96,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               ? ''
                                                               : ' invalid-candidate'
                                                       }${
+                                                          displayImpact &&
+                                                          maximumImpact.display &&
+                                                          maximumImpact.value === candidate.impact
+                                                              ? ' maximum-impact'
+                                                              : ''
+                                                      }${
                                                           isSelectedCandidate
                                                               ? ' selected'
                                                               : mustHighlightCandidate
@@ -92,9 +125,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             <button type="button" onClick={lockBoxHandler}>
                 Lock box
             </button>
-            <button type="button" onClick={impactHandler}>
+            <button type="button" onClick={displayImpactHandler}>
                 {displayImpact ? 'Show numbers' : 'Show impact'}
             </button>
+            {displayImpact && (
+                <button type="button" onClick={maximumImpactHandler}>
+                    {maximumImpact.display ? 'Disable' : 'Enable'} maximum impact
+                </button>
+            )}
         </React.Fragment>
     );
 };
