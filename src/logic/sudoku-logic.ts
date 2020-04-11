@@ -54,7 +54,9 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                                 isPeerBox || candidate.number === selectedNumber
                                     ? candidate.impact - 1
                                     : candidate.impact,
-                            isValid: candidate.isValid && candidate.number !== selectedNumber,
+                            isValid:
+                                candidate.isValid &&
+                                (!isPeerBox || candidate.number !== selectedNumber),
                             number: candidate.number
                         })),
                         column: box.column,

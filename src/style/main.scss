@@ -30,12 +30,13 @@ $candidateSize: 25px;
                     background-color: lightgreen;
                 }
 
-                &.highlight {
-                    background-color: lightblue;
-                }
-
                 &.invalid-candidate {
-                    text-decoration: line-through;
+                    font-style: italic;
+                    background-color: #efefef;
+
+                    &.highlight {
+                        background-color: lightblue;
+                    }
                 }
             }
 
