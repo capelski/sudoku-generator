@@ -10,7 +10,11 @@ export const Grid: React.FC<GridProps> = (props) => {
             {[...Array(props.size)].map((_x, rowIndex) => (
                 <div className="sudoku-row">
                     {[...Array(props.size)].map((_y, cellIndex) => (
-                        <div className="sudoku-cell">1</div>
+                        <div className="sudoku-cell">
+                            {[...Array(props.size)].map((_z, candidateIndex) => (
+                                <div className="sudoku-candidate">{candidateIndex + 1}</div>
+                            ))}
+                        </div>
                     ))}
                 </div>
             ))}

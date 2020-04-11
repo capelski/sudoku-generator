@@ -1,21 +1,23 @@
-$cellSize: 40px;
-
 .sudoku-grid {
-    margin-top: 16px;
-    margin-bottom: 16px;
-
     .sudoku-row {
         display: flex;
-        margin: auto;
 
         .sudoku-cell {
-            width: $cellSize;
-            height: $cellSize;
             border-left: 1px solid black;
             border-top: 1px solid black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: grid;
+            padding: 5px;
+            grid-column-gap: 3px;
+            grid-row-gap: 3px;
+
+            .sudoku-candidate {
+                text-align: center;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
 
             &:last-child {
                 border-right: 1px solid black;
@@ -35,9 +37,9 @@ $cellSize: 40px;
 
     &.size-4 {
         .sudoku-row {
-            width: $cellSize * 4;
-
             .sudoku-cell {
+                grid-template-columns: repeat(2, 1fr);
+
                 &:nth-child(2n + 3) {
                     border-left: 2px solid black;
 
@@ -61,9 +63,9 @@ $cellSize: 40px;
 
     &.size-9 {
         .sudoku-row {
-            width: $cellSize * 9;
-
             .sudoku-cell {
+                grid-template-columns: repeat(3, 1fr);
+
                 &:nth-child(3n + 4) {
                     border-left: 2px solid black;
 
