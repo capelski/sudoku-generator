@@ -13,12 +13,17 @@ interface BoxNumber {
 }
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
+    const [displayCandidates, setDisplayCandidates] = useState(true);
     const [displayImpact, setDisplayImpact] = useState(false);
     const [maximumImpact, setMaximumImpact] = useState({ display: false, value: -1 });
     const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
 
     const displayImpactHandler = () => {
         setDisplayImpact(!displayImpact);
+    };
+
+    const displayCandidatesHandler = () => {
+        setDisplayCandidates(!displayCandidates);
     };
 
     const maximumImpactHandler = () => {
@@ -92,6 +97,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               return (
                                                   <div
                                                       className={`sudoku-candidate${
+                                                          displayCandidates
+                                                              ? ''
+                                                              : ' hidden-candidate'
+                                                      }${
                                                           candidate.isValid
                                                               ? ''
                                                               : ' invalid-candidate'
@@ -110,9 +119,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                       }`}
                                                       onClick={candidateClickHandler}
                                                   >
-                                                      {displayImpact
-                                                          ? candidate.impact
-                                                          : candidate.number}
+                                                      {displayCandidates &&
+                                                          (displayImpact
+                                                              ? candidate.impact
+                                                              : candidate.number)}
                                                   </div>
                                               );
                                           })}
@@ -131,6 +141,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             {displayImpact && (
                 <button type="button" onClick={maximumImpactHandler}>
                     {maximumImpact.display ? 'Disable' : 'Enable'} maximum impact
+                </button>
+            )}
+            {!displayImpact && (
+                <button type="button" onClick={displayCandidatesHandler}>
+                    {displayCandidates ? 'Hide' : 'Show'} candidates
                 </button>
             )}
         </React.Fragment>

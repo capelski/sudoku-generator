@@ -26,6 +26,10 @@ $candidateSize: 25px;
                 align-items: center;
                 cursor: pointer;
 
+                &.hidden-candidate {
+                    background-color: unset !important;
+                }
+
                 &.maximum-impact {
                     background-color: lightcoral;
                 }
