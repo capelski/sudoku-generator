@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "build": "npm run clean:build && webpack --mode production",
+        "build:ts": "tsc --noEmit -p tsconfig.json",
         "clean:build": "rm -rf dist",
         "clean:dependencies": "rm -rf node_modules/ package-lock.json",
         "start:dev": "webpack-dev-server --open --mode development"
@@ -16,20 +17,14 @@
         "react-dom": "16.13.1"
     },
     "devDependencies": {
-        "@babel/core": "7.9.0",
-        "@babel/preset-env": "7.9.5",
-        "@babel/preset-react": "7.9.4",
-        "babel-loader": "8.1.0",
+        "@types/react": "16.9.34",
+        "@types/react-dom": "16.9.6",
+        "awesome-typescript-loader": "5.2.1",
         "html-loader": "1.1.0",
         "html-webpack-plugin": "4.2.0",
+        "typescript": "3.8.3",
         "webpack": "4.42.1",
         "webpack-cli": "3.3.11",
         "webpack-dev-server": "3.10.3"
-    },
-    "babel": {
-        "presets": [
-            "@babel/preset-env",
-            "@babel/preset-react"
-        ]
     }
 }
