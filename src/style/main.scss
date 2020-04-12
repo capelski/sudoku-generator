@@ -9,14 +9,6 @@ $candidateSize: 25px;
             border-top: 1px solid black;
             display: grid;
 
-            &.locked-box {
-                height: $candidateSize * 3;
-                width: $candidateSize * 3;
-                align-items: center;
-                justify-content: center;
-                font-size: 25px;
-            }
-
             .sudoku-candidate {
                 text-align: center;
                 width: $candidateSize;
@@ -31,7 +23,7 @@ $candidateSize: 25px;
                 }
 
                 &.maximum-impact {
-                    background-color: lightcoral;
+                    background-color: gold;
                 }
 
                 &.selected {
@@ -46,6 +38,23 @@ $candidateSize: 25px;
                 &.invalid-candidate.highlight {
                     font-style: italic;
                     background-color: #efefef;
+                }
+            }
+
+            &.locked-box {
+                height: $candidateSize * 3;
+                width: $candidateSize * 3;
+                align-items: center;
+                justify-content: center;
+                font-size: 25px;
+            }
+
+            &.impossible-box {
+                background-color: lightcoral;
+
+                .sudoku-candidate.invalid-candidate,
+                .sudoku-candidate.invalid-candidate.highlight {
+                    background-color: lightcoral;
                 }
             }
 

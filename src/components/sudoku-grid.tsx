@@ -78,12 +78,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             const isPeerBox =
                                 selectedBoxNumber !== undefined &&
                                 arePeerBoxes(selectedBoxNumber.box, box);
+                            const hasValidCandidates =
+                                box.candidates.filter((candidate) => candidate.isValid).length > 0;
 
                             return (
                                 <div
                                     className={`sudoku-box ${
                                         box.isLocked ? 'locked-box' : 'open-box'
-                                    }`}
+                                    }${hasValidCandidates ? '' : ' impossible-box'}`}
                                 >
                                     {box.isLocked
                                         ? box.number
