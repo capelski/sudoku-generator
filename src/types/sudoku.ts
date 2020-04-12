@@ -14,7 +14,7 @@ export interface Candidate {
 }
 
 export interface Sudoku {
+    boxes: Box[];
     regionSize: number;
-    rows: Box[][];
     size: number;
 }

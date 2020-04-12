@@ -1,127 +1,133 @@
 $candidateSize: 25px;
 
 .sudoku-grid {
-    .sudoku-row {
-        display: flex;
+    display: grid;
 
-        .sudoku-box {
-            border-left: 1px solid black;
-            border-top: 1px solid black;
-            display: grid;
+    .sudoku-box {
+        border-left: 1px solid black;
+        border-top: 1px solid black;
+        display: grid;
 
-            .sudoku-candidate {
-                text-align: center;
-                width: $candidateSize;
-                height: $candidateSize;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
+        .sudoku-candidate {
+            width: $candidateSize;
+            height: $candidateSize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
 
-                &.hidden-candidate {
-                    background-color: unset !important;
-                }
-
-                &.maximum-impact {
-                    background-color: gold;
-                }
-
-                &.selected {
-                    background-color: lightgreen;
-                }
-
-                &.highlight {
-                    background-color: lightblue;
-                }
-
-                &.invalid-candidate,
-                &.invalid-candidate.highlight {
-                    font-style: italic;
-                    background-color: #efefef;
-                }
+            &.hidden-candidate {
+                background-color: unset !important;
             }
 
-            &.locked-box {
-                height: $candidateSize * 3;
-                width: $candidateSize * 3;
-                align-items: center;
-                justify-content: center;
-                font-size: 25px;
+            &.maximum-impact {
+                background-color: gold;
             }
 
-            &.impossible-box {
-                background-color: lightcoral;
-
-                .sudoku-candidate.invalid-candidate,
-                .sudoku-candidate.invalid-candidate.highlight {
-                    background-color: lightcoral;
-                }
+            &.selected {
+                background-color: lightgreen;
             }
 
-            &:last-child {
-                border-right: 1px solid black;
+            &.highlight {
+                background-color: lightblue;
+            }
+
+            &.invalid-candidate,
+            &.invalid-candidate.highlight {
+                font-style: italic;
+                background-color: #efefef;
             }
         }
 
-        &:last-child {
-            .sudoku-box {
-                border-bottom: 1px solid black;
+        &.locked-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+        }
+
+        &.impossible-box {
+            background-color: lightcoral;
+
+            .sudoku-candidate.invalid-candidate,
+            .sudoku-candidate.invalid-candidate.highlight {
+                background-color: lightcoral;
             }
         }
     }
 
     &.size-4 {
-        .sudoku-row {
-            .sudoku-box {
-                &.open-box {
-                    grid-template-columns: repeat(2, 1fr);
-                }
+        grid-template-columns: repeat(4, $candidateSize * 2);
 
-                &:nth-child(2n + 3) {
-                    border-left: 2px solid black;
-
-                    &:last-child {
-                        border-left: 1px solid black;
-                    }
-                }
+        .sudoku-box {
+            &.open-box {
+                grid-template-columns: repeat(2, $candidateSize);
             }
 
-            &:nth-child(2n + 3) {
-                .sudoku-box {
-                    border-top: 2px solid black;
+            &:nth-last-child(-n + 4) {
+                border-bottom: 1px solid black;
+            }
 
-                    &:last-child {
-                        border-left: 1px solid black;
-                    }
-                }
+            &:nth-child(2n) {
+                border-right: 1.5px solid black;
+            }
+            &:nth-child(4n) {
+                border-right: 1px solid black;
+            }
+
+            &:nth-child(2n + 1) {
+                border-left: 1.5px solid black;
+            }
+            &:nth-child(4n + 1) {
+                border-left: 1px solid black;
+            }
+
+            &:nth-child(n + 5):not(:nth-child(n + 9)) {
+                border-bottom: 1.5px solid black;
+            }
+
+            &:nth-child(n + 9):not(:nth-child(n + 13)) {
+                border-top: 1.5px solid black;
             }
         }
     }
 
     &.size-9 {
-        .sudoku-row {
-            .sudoku-box {
-                &.open-box {
-                    grid-template-columns: repeat(3, 1fr);
-                }
+        grid-template-columns: repeat(9, $candidateSize * 3);
 
-                &:nth-child(3n + 4) {
-                    border-left: 2px solid black;
-
-                    &:last-child {
-                        border-left: 1px solid black;
-                    }
-                }
+        .sudoku-box {
+            &.open-box {
+                grid-template-columns: repeat(3, $candidateSize);
             }
 
-            &:nth-child(3n + 4) {
-                .sudoku-box {
-                    border-top: 2px solid black;
+            &:nth-last-child(-n + 9) {
+                border-bottom: 1px solid black;
+            }
 
-                    &:last-child {
-                        border-left: 1px solid black;
-                    }
-                }
+            &:nth-child(3n) {
+                border-right: 1.5px solid black;
+            }
+            &:nth-child(9n) {
+                border-right: 1px solid black;
+            }
+
+            &:nth-child(3n + 1) {
+                border-left: 1.5px solid black;
+            }
+            &:nth-child(9n + 1) {
+                border-left: 1px solid black;
+            }
+
+            // 19 = 9 x 2 + 1
+            // 28 = 9 x 3 + 1
+            &:nth-child(n + 19):not(:nth-child(n + 28)),
+            &:nth-child(n + 46):not(:nth-child(n + 55)) {
+                border-bottom: 1.5px solid black;
+            }
+
+            &:nth-child(n + 28):not(:nth-child(n + 33)),
+            &:nth-child(n + 55):not(:nth-child(n + 64)) {
+                border-top: 1.5px solid black;
             }
         }
     }

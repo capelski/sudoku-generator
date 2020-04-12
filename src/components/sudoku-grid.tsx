@@ -72,77 +72,66 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     return (
         <React.Fragment>
             <div className={`sudoku-grid size-${props.sudoku.size}`}>
-                {props.sudoku.rows.map((row) => (
-                    <div className="sudoku-row">
-                        {row.map((box) => {
-                            const isPeerBox =
-                                selectedBoxNumber !== undefined &&
-                                arePeerBoxes(selectedBoxNumber.box, box);
-                            const hasValidCandidates =
-                                box.candidates.filter((candidate) => candidate.isValid).length > 0;
+                {props.sudoku.boxes.map((box) => {
+                    const isPeerBox =
+                        selectedBoxNumber !== undefined && arePeerBoxes(selectedBoxNumber.box, box);
+                    const hasValidCandidates =
+                        box.candidates.filter((candidate) => candidate.isValid).length > 0;
 
-                            return (
-                                <div
-                                    className={`sudoku-box ${
-                                        box.isLocked ? 'locked-box' : 'open-box'
-                                    }${hasValidCandidates ? '' : ' impossible-box'}`}
-                                >
-                                    {box.isLocked
-                                        ? box.number
-                                        : box.candidates.map((candidate) => {
-                                              const isSelectedCandidate =
-                                                  selectedBoxNumber !== undefined &&
-                                                  selectedBoxNumber.box === box &&
-                                                  selectedBoxNumber.number === candidate.number;
+                    return (
+                        <div
+                            className={`sudoku-box ${box.isLocked ? 'locked-box' : 'open-box'}${
+                                hasValidCandidates ? '' : ' impossible-box'
+                            }`}
+                        >
+                            {box.isLocked
+                                ? box.number
+                                : box.candidates.map((candidate) => {
+                                      const isSelectedCandidate =
+                                          selectedBoxNumber !== undefined &&
+                                          selectedBoxNumber.box === box &&
+                                          selectedBoxNumber.number === candidate.number;
 
-                                              const mustHighlightCandidate =
-                                                  isPeerBox &&
-                                                  selectedBoxNumber!.number === candidate.number;
+                                      const mustHighlightCandidate =
+                                          isPeerBox &&
+                                          selectedBoxNumber!.number === candidate.number;
 
-                                              const candidateClickHandler = () => {
-                                                  setSelectedBoxNumber({
-                                                      box,
-                                                      number: candidate.number
-                                                  });
-                                              };
+                                      const candidateClickHandler = () => {
+                                          setSelectedBoxNumber({
+                                              box,
+                                              number: candidate.number
+                                          });
+                                      };
 
-                                              return (
-                                                  <div
-                                                      className={`sudoku-candidate${
-                                                          displayCandidates
-                                                              ? ''
-                                                              : ' hidden-candidate'
-                                                      }${
-                                                          candidate.isValid
-                                                              ? ''
-                                                              : ' invalid-candidate'
-                                                      }${
-                                                          displayImpact &&
-                                                          maximumImpact.display &&
-                                                          maximumImpact.value === candidate.impact
-                                                              ? ' maximum-impact'
-                                                              : ''
-                                                      }${
-                                                          isSelectedCandidate
-                                                              ? ' selected'
-                                                              : mustHighlightCandidate
-                                                              ? ' highlight'
-                                                              : ''
-                                                      }`}
-                                                      onClick={candidateClickHandler}
-                                                  >
-                                                      {displayCandidates &&
-                                                          (displayImpact
-                                                              ? candidate.impact
-                                                              : candidate.number)}
-                                                  </div>
-                                              );
-                                          })}
-                                </div>
-                            );
-                        })}
-                    </div>
-                ))}
+                                      return (
+                                          <div
+                                              className={`sudoku-candidate${
+                                                  displayCandidates ? '' : ' hidden-candidate'
+                                              }${candidate.isValid ? '' : ' invalid-candidate'}${
+                                                  displayImpact &&
+                                                  maximumImpact.display &&
+                                                  maximumImpact.value === candidate.impact
+                                                      ? ' maximum-impact'
+                                                      : ''
+                                              }${
+                                                  isSelectedCandidate
+                                                      ? ' selected'
+                                                      : mustHighlightCandidate
+                                                      ? ' highlight'
+                                                      : ''
+                                              }`}
+                                              onClick={candidateClickHandler}
+                                          >
+                                              {displayCandidates &&
+                                                  (displayImpact
+                                                      ? candidate.impact
+                                                      : candidate.number)}
+                                          </div>
+                                      );
+                                  })}
+                        </div>
+                    );
+                })}
             </div>
             <div>{props.locksNumber} locked boxes</div>
             <div>
