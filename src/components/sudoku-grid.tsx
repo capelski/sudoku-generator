@@ -48,7 +48,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const selectRandomMaximumImpactBox = () => {
         const maximumImpactBoxes = props.sudoku.boxes.filter((box) =>
-            box.candidates.find((candidate) => candidate.impact === props.sudoku.maximumImpact)
+            box.candidates.find(
+                (candidate) =>
+                    !candidate.isDiscardedByInferring &&
+                    candidate.impact === props.sudoku.maximumImpact
+            )
         );
         const randomBox = getRandomElement(maximumImpactBoxes);
 
@@ -98,14 +102,19 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                           selectedBoxNumber.box === box &&
                                           selectedBoxNumber.number === candidate.number;
 
+                                      const isInvalidCandidate =
+                                          !candidate.isValid ||
+                                          (useCandidatesInferring &&
+                                              candidate.isDiscardedByInferring);
+
                                       const isAffectedCandidate =
-                                          candidate.isValid &&
+                                          !isInvalidCandidate &&
                                           isPeerBox &&
                                           selectedBoxNumber!.box !== box &&
                                           selectedBoxNumber!.number === candidate.number;
 
                                       const candidateClickHandler = () => {
-                                          if (candidate.isValid) {
+                                          if (!isInvalidCandidate) {
                                               setSelectedBoxNumber({
                                                   box,
                                                   number: candidate.number
@@ -117,7 +126,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                           <div
                                               className={`sudoku-candidate${
                                                   displayCandidates ? '' : ' hidden-candidate'
-                                              }${candidate.isValid ? '' : ' invalid-candidate'}${
+                                              }${isInvalidCandidate ? ' invalid-candidate' : ''}${
                                                   displayImpact &&
                                                   highlightMaximumImpact &&
                                                   props.sudoku.maximumImpact === candidate.impact
@@ -125,12 +134,19 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                       : ''
                                               }${isSelectedCandidate ? ' selected-candidate' : ''}${
                                                   isAffectedCandidate ? ' affected-candidate' : ''
+                                              }${
+                                                  candidate.isDiscardedByInferring &&
+                                                  highlightInferableCandidates
+                                                      ? ' discarded-candidate'
+                                                      : ''
                                               }`}
                                               onClick={candidateClickHandler}
                                           >
                                               {displayCandidates &&
                                                   (displayImpact
-                                                      ? candidate.impact
+                                                      ? useCandidatesInferring
+                                                          ? candidate.impact
+                                                          : candidate.impactWithoutInferring
                                                       : candidate.number)}
                                           </div>
                                       );

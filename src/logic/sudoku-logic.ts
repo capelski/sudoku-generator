@@ -1,4 +1,4 @@
-import { Sudoku, Box, SudokuGroups, BoxGroups } from '../types/sudoku';
+import { Sudoku, Box, SudokuGroups, BoxGroups, Candidate } from '../types/sudoku';
 
 export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
@@ -18,11 +18,15 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
     const boxes = [...Array(size)]
         .map((_x, rowIndex) =>
             [...Array(size)].map((_y, columnIndex) => ({
-                candidates: [...Array(size)].map((_z, candidateIndex) => ({
-                    impact: initialImpact,
-                    isValid: true,
-                    number: candidateIndex + 1
-                })),
+                candidates: [...Array(size)].map(
+                    (_z, candidateIndex): Candidate => ({
+                        impact: initialImpact,
+                        impactWithoutInferring: initialImpact,
+                        isDiscardedByInferring: false,
+                        isValid: true,
+                        number: candidateIndex + 1
+                    })
+                ),
                 column: columnIndex,
                 hasValidCandidates: true,
                 isInferable: false,
@@ -92,11 +96,15 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
     const nextBoxes = sudoku.boxes.map((box) => {
         if (box === selectedBox) {
             return {
-                candidates: box.candidates.map((candidate) => ({
-                    impact: -1,
-                    isValid: candidate.number === selectedNumber,
-                    number: candidate.number
-                })),
+                candidates: box.candidates.map(
+                    (candidate): Candidate => ({
+                        impact: -1,
+                        impactWithoutInferring: -1,
+                        isDiscardedByInferring: false,
+                        isValid: candidate.number === selectedNumber,
+                        number: candidate.number
+                    })
+                ),
                 column: box.column,
                 isLocked: true,
                 isInferable: false,
@@ -108,11 +116,16 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
             };
         } else if (!box.isLocked) {
             const isPeerBox = arePeerBoxes(box, selectedBox);
-            const nextCandidates = box.candidates.map((candidate) => ({
-                impact: -2, //  = Invalidate the value. Will be computed below
-                isValid: candidate.isValid && (!isPeerBox || candidate.number !== selectedNumber),
-                number: candidate.number
-            }));
+            const nextCandidates = box.candidates.map(
+                (candidate): Candidate => ({
+                    impact: -2, // Invalidate the value. Will be computed below
+                    impactWithoutInferring: -2,
+                    isDiscardedByInferring: false,
+                    isValid:
+                        candidate.isValid && (!isPeerBox || candidate.number !== selectedNumber),
+                    number: candidate.number
+                })
+            );
 
             return {
                 candidates: nextCandidates,
@@ -144,11 +157,41 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                             peerBox.column !== nextBox.column && peerBox.row !== nextBox.row
                     )
                 );
+            const inferablePeerBoxes = peerBoxes.filter((peerBox) => peerBox.isInferable);
+
+            // Discard candidates on inferable boxes groups
+            nextBox.candidates.forEach((candidate) => {
+                if (
+                    candidate.isValid &&
+                    !candidate.isDiscardedByInferring &&
+                    inferablePeerBoxes.find((inferablePeerBox) =>
+                        inferablePeerBox.candidates.find(
+                            (peerCandidate) =>
+                                peerCandidate.isValid && peerCandidate.number === candidate.number
+                        )
+                    )
+                ) {
+                    candidate.isDiscardedByInferring = true;
+                }
+            });
 
             nextBox.candidates.forEach((candidate, candidateIndex) => {
-                candidate.impact = candidate.isValid
-                    ? peerBoxes.filter((peerBox) => peerBox.candidates[candidateIndex].isValid)
-                          .length
+                // TODO There is some error here. See sudoku-error.jpg
+                candidate.impact =
+                    candidate.isValid && !candidate.isDiscardedByInferring
+                        ? peerBoxes.filter(
+                              (peerBox) =>
+                                  !peerBox.isLocked &&
+                                  peerBox.candidates[candidateIndex].isValid &&
+                                  !peerBox.candidates[candidateIndex].isDiscardedByInferring
+                          ).length
+                        : -1;
+
+                candidate.impactWithoutInferring = candidate.isValid
+                    ? peerBoxes.filter(
+                          (peerBox) =>
+                              !peerBox.isLocked && peerBox.candidates[candidateIndex].isValid
+                      ).length
                     : -1;
             });
 

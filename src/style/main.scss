@@ -21,6 +21,10 @@ $candidateSize: 25px;
                 background-color: #efefef;
             }
 
+            &.discarded-candidate {
+                background-color: coral;
+            }
+
             &.maximum-impact-candidate {
                 background-color: gold;
             }

@@ -18,6 +18,8 @@ export interface BoxGroups {
 
 export interface Candidate {
     impact: number;
+    impactWithoutInferring: number;
+    isDiscardedByInferring: boolean;
     isValid: boolean;
     number: number;
 }
