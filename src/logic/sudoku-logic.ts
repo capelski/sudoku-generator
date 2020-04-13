@@ -7,26 +7,28 @@ export const arePeerBoxes = (a: Box, b: Box) => {
 export const getEmptySudoku = (regionSize: number): Sudoku => {
     const size = regionSize * regionSize;
     const initialImpact = 2 * (size - 1) + (regionSize - 1) * (regionSize - 1);
+    const boxes = [...Array(size)]
+        .map((_x, rowIndex) =>
+            [...Array(size)].map((_y, columnIndex) => ({
+                candidates: [...Array(size)].map((_z, candidateIndex) => ({
+                    impact: initialImpact,
+                    isValid: true,
+                    number: candidateIndex + 1
+                })),
+                column: columnIndex,
+                hasValidCandidates: true,
+                isLocked: false,
+                maximumImpact: initialImpact,
+                region:
+                    Math.floor(rowIndex / regionSize) * regionSize +
+                    Math.floor(columnIndex / regionSize),
+                row: rowIndex
+            }))
+        )
+        .reduce<Box[]>((reduced, boxes) => reduced.concat(boxes), []);
 
     return {
-        boxes: [...Array(size)]
-            .map((_x, rowIndex) =>
-                [...Array(size)].map((_y, columnIndex) => ({
-                    candidates: [...Array(size)].map((_z, candidateIndex) => ({
-                        impact: initialImpact,
-                        isValid: true,
-                        number: candidateIndex + 1
-                    })),
-                    column: columnIndex,
-                    isLocked: false,
-                    maximumImpact: initialImpact,
-                    region:
-                        Math.floor(rowIndex / regionSize) * regionSize +
-                        Math.floor(columnIndex / regionSize),
-                    row: rowIndex
-                }))
-            )
-            .reduce<Box[]>((reduced, boxes) => reduced.concat(boxes), []),
+        boxes,
         maximumImpact: initialImpact,
         regionSize,
         size
@@ -47,6 +49,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                 })),
                 column: box.column,
                 isLocked: true,
+                hasValidCandidates: true,
                 maximumImpact: -1,
                 number: selectedNumber,
                 region: box.region,
@@ -74,6 +77,8 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
             return {
                 candidates: nextCandidates,
                 column: box.column,
+                hasValidCandidates:
+                    nextCandidates.filter((candidate) => candidate.isValid).length > 0,
                 isLocked: false,
                 maximumImpact: boxMaximumImpact,
                 region: box.region,
