@@ -1,4 +1,4 @@
-import { Sudoku, Box } from '../types/sudoku';
+import { Sudoku, Box, SudokuGroups } from '../types/sudoku';
 
 export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
@@ -26,17 +26,58 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
             }))
         )
         .reduce<Box[]>((reduced, boxes) => reduced.concat(boxes), []);
+    const groups = getGroups(boxes);
 
     return {
         boxes,
+        groups,
         maximumImpact: initialImpact,
         regionSize,
         size
     };
 };
 
+export const getGroups = (boxes: Box[]): SudokuGroups => {
+    return boxes.reduce<SudokuGroups>(
+        (reduced, box) => {
+            reduced.columns[box.column] = reduced.columns[box.column] || {
+                isValid: true,
+                boxes: []
+            };
+            reduced.regions[box.region] = reduced.regions[box.region] || {
+                isValid: true,
+                boxes: []
+            };
+            reduced.rows[box.row] = reduced.rows[box.row] || { isValid: true, boxes: [] };
+
+            reduced.columns[box.column].boxes.push(box);
+            reduced.regions[box.region].boxes.push(box);
+            reduced.rows[box.row].boxes.push(box);
+
+            reduced.columns[box.column].isValid =
+                reduced.columns[box.column].isValid && box.hasValidCandidates;
+            reduced.regions[box.region].isValid =
+                reduced.regions[box.region].isValid && box.hasValidCandidates;
+            reduced.rows[box.row].isValid = reduced.rows[box.row].isValid && box.hasValidCandidates;
+
+            // TODO Compute groups isValid based on whether all numbers have an available box
+
+            return reduced;
+        },
+        { columns: {}, regions: {}, rows: {} }
+    );
+};
+
 export const getRandomElement = <T>(array: T[]) =>
     array[Math.round(Math.random() * (array.length - 1))];
+
+export const isBoxInInvalidGroup = (sudoku: Sudoku, box: Box) => {
+    const isInvalidColumn = !sudoku.groups.columns[box.column].isValid;
+    const isInvalidRegion = !sudoku.groups.regions[box.region].isValid;
+    const isInvalidRow = !sudoku.groups.rows[box.row].isValid;
+
+    return isInvalidColumn || isInvalidRegion || isInvalidRow;
+};
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
     const nextBoxes = sudoku.boxes.map((box) => {
@@ -95,6 +136,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
 
     return {
         boxes: nextBoxes,
+        groups: getGroups(nextBoxes),
         maximumImpact: sudokuMaximumImpact,
         regionSize: sudoku.regionSize,
         size: sudoku.size

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
-import { arePeerBoxes, getRandomElement } from '../logic/sudoku-logic';
+import { arePeerBoxes, getRandomElement, isBoxInInvalidGroup } from '../logic/sudoku-logic';
 
 interface GridProps {
     lockBox: (selectedBox: Box, selectedNumber: number) => void;
@@ -67,8 +67,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     return (
                         <div
                             className={`sudoku-box ${box.isLocked ? 'locked-box' : 'open-box'}${
-                                box.hasValidCandidates ? '' : ' impossible-box'
-                            }`}
+                                isBoxInInvalidGroup(props.sudoku, box)
+                                    ? ' inside-invalid-group'
+                                    : ''
+                            }${!box.hasValidCandidates ? ' invalid-box' : ''}`}
                         >
                             {box.isLocked
                                 ? box.number
@@ -83,10 +85,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                           selectedBoxNumber!.number === candidate.number;
 
                                       const candidateClickHandler = () => {
-                                          setSelectedBoxNumber({
-                                              box,
-                                              number: candidate.number
-                                          });
+                                          if (candidate.isValid) {
+                                              setSelectedBoxNumber({
+                                                  box,
+                                                  number: candidate.number
+                                              });
+                                          }
                                       };
 
                                       return (

@@ -46,12 +46,22 @@ $candidateSize: 25px;
             font-size: 25px;
         }
 
-        &.impossible-box {
+        &.inside-invalid-group {
             background-color: lightcoral;
 
-            .sudoku-candidate.invalid-candidate,
-            .sudoku-candidate.invalid-candidate.highlight {
+            .sudoku-candidate {
                 background-color: lightcoral;
+
+                &.invalid-candidate {
+                    background-color: #efefef;
+                }
+            }
+
+            &.invalid-box {
+                .sudoku-candidate.invalid-candidate,
+                .sudoku-candidate.invalid-candidate.highlight {
+                    background-color: lightcoral;
+                }
             }
         }
     }
@@ -62,6 +72,10 @@ $candidateSize: 25px;
         .sudoku-box {
             &.open-box {
                 grid-template-columns: repeat(2, $candidateSize);
+            }
+
+            &.locked-box {
+                height: $candidateSize * 2;
             }
 
             &:nth-last-child(-n + 4) {
@@ -98,6 +112,10 @@ $candidateSize: 25px;
         .sudoku-box {
             &.open-box {
                 grid-template-columns: repeat(3, $candidateSize);
+            }
+
+            &.locked-box {
+                height: $candidateSize * 3;
             }
 
             &:nth-last-child(-n + 9) {
