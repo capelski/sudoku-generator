@@ -21,16 +21,16 @@ $candidateSize: 25px;
                 background-color: #efefef;
             }
 
+            &.maximum-impact-candidate {
+                background-color: gold;
+            }
+
             &.selected-candidate {
-                background-color: blueviolet;
+                background-color: #566c73;
             }
 
             &.affected-candidate {
                 background-color: lightblue;
-            }
-
-            &.maximum-impact-candidate {
-                background-color: gold;
             }
 
             &.hidden-candidate {
@@ -51,6 +51,10 @@ $candidateSize: 25px;
             .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate) {
                 background-color: lightgreen;
             }
+
+            .sudoku-candidate.invalid-candidate {
+                background-color: #81d681;
+            }
         }
 
         &.inside-invalid-group {
@@ -58,6 +62,10 @@ $candidateSize: 25px;
 
             .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate) {
                 background-color: lightcoral;
+            }
+
+            .sudoku-candidate.invalid-candidate {
+                background-color: #d87373;
             }
         }
     }
