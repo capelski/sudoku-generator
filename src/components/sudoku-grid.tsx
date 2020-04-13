@@ -21,6 +21,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [highlightInferableCandidates, setHighlightInferableCandidates] = useState(true);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
+    const [useCandidatesInferring, setUseCandidatesInferring] = useState(true);
 
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
@@ -62,16 +63,22 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         });
     };
 
+    const useCandidatesInferringHandler = () => {
+        setUseCandidatesInferring(!useCandidatesInferring);
+    };
+
     return (
         <React.Fragment>
             <div className={`sudoku-grid size-${props.sudoku.size}`}>
                 {props.sudoku.boxes.map((box) => {
                     const isPeerBox =
                         selectedBoxNumber !== undefined && arePeerBoxes(selectedBoxNumber.box, box);
+                    const isResolvedBox =
+                        box.isLocked || (useCandidatesInferring && box.isInferable);
 
                     return (
                         <div
-                            className={`sudoku-box ${box.isLocked ? 'locked-box' : 'open-box'}${
+                            className={`sudoku-box ${isResolvedBox ? 'resolved-box' : 'open-box'}${
                                 isBoxInInvalidGroup(props.sudoku, box)
                                     ? ' inside-invalid-group'
                                     : ''
@@ -83,6 +90,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         >
                             {box.isLocked
                                 ? box.number
+                                : useCandidatesInferring && box.isInferable
+                                ? box.candidates.find((candidate) => candidate.isValid)!.number
                                 : box.candidates.map((candidate) => {
                                       const isSelectedCandidate =
                                           selectedBoxNumber !== undefined &&
@@ -164,6 +173,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                 <button type="button" onClick={highlightInferableCandidatesHandler}>
                     {highlightInferableCandidates ? 'Disable' : 'Enable'} inferable candidates
                     highlight
+                </button>
+                <button type="button" onClick={useCandidatesInferringHandler}>
+                    {useCandidatesInferring ? 'Disable' : 'Enable'} candidates inferring
                 </button>
             </div>
         </React.Fragment>

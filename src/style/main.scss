@@ -38,7 +38,7 @@ $candidateSize: 25px;
             }
         }
 
-        &.locked-box {
+        &.resolved-box {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -78,7 +78,7 @@ $candidateSize: 25px;
                 grid-template-columns: repeat(2, $candidateSize);
             }
 
-            &.locked-box {
+            &.resolved-box {
                 height: $candidateSize * 2;
             }
 
@@ -118,7 +118,7 @@ $candidateSize: 25px;
                 grid-template-columns: repeat(3, $candidateSize);
             }
 
-            &.locked-box {
+            &.resolved-box {
                 height: $candidateSize * 3;
             }
 
