@@ -1,7 +1,15 @@
-import { Sudoku, Box, SudokuGroups } from '../types/sudoku';
+import { Sudoku, Box, SudokuGroups, BoxGroups } from '../types/sudoku';
 
 export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
+};
+
+export const getBoxGroups = (sudokuGroups: SudokuGroups, box: Box): BoxGroups => {
+    return {
+        column: sudokuGroups.columns[box.column],
+        region: sudokuGroups.regions[box.region],
+        row: sudokuGroups.rows[box.row]
+    };
 };
 
 export const getEmptySudoku = (regionSize: number): Sudoku => {
@@ -101,21 +109,10 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
         } else if (!box.isLocked) {
             const isPeerBox = arePeerBoxes(box, selectedBox);
             const nextCandidates = box.candidates.map((candidate) => ({
-                impact:
-                    candidate.impact === -1
-                        ? -1
-                        : isPeerBox && candidate.number === selectedNumber
-                        ? -1
-                        : isPeerBox || candidate.number === selectedNumber
-                        ? candidate.impact - 1
-                        : candidate.impact,
+                impact: -2, //  = Invalidate the value. Will be computed below
                 isValid: candidate.isValid && (!isPeerBox || candidate.number !== selectedNumber),
                 number: candidate.number
             }));
-            const boxMaximumImpact = nextCandidates.reduce(
-                (reduced, candidate) => Math.max(reduced, candidate.impact),
-                0
-            );
 
             return {
                 candidates: nextCandidates,
@@ -124,7 +121,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                     nextCandidates.filter((candidate) => candidate.isValid).length > 0,
                 isLocked: false,
                 isInferable: nextCandidates.filter((candidate) => candidate.isValid).length === 1,
-                maximumImpact: boxMaximumImpact,
+                maximumImpact: -2, // Invalidate the value. Will be computed below
                 region: box.region,
                 row: box.row
             };
@@ -132,6 +129,34 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
             return box;
         }
     });
+    const nextGroups = getGroups(nextBoxes);
+
+    nextBoxes
+        .filter((box) => !box.isLocked)
+        .forEach((nextBox) => {
+            const boxGroups = getBoxGroups(nextGroups, nextBox);
+            const peerBoxes = boxGroups.column.boxes
+                .filter((peerBox) => peerBox !== nextBox)
+                .concat(boxGroups.row.boxes.filter((peerBox) => peerBox !== nextBox))
+                .concat(
+                    boxGroups.region.boxes.filter(
+                        (peerBox) =>
+                            peerBox.column !== nextBox.column && peerBox.row !== nextBox.row
+                    )
+                );
+
+            nextBox.candidates.forEach((candidate, candidateIndex) => {
+                candidate.impact = candidate.isValid
+                    ? peerBoxes.filter((peerBox) => peerBox.candidates[candidateIndex].isValid)
+                          .length
+                    : -1;
+            });
+
+            nextBox.maximumImpact = nextBox.candidates.reduce(
+                (reduced, candidate) => Math.max(reduced, candidate.impact),
+                0
+            );
+        });
     const sudokuMaximumImpact = nextBoxes.reduce(
         (reduced, nextBox) => Math.max(reduced, nextBox.maximumImpact),
         0
@@ -139,7 +164,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
 
     return {
         boxes: nextBoxes,
-        groups: getGroups(nextBoxes),
+        groups: nextGroups,
         maximumImpact: sudokuMaximumImpact,
         regionSize: sudoku.regionSize,
         size: sudoku.size
