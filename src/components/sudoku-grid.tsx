@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
-import {
-    arePeerBoxes,
-    getSudokuMaximumImpact,
-    getRandomElement,
-    getImpactBoxes
-} from '../logic/sudoku-logic';
+import { arePeerBoxes, getRandomElement } from '../logic/sudoku-logic';
 
 interface GridProps {
     lockBox: (selectedBox: Box, selectedNumber: number) => void;
@@ -23,29 +18,19 @@ interface BoxNumber {
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [displayCandidates, setDisplayCandidates] = useState(true);
     const [displayImpact, setDisplayImpact] = useState(false);
-    const [maximumImpact, setMaximumImpact] = useState({ display: false, value: -1 });
+    const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
-
-    const displayImpactHandler = () => {
-        setDisplayImpact(!displayImpact);
-    };
 
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
     };
 
-    const maximumImpactHandler = () => {
-        if (maximumImpact.display) {
-            setMaximumImpact({
-                display: false,
-                value: -1
-            });
-        } else {
-            setMaximumImpact({
-                display: true,
-                value: getSudokuMaximumImpact(props.sudoku)
-            });
-        }
+    const displayImpactHandler = () => {
+        setDisplayImpact(!displayImpact);
+    };
+
+    const highlightMaximumImpactHandler = () => {
+        setHighlightMaximumImpact(!highlightMaximumImpact);
     };
 
     const lockSelectedBoxHandler = () => {
@@ -56,12 +41,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     };
 
     const selectRandomMaximumImpactBox = () => {
-        const maximumImpact = getSudokuMaximumImpact(props.sudoku);
-        const maximumImpactBoxes = getImpactBoxes(props.sudoku, maximumImpact);
-        const randomBox = getRandomElement(maximumImpactBoxes);
-        const randomCandidate = getRandomElement(
-            randomBox.candidates.filter((candidate) => candidate.impact === maximumImpact)
+        const maximumImpactBoxes = props.sudoku.boxes.filter((box) =>
+            box.candidates.find((candidate) => candidate.impact === props.sudoku.maximumImpact)
         );
+        const randomBox = getRandomElement(maximumImpactBoxes);
+
+        const maximumImpactCandidates = randomBox.candidates.filter(
+            (candidate) => candidate.impact === props.sudoku.maximumImpact
+        );
+        const randomCandidate = getRandomElement(maximumImpactCandidates);
 
         setSelectedBoxNumber({
             box: randomBox,
@@ -109,8 +97,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   displayCandidates ? '' : ' hidden-candidate'
                                               }${candidate.isValid ? '' : ' invalid-candidate'}${
                                                   displayImpact &&
-                                                  maximumImpact.display &&
-                                                  maximumImpact.value === candidate.impact
+                                                  highlightMaximumImpact &&
+                                                  props.sudoku.maximumImpact === candidate.impact
                                                       ? ' maximum-impact'
                                                       : ''
                                               }${
@@ -153,8 +141,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     {displayImpact ? 'Show numbers' : 'Show impact'}
                 </button>
                 {displayImpact && (
-                    <button type="button" onClick={maximumImpactHandler}>
-                        {maximumImpact.display ? 'Disable' : 'Enable'} maximum impact
+                    <button type="button" onClick={highlightMaximumImpactHandler}>
+                        {highlightMaximumImpact ? 'Disable' : 'Enable'} maximum impact highlight
                     </button>
                 )}
                 {!displayImpact && (
