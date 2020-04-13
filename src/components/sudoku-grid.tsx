@@ -70,7 +70,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 isBoxInInvalidGroup(props.sudoku, box)
                                     ? ' inside-invalid-group'
                                     : ''
-                            }${!box.hasValidCandidates ? ' invalid-box' : ''}`}
+                            }${!box.hasValidCandidates ? ' invalid-box' : ''}
+                            ${box.isInferable ? ' inferable-box' : ''}`}
                         >
                             {box.isLocked
                                 ? box.number

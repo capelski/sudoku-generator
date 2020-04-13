@@ -17,6 +17,7 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                 })),
                 column: columnIndex,
                 hasValidCandidates: true,
+                isInferable: false,
                 isLocked: false,
                 maximumImpact: initialImpact,
                 region:
@@ -90,6 +91,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                 })),
                 column: box.column,
                 isLocked: true,
+                isInferable: false,
                 hasValidCandidates: true,
                 maximumImpact: -1,
                 number: selectedNumber,
@@ -121,6 +123,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                 hasValidCandidates:
                     nextCandidates.filter((candidate) => candidate.isValid).length > 0,
                 isLocked: false,
+                isInferable: nextCandidates.filter((candidate) => candidate.isValid).length === 1,
                 maximumImpact: boxMaximumImpact,
                 region: box.region,
                 row: box.row
