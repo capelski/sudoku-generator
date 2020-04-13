@@ -1,4 +1,4 @@
-import { Sudoku, Box, SudokuGroups, BoxGroups, Candidate } from '../types/sudoku';
+import { Sudoku, Box, SudokuGroups, BoxGroups, Candidate, BoxPeerData } from '../types/sudoku';
 
 export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
@@ -144,62 +144,67 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
     });
     const nextGroups = getGroups(nextBoxes);
 
-    nextBoxes
-        .filter((box) => !box.isLocked)
-        .forEach((nextBox) => {
-            const boxGroups = getBoxGroups(nextGroups, nextBox);
-            const peerBoxes = boxGroups.column.boxes
-                .filter((peerBox) => peerBox !== nextBox)
-                .concat(boxGroups.row.boxes.filter((peerBox) => peerBox !== nextBox))
-                .concat(
-                    boxGroups.region.boxes.filter(
-                        (peerBox) =>
-                            peerBox.column !== nextBox.column && peerBox.row !== nextBox.row
-                    )
-                );
-            const inferablePeerBoxes = peerBoxes.filter((peerBox) => peerBox.isInferable);
+    const boxPeerDataCollection = nextBoxes
+        .filter((nextBox) => !nextBox.isLocked)
+        .map(
+            (nextBox): BoxPeerData => {
+                const boxGroups = getBoxGroups(nextGroups, nextBox);
+                const peerBoxes = boxGroups.column.boxes
+                    .filter((peerBox) => peerBox !== nextBox)
+                    .concat(boxGroups.row.boxes.filter((peerBox) => peerBox !== nextBox))
+                    .concat(
+                        boxGroups.region.boxes.filter(
+                            (peerBox) =>
+                                peerBox.column !== nextBox.column && peerBox.row !== nextBox.row
+                        )
+                    );
+                return { box: nextBox, peerBoxes };
+            }
+        );
 
-            // Discard candidates on inferable boxes groups
-            nextBox.candidates.forEach((candidate) => {
-                if (
-                    candidate.isValid &&
-                    !candidate.isDiscardedByInferring &&
+    // Discard candidates on inferable boxes groups
+    boxPeerDataCollection.forEach((boxPeerData) => {
+        const inferablePeerBoxes = boxPeerData.peerBoxes.filter((peerBox) => peerBox.isInferable);
+        boxPeerData.box.candidates.forEach((candidate) => {
+            candidate.isDiscardedByInferring =
+                !boxPeerData.box.isLocked &&
+                candidate.isValid &&
+                (candidate.isDiscardedByInferring ||
                     inferablePeerBoxes.find((inferablePeerBox) =>
                         inferablePeerBox.candidates.find(
                             (peerCandidate) =>
                                 peerCandidate.isValid && peerCandidate.number === candidate.number
                         )
-                    )
-                ) {
-                    candidate.isDiscardedByInferring = true;
-                }
-            });
+                    ) !== undefined);
+        });
+    });
 
-            nextBox.candidates.forEach((candidate, candidateIndex) => {
-                // TODO There is some error here. See sudoku-error.jpg
-                candidate.impact =
-                    candidate.isValid && !candidate.isDiscardedByInferring
-                        ? peerBoxes.filter(
-                              (peerBox) =>
-                                  !peerBox.isLocked &&
-                                  peerBox.candidates[candidateIndex].isValid &&
-                                  !peerBox.candidates[candidateIndex].isDiscardedByInferring
-                          ).length
-                        : -1;
-
-                candidate.impactWithoutInferring = candidate.isValid
-                    ? peerBoxes.filter(
+    // Update candidates impact after discarding candidates based on inferring
+    boxPeerDataCollection.forEach((boxPeerData) => {
+        boxPeerData.box.candidates.forEach((candidate, candidateIndex) => {
+            candidate.impact =
+                candidate.isValid && !candidate.isDiscardedByInferring
+                    ? boxPeerData.peerBoxes.filter(
                           (peerBox) =>
-                              !peerBox.isLocked && peerBox.candidates[candidateIndex].isValid
+                              !peerBox.isLocked &&
+                              peerBox.candidates[candidateIndex].isValid &&
+                              !peerBox.candidates[candidateIndex].isDiscardedByInferring
                       ).length
                     : -1;
-            });
 
-            nextBox.maximumImpact = nextBox.candidates.reduce(
-                (reduced, candidate) => Math.max(reduced, candidate.impact),
-                0
-            );
+            candidate.impactWithoutInferring = candidate.isValid
+                ? boxPeerData.peerBoxes.filter(
+                      (peerBox) => !peerBox.isLocked && peerBox.candidates[candidateIndex].isValid
+                  ).length
+                : -1;
         });
+
+        boxPeerData.box.maximumImpact = boxPeerData.box.candidates.reduce(
+            (reduced, candidate) => Math.max(reduced, candidate.impact),
+            0
+        );
+    });
+
     const sudokuMaximumImpact = nextBoxes.reduce(
         (reduced, nextBox) => Math.max(reduced, nextBox.maximumImpact),
         0

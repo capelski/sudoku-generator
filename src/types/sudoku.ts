@@ -10,6 +10,11 @@ export interface Box {
     row: number;
 }
 
+export interface BoxPeerData {
+    box: Box;
+    peerBoxes: Box[];
+}
+
 export interface BoxGroups {
     column: Group;
     region: Group;
