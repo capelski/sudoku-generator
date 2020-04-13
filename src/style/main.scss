@@ -16,26 +16,25 @@ $candidateSize: 25px;
             align-items: center;
             cursor: pointer;
 
-            &.hidden-candidate {
-                background-color: unset !important;
+            &.invalid-candidate {
+                font-style: italic;
+                background-color: #efefef;
             }
 
-            &.maximum-impact {
-                background-color: gold;
-            }
-
-            &.selected {
+            &.selected-candidate {
                 background-color: blueviolet;
             }
 
-            &.highlight {
+            &.affected-candidate {
                 background-color: lightblue;
             }
 
-            &.invalid-candidate,
-            &.invalid-candidate.highlight {
-                font-style: italic;
-                background-color: #efefef;
+            &.maximum-impact-candidate {
+                background-color: gold;
+            }
+
+            &.hidden-candidate {
+                background-color: unset !important;
             }
         }
 
@@ -49,31 +48,16 @@ $candidateSize: 25px;
         &.inferable-box {
             background-color: lightgreen;
 
-            .sudoku-candidate {
+            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate) {
                 background-color: lightgreen;
-
-                &.invalid-candidate {
-                    background-color: #efefef;
-                }
             }
         }
 
         &.inside-invalid-group {
             background-color: lightcoral;
 
-            .sudoku-candidate {
+            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate) {
                 background-color: lightcoral;
-
-                &.invalid-candidate {
-                    background-color: #efefef;
-                }
-            }
-
-            &.invalid-box {
-                .sudoku-candidate.invalid-candidate,
-                .sudoku-candidate.invalid-candidate.highlight {
-                    background-color: lightcoral;
-                }
             }
         }
     }

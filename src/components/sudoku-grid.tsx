@@ -18,6 +18,7 @@ interface BoxNumber {
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [displayCandidates, setDisplayCandidates] = useState(true);
     const [displayImpact, setDisplayImpact] = useState(false);
+    const [highlightInferableCandidates, setHighlightInferableCandidates] = useState(true);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
 
@@ -27,6 +28,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const displayImpactHandler = () => {
         setDisplayImpact(!displayImpact);
+    };
+
+    const highlightInferableCandidatesHandler = () => {
+        setHighlightInferableCandidates(!highlightInferableCandidates);
     };
 
     const highlightMaximumImpactHandler = () => {
@@ -70,8 +75,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 isBoxInInvalidGroup(props.sudoku, box)
                                     ? ' inside-invalid-group'
                                     : ''
-                            }${!box.hasValidCandidates ? ' invalid-box' : ''}
-                            ${box.isInferable ? ' inferable-box' : ''}`}
+                            }${!box.hasValidCandidates ? ' invalid-box' : ''}${
+                                highlightInferableCandidates && box.isInferable
+                                    ? ' inferable-box'
+                                    : ''
+                            }`}
                         >
                             {box.isLocked
                                 ? box.number
@@ -81,8 +89,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                           selectedBoxNumber.box === box &&
                                           selectedBoxNumber.number === candidate.number;
 
-                                      const mustHighlightCandidate =
+                                      const isAffectedCandidate =
+                                          candidate.isValid &&
                                           isPeerBox &&
+                                          selectedBoxNumber!.box !== box &&
                                           selectedBoxNumber!.number === candidate.number;
 
                                       const candidateClickHandler = () => {
@@ -102,14 +112,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   displayImpact &&
                                                   highlightMaximumImpact &&
                                                   props.sudoku.maximumImpact === candidate.impact
-                                                      ? ' maximum-impact'
+                                                      ? ' maximum-impact-candidate'
                                                       : ''
-                                              }${
-                                                  isSelectedCandidate
-                                                      ? ' selected'
-                                                      : mustHighlightCandidate
-                                                      ? ' highlight'
-                                                      : ''
+                                              }${isSelectedCandidate ? ' selected-candidate' : ''}${
+                                                  isAffectedCandidate ? ' affected-candidate' : ''
                                               }`}
                                               onClick={candidateClickHandler}
                                           >
@@ -153,6 +159,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         {displayCandidates ? 'Hide' : 'Show'} candidates
                     </button>
                 )}
+            </div>
+            <div>
+                <button type="button" onClick={highlightInferableCandidatesHandler}>
+                    {highlightInferableCandidates ? 'Disable' : 'Enable'} inferable candidates
+                    highlight
+                </button>
             </div>
         </React.Fragment>
     );
