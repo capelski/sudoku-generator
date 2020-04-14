@@ -21,8 +21,8 @@ $candidateSize: 25px;
                 background-color: #efefef;
             }
 
-            &.discarded-candidate {
-                background-color: coral;
+            &.discarded-candidate:not(.invalid-candidate) {
+                background-color: #f6b2b2;
             }
 
             &.maximum-impact-candidate {
@@ -52,7 +52,7 @@ $candidateSize: 25px;
         &.inferable-box {
             background-color: lightgreen;
 
-            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate) {
+            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate):not(.discarded-candidate) {
                 background-color: lightgreen;
             }
 

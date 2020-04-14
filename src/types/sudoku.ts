@@ -1,18 +1,12 @@
 export interface Box {
     candidates: Candidate[];
     column: number;
-    hasValidCandidates: boolean;
-    isInferable: boolean;
     isLocked: boolean;
     maximumImpact: number;
     number?: number;
+    peerBoxes: Box[];
     region: number;
     row: number;
-}
-
-export interface BoxPeerData {
-    box: Box;
-    peerBoxes: Box[];
 }
 
 export interface BoxGroups {
@@ -24,7 +18,10 @@ export interface BoxGroups {
 export interface Candidate {
     impact: number;
     impactWithoutInferring: number;
-    isDiscardedByInferring: boolean;
+    isSingleCandidateInBox: boolean;
+    isSingleCandidateInBoxPeer: boolean;
+    isSingleCandidateInGroup: boolean;
+    isSingleCandidateInGroupPeer: boolean;
     isValid: boolean;
     number: number;
 }

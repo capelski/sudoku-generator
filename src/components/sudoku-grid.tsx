@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
-import { arePeerBoxes, getRandomElement, isBoxInInvalidGroup } from '../logic/sudoku-logic';
+import {
+    arePeerBoxes,
+    getRandomElement,
+    isBoxInInvalidGroup,
+    isValidBox,
+    isValidCandidate,
+    isInferableBox,
+    getBoxInferredNumber
+} from '../logic/sudoku-logic';
 
 interface GridProps {
     lockBox: (selectedBox: Box, selectedNumber: number) => void;
@@ -50,8 +58,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         const maximumImpactBoxes = props.sudoku.boxes.filter((box) =>
             box.candidates.find(
                 (candidate) =>
-                    !candidate.isDiscardedByInferring &&
-                    candidate.impact === props.sudoku.maximumImpact
+                    isValidCandidate(candidate) && candidate.impact === props.sudoku.maximumImpact
             )
         );
         const randomBox = getRandomElement(maximumImpactBoxes);
@@ -75,10 +82,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         <React.Fragment>
             <div className={`sudoku-grid size-${props.sudoku.size}`}>
                 {props.sudoku.boxes.map((box) => {
-                    const isPeerBox =
-                        selectedBoxNumber !== undefined && arePeerBoxes(selectedBoxNumber.box, box);
+                    const isInvalidBox = !isValidBox(box);
+                    const isBoxInferable = isInferableBox(box);
                     const isResolvedBox =
-                        box.isLocked || (useCandidatesInferring && box.isInferable);
+                        box.isLocked || (useCandidatesInferring && isBoxInferable);
+                    const isSelectedBoxPeer =
+                        selectedBoxNumber !== undefined && arePeerBoxes(selectedBoxNumber.box, box);
 
                     return (
                         <div
@@ -86,32 +95,46 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 isBoxInInvalidGroup(props.sudoku, box)
                                     ? ' inside-invalid-group'
                                     : ''
-                            }${!box.hasValidCandidates ? ' invalid-box' : ''}${
-                                highlightInferableCandidates && box.isInferable
+                            }${isInvalidBox ? ' invalid-box' : ''}${
+                                highlightInferableCandidates && isBoxInferable
                                     ? ' inferable-box'
                                     : ''
                             }`}
                         >
                             {box.isLocked
                                 ? box.number
-                                : useCandidatesInferring && box.isInferable
-                                ? box.candidates.find((candidate) => candidate.isValid)!.number
+                                : useCandidatesInferring && isBoxInferable
+                                ? getBoxInferredNumber(box) || '?'
                                 : box.candidates.map((candidate) => {
+                                      const isInvalidCandidate = !isValidCandidate(
+                                          candidate,
+                                          useCandidatesInferring
+                                      );
+
+                                      const isDiscardedCandidate =
+                                          highlightInferableCandidates &&
+                                          (candidate.isSingleCandidateInBoxPeer ||
+                                              candidate.isSingleCandidateInGroupPeer);
+
+                                      const candidateImpact = useCandidatesInferring
+                                          ? candidate.impact
+                                          : candidate.impactWithoutInferring;
+
                                       const isSelectedCandidate =
                                           selectedBoxNumber !== undefined &&
                                           selectedBoxNumber.box === box &&
                                           selectedBoxNumber.number === candidate.number;
 
-                                      const isInvalidCandidate =
-                                          !candidate.isValid ||
-                                          (useCandidatesInferring &&
-                                              candidate.isDiscardedByInferring);
-
                                       const isAffectedCandidate =
                                           !isInvalidCandidate &&
-                                          isPeerBox &&
+                                          isSelectedBoxPeer &&
                                           selectedBoxNumber!.box !== box &&
                                           selectedBoxNumber!.number === candidate.number;
+
+                                      const isMaximumImpactCandidate =
+                                          displayImpact &&
+                                          highlightMaximumImpact &&
+                                          props.sudoku.maximumImpact === candidate.impact;
 
                                       const candidateClickHandler = () => {
                                           if (!isInvalidCandidate) {
@@ -127,26 +150,19 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               className={`sudoku-candidate${
                                                   displayCandidates ? '' : ' hidden-candidate'
                                               }${isInvalidCandidate ? ' invalid-candidate' : ''}${
-                                                  displayImpact &&
-                                                  highlightMaximumImpact &&
-                                                  props.sudoku.maximumImpact === candidate.impact
+                                                  isMaximumImpactCandidate
                                                       ? ' maximum-impact-candidate'
                                                       : ''
                                               }${isSelectedCandidate ? ' selected-candidate' : ''}${
                                                   isAffectedCandidate ? ' affected-candidate' : ''
                                               }${
-                                                  candidate.isDiscardedByInferring &&
-                                                  highlightInferableCandidates
-                                                      ? ' discarded-candidate'
-                                                      : ''
+                                                  isDiscardedCandidate ? ' discarded-candidate' : ''
                                               }`}
                                               onClick={candidateClickHandler}
                                           >
                                               {displayCandidates &&
                                                   (displayImpact
-                                                      ? useCandidatesInferring
-                                                          ? candidate.impact
-                                                          : candidate.impactWithoutInferring
+                                                      ? candidateImpact
                                                       : candidate.number)}
                                           </div>
                                       );
