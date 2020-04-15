@@ -181,6 +181,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           ? ' affected-candidate'
                                                           : ''
                                                   }${
+                                                      candidate.isBoxSingleCandidate
+                                                          ? ' box-single-candidate'
+                                                          : ''
+                                                  }${
+                                                      candidate.isGroupSingleCandidate
+                                                          ? ' group-single-candidate'
+                                                          : ''
+                                                  }${
                                                       highlightInferableCandidates &&
                                                       candidate.isDiscardedByBoxSingleCandidateInPeerBox
                                                           ? ' discarded-by-box-single-candidate-in-peer-box'

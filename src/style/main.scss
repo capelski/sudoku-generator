@@ -57,7 +57,8 @@ $candidateSize: 25px;
         &.inferable-box {
             background-color: lightgreen;
 
-            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate):not(.discarded-by-box-single-candidate-in-peer-box):not(.discarded-by-group-single-candidate-in-same-box) {
+            .sudoku-candidate.box-single-candidate,
+            .sudoku-candidate.group-single-candidate {
                 background-color: lightgreen;
             }
         }
