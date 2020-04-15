@@ -111,10 +111,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                           useCandidatesInferring
                                       );
 
-                                      const isDiscardedCandidate =
-                                          highlightInferableCandidates &&
-                                          (candidate.isSingleCandidateInBoxPeer ||
-                                              candidate.isSingleCandidateInGroupPeer);
+                                      const highlightDiscardedCandidates =
+                                          highlightInferableCandidates && !useCandidatesInferring;
+
+                                      const isSingleCandidateInBoxPeer =
+                                          highlightDiscardedCandidates &&
+                                          candidate.isSingleCandidateInBoxPeer;
+
+                                      const isSingleCandidateInGroupPeer =
+                                          highlightDiscardedCandidates &&
+                                          candidate.isSingleCandidateInGroupPeer;
 
                                       const candidateImpact = useCandidatesInferring
                                           ? candidate.impact
@@ -156,7 +162,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               }${isSelectedCandidate ? ' selected-candidate' : ''}${
                                                   isAffectedCandidate ? ' affected-candidate' : ''
                                               }${
-                                                  isDiscardedCandidate ? ' discarded-candidate' : ''
+                                                  isSingleCandidateInBoxPeer
+                                                      ? ' single-candidate-in-box-peer'
+                                                      : ''
+                                              }${
+                                                  isSingleCandidateInGroupPeer
+                                                      ? ' single-candidate-for-group-in-box-peer'
+                                                      : ''
                                               }`}
                                               onClick={candidateClickHandler}
                                           >
