@@ -12,26 +12,35 @@ export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
 };
 
+export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
+    boxes.filter(
+        (box) =>
+            !box.isLocked &&
+            box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
+            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
+    );
+
 export const discardInferableCandidates = (boxes: Box[], groups: SudokuGroups) => {
     for (;;) {
-        const nonMarkedSingleCandidateBoxes = boxes.filter(
-            (box) =>
-                !box.isLocked &&
-                box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
-                box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
-        );
-        if (nonMarkedSingleCandidateBoxes.length === 0) {
+        for (;;) {
+            const unnoticedSingleCandidateBoxes = getUnnoticedSingleCandidateBoxes(boxes);
+            if (unnoticedSingleCandidateBoxes.length === 0) {
+                break;
+            }
+            unnoticedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
+            console.log('End of single candidates inferring round');
+        }
+
+        inferByGroup(groups.columns);
+        inferByGroup(groups.regions);
+        inferByGroup(groups.rows);
+        console.log('End of group candidates inferring round');
+
+        const unnoticedSingleCandidateBoxes = getUnnoticedSingleCandidateBoxes(boxes);
+        if (unnoticedSingleCandidateBoxes.length === 0) {
             break;
         }
-        nonMarkedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
-        console.log('End of inferring round');
     }
-
-    inferByGroup(groups.columns);
-    inferByGroup(groups.regions);
-    inferByGroup(groups.rows);
-
-    // TODO Apply recursively
 };
 
 export const getBoxGroups = (sudokuGroups: SudokuGroups, box: Box): BoxGroups => {
