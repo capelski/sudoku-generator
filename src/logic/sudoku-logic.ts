@@ -13,13 +13,19 @@ export const arePeerBoxes = (a: Box, b: Box) => {
 };
 
 export const discardInferableCandidates = (boxes: Box[], groups: SudokuGroups) => {
-    const nonMarkedSingleCandidateBoxes = boxes.filter(
-        (box) =>
-            !box.isLocked &&
-            box.candidates.filter((candidate) => candidate.isValid).length === 1 &&
-            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
-    );
-    nonMarkedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
+    for (;;) {
+        const nonMarkedSingleCandidateBoxes = boxes.filter(
+            (box) =>
+                !box.isLocked &&
+                box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
+                box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
+        );
+        if (nonMarkedSingleCandidateBoxes.length === 0) {
+            break;
+        }
+        nonMarkedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
+        console.log('End of inferring round');
+    }
 
     inferByGroup(groups.columns);
     inferByGroup(groups.regions);
@@ -288,16 +294,26 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
 };
 
 export const setBoxSingleCandidate = (box: Box) => {
-    const singleCandidateIndex = box.candidates.findIndex((candidate) => candidate.isValid);
+    const singleCandidateIndex = box.candidates.findIndex((candidate) =>
+        isValidCandidate(candidate)
+    );
+    console.log(
+        'Setting candidate',
+        box.candidates[singleCandidateIndex].number,
+        'in box',
+        box.row,
+        box.column
+    );
     box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
     box.peerBoxes
-        .filter((peerBox) => !peerBox.isLocked)
+        .filter(
+            (peerBox) =>
+                !peerBox.isLocked && isValidCandidate(peerBox.candidates[singleCandidateIndex])
+        )
         .forEach((peerBox) => {
             peerBox.candidates[
                 singleCandidateIndex
             ].isDiscardedByBoxSingleCandidateInPeerBox = true;
-            // Peer box might now have a single valid candidate; instead of processing it here
-            // it will be done in discardInferableCandidates
         });
 };
 
@@ -309,9 +325,10 @@ export const setCandidateImpact = (box: Box, candidateIndex: number) => {
           ).length
         : -1;
 
-    candidate.impactWithoutInferring = candidate.isValid
+    candidate.impactWithoutInferring = isValidCandidate(candidate, false)
         ? box.peerBoxes.filter(
-              (peerBox) => !peerBox.isLocked && peerBox.candidates[candidateIndex].isValid
+              (peerBox) =>
+                  !peerBox.isLocked && isValidCandidate(peerBox.candidates[candidateIndex], false)
           ).length
         : -1;
 };
@@ -329,4 +346,11 @@ export const setGroupSingleCandidate = (box: Box, number: number) => {
             }
         }
     });
+    box.peerBoxes
+        .filter(
+            (peerBox) => !peerBox.isLocked && isValidCandidate(peerBox.candidates[candidateIndex])
+        )
+        .forEach((peerBox) => {
+            peerBox.candidates[candidateIndex].isDiscardedByBoxSingleCandidateInPeerBox = true;
+        });
 };
