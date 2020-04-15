@@ -106,21 +106,35 @@ export const getGroups = (boxes: Box[]): SudokuGroups =>
         { columns: {}, regions: {}, rows: {} }
     );
 
+const getNonMarkedSingleCandidateBoxes = (boxes: Box[]) => {
+    return boxes.filter(
+        (box) =>
+            !box.isLocked &&
+            box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
+            box.candidates.filter((candidate) => candidate.isSingleCandidateInBox).length === 0
+        // TODO Should I consider isSingleCandidateInGroup too? In fact, aren't the same thing?
+    );
+};
+
+export const getNumbersAvailableBoxes = (boxes: Box[]): Dictionary<Box[]> => {
+    const boxesPerNumber: Dictionary<Box[]> = {};
+    boxes.forEach((box) => {
+        box.candidates.forEach((candidate) => {
+            boxesPerNumber[candidate.number] = boxesPerNumber[candidate.number] || [];
+            if (isValidCandidate(candidate)) {
+                boxesPerNumber[candidate.number].push(box);
+            }
+        });
+    });
+    return boxesPerNumber;
+};
+
 export const getRandomElement = <T>(array: T[]) =>
     array[Math.round(Math.random() * (array.length - 1))];
 
 export const inferByGroup = (groups: Dictionary<Group>) => {
     Object.values(groups).forEach((group) => {
-        const boxesPerNumber: Dictionary<Box[]> = {};
-
-        group.boxes.forEach((box) => {
-            box.candidates.forEach((candidate) => {
-                boxesPerNumber[candidate.number] = boxesPerNumber[candidate.number] || [];
-                if (isValidCandidate(candidate)) {
-                    boxesPerNumber[candidate.number].push(box);
-                }
-            });
-        });
+        const boxesPerNumber = getNumbersAvailableBoxes(group.boxes);
 
         Object.keys(boxesPerNumber)
             .map((boxesKey) => parseInt(boxesKey))
@@ -134,11 +148,16 @@ export const inferByGroup = (groups: Dictionary<Group>) => {
             });
 
         // TODO If two numbers fight for the same two boxes (i.e. no other boxes are valid for those numbers), remove other numbers for that boxes
+        // Object.keys(boxesPerNumber)
+        //     .map((boxesKey) => parseInt(boxesKey))
+        //     .filter((boxesKey) => boxesPerNumber[boxesKey].length === 2);
 
         // TODO If two boxes have only the same two numbers, remove those numbers from other boxes
 
         group.isValid =
+            // Group is valid if all boxes have at least a potential candidate
             group.boxes.find((box) => !isValidBox(box)) === undefined &&
+            // and if all candidates have at least a potential box
             Object.values(boxesPerNumber).reduce(
                 (reduced, boxes) => reduced && boxes.length > 0,
                 true
@@ -163,8 +182,9 @@ export const isBoxWithSingleCandidate = (box: Box) =>
 export const isInferableBox = (box: Box) =>
     !box.isLocked && (isBoxWithSingleCandidate(box) || isBoxWithGroupSingleCandidate(box));
 
-export const isValidBox = (box: Box) =>
-    box.candidates.find((candidate) => candidate.isValid) !== undefined;
+export const isValidBox = (box: Box, useCandidateInferring = true) =>
+    box.candidates.find((candidate) => isValidCandidate(candidate, useCandidateInferring)) !==
+    undefined;
 
 export const isValidCandidate = (candidate: Candidate, useCandidateInferring = true) =>
     candidate.isValid &&
@@ -232,22 +252,26 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
         nextBox.peerBoxes = getBoxPeers(nextGroups, nextBox);
     });
 
-    // TODO Discard recursively including groups validation
-    // Think how discards affect each group
-    // Give boxes an id equal to the position they hold in the sudoku.boxes array
-    // If the peerBox.is is bigger than the current one, it will already be processed
+    for (;;) {
+        // TODO Discard candidates recursively
 
-    nextBoxes
-        .filter(
-            (nextBox) =>
-                !nextBox.isLocked &&
-                nextBox.candidates.filter((candidate) => candidate.isValid).length === 1
-        )
-        .forEach(setBoxSingleCandidate);
+        for (;;) {
+            let nonMarkedSingleCandidateBoxes = getNonMarkedSingleCandidateBoxes(nextBoxes);
+            if (nonMarkedSingleCandidateBoxes.length === 0) {
+                break;
+            }
+            nonMarkedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
+        }
 
-    inferByGroup(nextGroups.columns);
-    inferByGroup(nextGroups.regions);
-    inferByGroup(nextGroups.rows);
+        inferByGroup(nextGroups.columns);
+        inferByGroup(nextGroups.regions);
+        inferByGroup(nextGroups.rows);
+
+        let nonMarkedSingleCandidateBoxes = getNonMarkedSingleCandidateBoxes(nextBoxes);
+        if (nonMarkedSingleCandidateBoxes.length === 0) {
+            break;
+        }
+    }
 
     // Update candidates impact after discarding candidates based on inferring
     nextBoxes.forEach((nextBox) => {

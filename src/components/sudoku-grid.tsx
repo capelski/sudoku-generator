@@ -82,7 +82,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         <React.Fragment>
             <div className={`sudoku-grid size-${props.sudoku.size}`}>
                 {props.sudoku.boxes.map((box) => {
-                    const isInvalidBox = !isValidBox(box);
+                    const isInvalidBox = !isValidBox(box, useCandidatesInferring);
                     const isBoxInferable = isInferableBox(box);
                     const isResolvedBox =
                         box.isLocked || (useCandidatesInferring && isBoxInferable);
