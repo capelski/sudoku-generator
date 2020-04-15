@@ -13,26 +13,19 @@ export const arePeerBoxes = (a: Box, b: Box) => {
 };
 
 export const discardInferableCandidates = (boxes: Box[], groups: SudokuGroups) => {
-    for (;;) {
-        // TODO Is this recursion actually working?
+    const nonMarkedSingleCandidateBoxes = boxes.filter(
+        (box) =>
+            !box.isLocked &&
+            box.candidates.filter((candidate) => candidate.isValid).length === 1 &&
+            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
+    );
+    nonMarkedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
 
-        for (;;) {
-            let nonMarkedSingleCandidateBoxes = getNonMarkedSingleCandidateBoxes(boxes);
-            if (nonMarkedSingleCandidateBoxes.length === 0) {
-                break;
-            }
-            nonMarkedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
-        }
+    inferByGroup(groups.columns);
+    inferByGroup(groups.regions);
+    inferByGroup(groups.rows);
 
-        inferByGroup(groups.columns);
-        inferByGroup(groups.regions);
-        inferByGroup(groups.rows);
-
-        let nonMarkedSingleCandidateBoxes = getNonMarkedSingleCandidateBoxes(boxes);
-        if (nonMarkedSingleCandidateBoxes.length === 0) {
-            break;
-        }
-    }
+    // TODO Apply recursively
 };
 
 export const getBoxGroups = (sudokuGroups: SudokuGroups, box: Box): BoxGroups => {
@@ -128,16 +121,6 @@ export const getGroups = (boxes: Box[]): SudokuGroups =>
         },
         { columns: {}, regions: {}, rows: {} }
     );
-
-const getNonMarkedSingleCandidateBoxes = (boxes: Box[]) => {
-    return boxes.filter(
-        (box) =>
-            !box.isLocked &&
-            box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
-            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
-        // TODO This will cause groupSingleCandidate boxes to be marked as boxSingleCandidate
-    );
-};
 
 export const getNumbersAvailableBoxes = (boxes: Box[]): Dictionary<Box[]> => {
     const boxesPerNumber: Dictionary<Box[]> = {};
