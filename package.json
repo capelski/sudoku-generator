@@ -8,11 +8,13 @@
         "build:ts": "tsc --noEmit -p tsconfig.json",
         "clean:build": "rm -rf dist",
         "clean:dependencies": "rm -rf node_modules/ package-lock.json",
+        "start": "node index.js",
         "start:dev": "webpack-dev-server --open --mode development"
     },
     "author": "Carles Capellas <capellas.carles@gmail.com>",
     "license": "ISC",
     "dependencies": {
+        "express": "4.17.1",
         "react": "16.13.1",
         "react-dom": "16.13.1"
     },

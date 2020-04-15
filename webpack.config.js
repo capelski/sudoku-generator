@@ -32,6 +32,10 @@ module.exports = {
             }
         ]
     },
+    output: {
+        filename: 'main.js?$modena=sudoku-generator',
+        publicPath: '/'
+    },
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/index.html',
