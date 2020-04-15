@@ -33,7 +33,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [highlightInferableCandidates, setHighlightInferableCandidates] = useState(true);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
-    const [useCandidatesInferring, setUseCandidatesInferring] = useState(true);
+    const [automaticInferring, setAutomaticInferring] = useState(false);
 
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
@@ -82,8 +82,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         });
     };
 
-    const useCandidatesInferringHandler = () => {
-        setUseCandidatesInferring(!useCandidatesInferring);
+    const automaticInferringHandler = () => {
+        setAutomaticInferring(!automaticInferring);
     };
 
     return (
@@ -91,10 +91,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             <div className="screen-splitter">
                 <div className={`sudoku-grid size-${props.sudoku.size}`}>
                     {props.sudoku.boxes.map((box) => {
-                        const isInvalidBox = !isValidBox(box, useCandidatesInferring);
+                        const isInvalidBox = !isValidBox(box, automaticInferring);
                         const isBoxInferable = isInferableBox(box);
                         const isResolvedBox =
-                            box.isLocked || (useCandidatesInferring && isBoxInferable);
+                            box.isLocked || (automaticInferring && isBoxInferable);
                         const isSelectedBoxPeer =
                             selectedBoxNumber !== undefined &&
                             arePeerBoxes(selectedBoxNumber.box, box);
@@ -115,23 +115,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             >
                                 {box.isLocked
                                     ? box.number
-                                    : useCandidatesInferring && isBoxInferable
+                                    : automaticInferring && isBoxInferable
                                     ? getBoxInferredNumber(box) || '?'
                                     : box.candidates.map((candidate) => {
                                           const isInvalidCandidate = !isValidCandidate(
                                               candidate,
-                                              useCandidatesInferring
+                                              automaticInferring
                                           );
 
-                                          const isSingleCandidateInBoxPeer =
-                                              highlightInferableCandidates &&
-                                              candidate.isSingleCandidateForBoxInBoxPeer;
-
-                                          const isSingleCandidateInGroupPeer =
-                                              highlightInferableCandidates &&
-                                              candidate.isSingleCandidateForGroupInBoxPeer;
-
-                                          const candidateImpact = useCandidatesInferring
+                                          const candidateImpact = automaticInferring
                                               ? candidate.impact
                                               : candidate.impactWithoutInferring;
 
@@ -189,12 +181,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           ? ' affected-candidate'
                                                           : ''
                                                   }${
-                                                      isSingleCandidateInBoxPeer
-                                                          ? ' single-candidate-for-box-in-box-peer'
+                                                      highlightInferableCandidates &&
+                                                      candidate.isDiscardedByBoxSingleCandidateInPeerBox
+                                                          ? ' discarded-by-box-single-candidate-in-peer-box'
                                                           : ''
                                                   }${
-                                                      isSingleCandidateInGroupPeer
-                                                          ? ' single-candidate-for-group-in-box-peer'
+                                                      highlightInferableCandidates &&
+                                                      candidate.isDiscardedByGroupSingleCandidateInSameBox
+                                                          ? ' discarded-by-group-single-candidate-in-same-box'
                                                           : ''
                                                   }`}
                                                   onClick={candidateClickHandler}
@@ -253,19 +247,18 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={useCandidatesInferringHandler}
-                                checked={useCandidatesInferring}
-                            />{' '}
-                            Automatically infer candidates
-                        </p>
-
-                        <p>
-                            <input
-                                type="checkbox"
                                 onClick={highlightInferableCandidatesHandler}
                                 checked={highlightInferableCandidates}
                             />{' '}
                             Highlight inferable candidates
+                        </p>
+                        <p>
+                            <input
+                                type="checkbox"
+                                onClick={automaticInferringHandler}
+                                checked={automaticInferring}
+                            />{' '}
+                            Automatically infer candidates
                         </p>
                     </div>
                     <div>

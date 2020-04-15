@@ -25,8 +25,8 @@ $candidateSize: 25px;
                 background-color: #efefef;
             }
 
-            &.single-candidate-for-box-in-box-peer,
-            &.single-candidate-for-group-in-box-peer {
+            &.discarded-by-box-single-candidate-in-peer-box,
+            &.discarded-by-group-single-candidate-in-same-box {
                 background-color: #f6b2b2;
             }
 
@@ -57,12 +57,8 @@ $candidateSize: 25px;
         &.inferable-box {
             background-color: lightgreen;
 
-            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate):not(.single-candidate-for-box-in-box-peer):not(.single-candidate-for-group-in-box-peer) {
+            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate):not(.discarded-by-box-single-candidate-in-peer-box):not(.discarded-by-group-single-candidate-in-same-box) {
                 background-color: lightgreen;
-            }
-
-            .sudoku-candidate.invalid-candidate {
-                background-color: #81d681;
             }
         }
 

@@ -14,7 +14,7 @@ export const arePeerBoxes = (a: Box, b: Box) => {
 
 export const discardInferableCandidates = (boxes: Box[], groups: SudokuGroups) => {
     for (;;) {
-        // TODO Discard candidates recursively
+        // TODO Is this recursion actually working?
 
         for (;;) {
             let nonMarkedSingleCandidateBoxes = getNonMarkedSingleCandidateBoxes(boxes);
@@ -45,7 +45,7 @@ export const getBoxGroups = (sudokuGroups: SudokuGroups, box: Box): BoxGroups =>
 
 export const getBoxInferredNumber = (box: Box) =>
     box.candidates.find(
-        (candidate) => candidate.isSingleCandidateForBox || candidate.isSingleCandidateForGroup
+        (candidate) => candidate.isBoxSingleCandidate || candidate.isGroupSingleCandidate
     )?.number;
 
 export const getBoxPeers = (sudokuGroups: SudokuGroups, box: Box): Box[] => {
@@ -71,10 +71,10 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                         (_z, candidateIndex): Candidate => ({
                             impact: initialImpact,
                             impactWithoutInferring: initialImpact,
-                            isSingleCandidateForBox: false,
-                            isSingleCandidateForBoxInBoxPeer: false,
-                            isSingleCandidateForGroup: false,
-                            isSingleCandidateForGroupInBoxPeer: false,
+                            isBoxSingleCandidate: false,
+                            isDiscardedByBoxSingleCandidateInPeerBox: false,
+                            isDiscardedByGroupSingleCandidateInSameBox: false,
+                            isGroupSingleCandidate: false,
                             isValid: true,
                             number: candidateIndex + 1
                         })
@@ -134,7 +134,8 @@ const getNonMarkedSingleCandidateBoxes = (boxes: Box[]) => {
         (box) =>
             !box.isLocked &&
             box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
-            box.candidates.filter((candidate) => candidate.isSingleCandidateForBox).length === 0
+            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
+        // TODO This will cause groupSingleCandidate boxes to be marked as boxSingleCandidate
     );
 };
 
@@ -170,9 +171,13 @@ export const inferByGroup = (groups: Dictionary<Group>) => {
             });
 
         // TODO If two numbers fight for the same two boxes (i.e. no other boxes are valid for those numbers), remove other numbers for that boxes
-        // Object.keys(boxesPerNumber)
+        // const numbersWithTwoBoxesOnly = Object.keys(boxesPerNumber)
         //     .map((boxesKey) => parseInt(boxesKey))
-        //     .filter((boxesKey) => boxesPerNumber[boxesKey].length === 2);
+        //     .filter((boxesKey) => boxesPerNumber[boxesKey].length === 2)
+        //     .reduce(
+        //         (reduced, boxesKey) => ({ ...reduced, [boxesKey]: boxesPerNumber[boxesKey] }),
+        //         {}
+        //     );
 
         // TODO If two boxes have only the same two numbers, remove those numbers from other boxes
 
@@ -195,14 +200,10 @@ export const isBoxInInvalidGroup = (sudoku: Sudoku, box: Box) => {
     return isInvalidColumn || isInvalidRegion || isInvalidRow;
 };
 
-export const isBoxWithGroupSingleCandidate = (box: Box) =>
-    box.candidates.find((candidate) => candidate.isSingleCandidateForGroup);
-
-export const isBoxWithSingleCandidate = (box: Box) =>
-    box.candidates.find((candidate) => candidate.isSingleCandidateForBox);
-
 export const isInferableBox = (box: Box) =>
-    !box.isLocked && (isBoxWithSingleCandidate(box) || isBoxWithGroupSingleCandidate(box));
+    !box.isLocked &&
+    (box.candidates.find((candidate) => candidate.isGroupSingleCandidate) ||
+        box.candidates.find((candidate) => candidate.isBoxSingleCandidate));
 
 export const isValidBox = (box: Box, useCandidateInferring = true) =>
     box.candidates.find((candidate) => isValidCandidate(candidate, useCandidateInferring)) !==
@@ -211,8 +212,8 @@ export const isValidBox = (box: Box, useCandidateInferring = true) =>
 export const isValidCandidate = (candidate: Candidate, useCandidateInferring = true) =>
     candidate.isValid &&
     (!useCandidateInferring ||
-        (!candidate.isSingleCandidateForBoxInBoxPeer &&
-            !candidate.isSingleCandidateForGroupInBoxPeer));
+        (!candidate.isDiscardedByBoxSingleCandidateInPeerBox &&
+            !candidate.isDiscardedByGroupSingleCandidateInSameBox));
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
     const nextBoxes = sudoku.boxes.map(
@@ -223,10 +224,10 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                         (candidate): Candidate => ({
                             impact: -1,
                             impactWithoutInferring: -1,
-                            isSingleCandidateForBox: true,
-                            isSingleCandidateForBoxInBoxPeer: false,
-                            isSingleCandidateForGroup: true,
-                            isSingleCandidateForGroupInBoxPeer: false,
+                            isBoxSingleCandidate: true,
+                            isDiscardedByBoxSingleCandidateInPeerBox: false,
+                            isDiscardedByGroupSingleCandidateInSameBox: false,
+                            isGroupSingleCandidate: true,
                             isValid: candidate.number === selectedNumber,
                             number: candidate.number
                         })
@@ -243,12 +244,12 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                 const isPeerBox = arePeerBoxes(box, selectedBox);
                 const nextCandidates = box.candidates.map(
                     (candidate): Candidate => ({
-                        impact: -2, // Invalidate the value. Will be computed below
-                        impactWithoutInferring: -2, // Invalidate the value. Will be computed below
-                        isSingleCandidateForBox: false, // Invalidate the value. Will be computed below
-                        isSingleCandidateForBoxInBoxPeer: false, // Invalidate the value. Will be computed below
-                        isSingleCandidateForGroup: false, // Invalidate the value. Will be computed below
-                        isSingleCandidateForGroupInBoxPeer: false, // Invalidate the value. Will be computed below
+                        impact: -2,
+                        impactWithoutInferring: -2,
+                        isBoxSingleCandidate: false,
+                        isDiscardedByBoxSingleCandidateInPeerBox: false,
+                        isDiscardedByGroupSingleCandidateInSameBox: false,
+                        isGroupSingleCandidate: false,
                         isValid:
                             candidate.isValid &&
                             (!isPeerBox || candidate.number !== selectedNumber),
@@ -261,7 +262,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                     column: box.column,
                     isLocked: false,
                     peerBoxes: [], // Some peer boxes might not exist here yet
-                    maximumImpact: -2, // Invalidate the value. Will be computed below
+                    maximumImpact: -2,
                     region: box.region,
                     row: box.row
                 };
@@ -305,11 +306,13 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
 
 export const setBoxSingleCandidate = (box: Box) => {
     const singleCandidateIndex = box.candidates.findIndex((candidate) => candidate.isValid);
-    box.candidates[singleCandidateIndex].isSingleCandidateForBox = true;
+    box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
     box.peerBoxes
         .filter((peerBox) => !peerBox.isLocked)
         .forEach((peerBox) => {
-            peerBox.candidates[singleCandidateIndex].isSingleCandidateForBoxInBoxPeer = true;
+            peerBox.candidates[
+                singleCandidateIndex
+            ].isDiscardedByBoxSingleCandidateInPeerBox = true;
             // Peer box might now have a single valid candidate; instead of processing it here
             // it will be done in discardInferableCandidates
         });
@@ -332,10 +335,15 @@ export const setCandidateImpact = (box: Box, candidateIndex: number) => {
 
 export const setGroupSingleCandidate = (box: Box, number: number) => {
     const candidateIndex = box.candidates.findIndex((candidate) => candidate.number === number);
-    box.candidates[candidateIndex].isSingleCandidateForGroup = true;
-    box.peerBoxes.forEach((peerBox) => {
-        peerBox.candidates[candidateIndex].isSingleCandidateForGroupInBoxPeer = true;
-        // Peer box might now have a single valid candidate; instead of processing it here
-        // it will be done in discardInferableCandidates
+    box.candidates.forEach((candidate, currentCandidateIndex) => {
+        if (isValidCandidate(candidate)) {
+            if (currentCandidateIndex === candidateIndex) {
+                box.candidates[currentCandidateIndex].isGroupSingleCandidate = true;
+            } else {
+                box.candidates[
+                    currentCandidateIndex
+                ].isDiscardedByGroupSingleCandidateInSameBox = true;
+            }
+        }
     });
 };
