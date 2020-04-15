@@ -152,11 +152,21 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               props.sudoku.maximumImpact === candidate.impact;
 
                                           const candidateClickHandler = () => {
-                                              if (!isInvalidCandidate) {
+                                              if (
+                                                  !isInvalidCandidate &&
+                                                  (selectedBoxNumber === undefined ||
+                                                      selectedBoxNumber.box !== box)
+                                              ) {
                                                   setSelectedBoxNumber({
                                                       box,
                                                       number: candidate.number
                                                   });
+                                              } else if (
+                                                  !isInvalidCandidate &&
+                                                  selectedBoxNumber !== undefined &&
+                                                  selectedBoxNumber.box === box
+                                              ) {
+                                                  lockSelectedBoxHandler();
                                               }
                                           };
 
