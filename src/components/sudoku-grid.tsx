@@ -125,11 +125,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                                           const isSingleCandidateInBoxPeer =
                                               highlightInferableCandidates &&
-                                              candidate.isSingleCandidateInBoxPeer;
+                                              candidate.isSingleCandidateForBoxInBoxPeer;
 
                                           const isSingleCandidateInGroupPeer =
                                               highlightInferableCandidates &&
-                                              candidate.isSingleCandidateInGroupPeer;
+                                              candidate.isSingleCandidateForGroupInBoxPeer;
 
                                           const candidateImpact = useCandidatesInferring
                                               ? candidate.impact
@@ -190,7 +190,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           : ''
                                                   }${
                                                       isSingleCandidateInBoxPeer
-                                                          ? ' single-candidate-in-box-peer'
+                                                          ? ' single-candidate-for-box-in-box-peer'
                                                           : ''
                                                   }${
                                                       isSingleCandidateInGroupPeer

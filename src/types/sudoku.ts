@@ -18,12 +18,11 @@ export interface BoxGroups {
 export interface Candidate {
     impact: number;
     impactWithoutInferring: number;
-    // TODO => Consider inferring loop iteration on the isSingleCandidateInBox?
-    isSingleCandidateInBox: boolean;
-    isSingleCandidateInBoxPeer: boolean;
-    // TODO Rename to isSingleCandidateForGroupInBox, isSingleCandidateForGroupInBoxPeer
-    isSingleCandidateInGroup: boolean;
-    isSingleCandidateInGroupPeer: boolean;
+    // TODO => Consider reflecting inferring iteration on the isSingleCandidateInBox?
+    isSingleCandidateForBox: boolean;
+    isSingleCandidateForBoxInBoxPeer: boolean;
+    isSingleCandidateForGroup: boolean;
+    isSingleCandidateForGroupInBoxPeer: boolean;
     isValid: boolean;
     number: number;
 }

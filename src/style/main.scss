@@ -25,7 +25,7 @@ $candidateSize: 25px;
                 background-color: #efefef;
             }
 
-            &.single-candidate-in-box-peer,
+            &.single-candidate-for-box-in-box-peer,
             &.single-candidate-for-group-in-box-peer {
                 background-color: #f6b2b2;
             }
@@ -57,7 +57,7 @@ $candidateSize: 25px;
         &.inferable-box {
             background-color: lightgreen;
 
-            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate):not(.single-candidate-in-box-peer):not(.single-candidate-for-group-in-box-peer) {
+            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate):not(.single-candidate-for-box-in-box-peer):not(.single-candidate-for-group-in-box-peer) {
                 background-color: lightgreen;
             }
 
