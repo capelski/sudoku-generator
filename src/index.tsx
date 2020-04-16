@@ -36,12 +36,18 @@ const App = () => {
         setSudokuIndex(Math.max(sudokuIndex - 1, 0));
     };
 
+    const setRegionSize = (regionSize: number) => {
+        setSudokuIndex(0);
+        setSudokuList([getEmptySudoku(regionSize)]);
+    };
+
     return (
         <SudokuGrid
             lockBox={lockBoxWrapper}
             locksNumber={sudokuIndex}
             nextSudoku={nextSudoku}
             previousSudoku={previousSudoku}
+            setRegionSize={setRegionSize}
             sudoku={sudokuList[sudokuIndex]}
         />
     );
