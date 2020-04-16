@@ -26,7 +26,8 @@ $candidateSize: 25px;
             }
 
             &.discarded-by-box-single-candidate-in-peer-box,
-            &.discarded-by-group-single-candidate-in-same-box {
+            &.discarded-by-group-single-candidate-in-same-box,
+            &.discarded-by-boxes-numbers-group-restriction {
                 background-color: #f6b2b2;
             }
 

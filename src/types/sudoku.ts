@@ -9,6 +9,11 @@ export interface Box {
     row: number;
 }
 
+export interface BoxesNumbersGroupRestriction {
+    numbers: number[];
+    boxes: Box[];
+}
+
 export interface BoxGroups {
     column: Group;
     region: Group;
@@ -19,6 +24,7 @@ export interface Candidate {
     impact: number;
     impactWithoutInferring: number;
     isBoxSingleCandidate: boolean;
+    isDiscardedByBoxesNumbersGroupRestriction: boolean;
     isDiscardedByBoxSingleCandidateInPeerBox: boolean;
     isDiscardedByGroupSingleCandidateInSameBox: boolean;
     isGroupSingleCandidate: boolean;
@@ -26,12 +32,20 @@ export interface Candidate {
     number: number;
 }
 
-export type Dictionary<T> = { [key: number]: T };
-
 export interface Group {
     isValid: boolean;
     boxes: Box[];
 }
+
+export interface NumberAvailableBoxes {
+    boxes: Box[];
+    boxesCoordinates: string;
+}
+
+export type NumericDictionary<T> = { [key: number]: T };
+
+export type StringDictionary<T> = { [key: string]: T };
+
 export interface Sudoku {
     boxes: Box[];
     groups: SudokuGroups;
@@ -41,7 +55,7 @@ export interface Sudoku {
 }
 
 export interface SudokuGroups {
-    columns: Dictionary<Group>;
-    regions: Dictionary<Group>;
-    rows: Dictionary<Group>;
+    columns: NumericDictionary<Group>;
+    regions: NumericDictionary<Group>;
+    rows: NumericDictionary<Group>;
 }

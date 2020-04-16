@@ -1,9 +1,12 @@
 import {
     Box,
+    BoxesNumbersGroupRestriction,
     BoxGroups,
     Candidate,
-    Dictionary,
     Group,
+    NumberAvailableBoxes,
+    NumericDictionary,
+    StringDictionary,
     Sudoku,
     SudokuGroups
 } from '../types/sudoku';
@@ -19,6 +22,16 @@ export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
             box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
             box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
     );
+
+const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
+    box.candidates
+        .filter(
+            (candidate) => isValidCandidate(candidate) && numbers.indexOf(candidate.number) === -1
+        )
+        .forEach((candidate) => {
+            candidate.isDiscardedByBoxesNumbersGroupRestriction = true;
+        });
+};
 
 export const discardInferableCandidates = (boxes: Box[], groups: SudokuGroups) => {
     for (;;) {
@@ -80,6 +93,7 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                             impact: initialImpact,
                             impactWithoutInferring: initialImpact,
                             isBoxSingleCandidate: false,
+                            isDiscardedByBoxesNumbersGroupRestriction: false,
                             isDiscardedByBoxSingleCandidateInPeerBox: false,
                             isDiscardedByGroupSingleCandidateInSameBox: false,
                             isGroupSingleCandidate: false,
@@ -137,54 +151,71 @@ export const getGroups = (boxes: Box[]): SudokuGroups =>
         { columns: {}, regions: {}, rows: {} }
     );
 
-export const getNumbersAvailableBoxes = (boxes: Box[]): Dictionary<Box[]> => {
-    const boxesPerNumber: Dictionary<Box[]> = {};
-    boxes.forEach((box) => {
-        box.candidates.forEach((candidate) => {
-            boxesPerNumber[candidate.number] = boxesPerNumber[candidate.number] || [];
-            if (isValidCandidate(candidate)) {
-                boxesPerNumber[candidate.number].push(box);
-            }
+export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<NumberAvailableBoxes> => {
+    const numbersAvailableBoxes: NumericDictionary<NumberAvailableBoxes> = {};
+    boxes
+        .filter((box) => !box.isLocked)
+        .forEach((box) => {
+            box.candidates
+                .filter((candidate) => isValidCandidate(candidate))
+                .forEach((candidate) => {
+                    numbersAvailableBoxes[candidate.number] = numbersAvailableBoxes[
+                        candidate.number
+                    ] || {
+                        boxes: []
+                    };
+                    numbersAvailableBoxes[candidate.number].boxes.push(box);
+                });
         });
+    Object.values(numbersAvailableBoxes).forEach((numberAvailableBoxes) => {
+        numberAvailableBoxes.boxesCoordinates = numberAvailableBoxes.boxes
+            .map((box) => box.row + '-' + box.column)
+            .join();
     });
-    return boxesPerNumber;
+    return numbersAvailableBoxes;
 };
 
 export const getRandomElement = <T>(array: T[]) =>
     array[Math.round(Math.random() * (array.length - 1))];
 
-export const inferByGroup = (groups: Dictionary<Group>) => {
+export const inferByGroup = (groups: NumericDictionary<Group>) => {
     Object.values(groups).forEach((group) => {
-        const boxesPerNumber = getNumbersAvailableBoxes(group.boxes);
+        const numbersAvailableBoxes = getNumbersAvailableBoxes(group.boxes);
 
-        Object.keys(boxesPerNumber)
-            .map((boxesKey) => parseInt(boxesKey))
-            .filter(
-                (boxesKey) =>
-                    boxesPerNumber[boxesKey].length === 1 && !boxesPerNumber[boxesKey][0].isLocked
-            )
-            .forEach((boxesKey) => {
-                const box = boxesPerNumber[boxesKey][0];
-                setGroupSingleCandidate(box, boxesKey);
+        Object.keys(numbersAvailableBoxes)
+            .map((numberKey) => parseInt(numberKey))
+            .filter((number) => numbersAvailableBoxes[number].boxes.length === 1)
+            .forEach((number) => {
+                const box = numbersAvailableBoxes[number].boxes[0];
+                setGroupSingleCandidate(box, number);
             });
 
-        // TODO If two numbers fight for the same two boxes (i.e. no other boxes are valid for those numbers), remove other numbers for that boxes
-        // const numbersWithTwoBoxesOnly = Object.keys(boxesPerNumber)
-        //     .map((boxesKey) => parseInt(boxesKey))
-        //     .filter((boxesKey) => boxesPerNumber[boxesKey].length === 2)
-        //     .reduce(
-        //         (reduced, boxesKey) => ({ ...reduced, [boxesKey]: boxesPerNumber[boxesKey] }),
-        //         {}
-        //     );
+        // If two numbers can only be placed in the same two boxes, discard other candidates for that boxes
+        const boxesWithSameNumbers = Object.keys(numbersAvailableBoxes)
+            .map((numberKey) => parseInt(numberKey))
+            .reduce<StringDictionary<BoxesNumbersGroupRestriction>>((reduced, number) => {
+                const boxesCoordinates = numbersAvailableBoxes[number].boxesCoordinates;
+                reduced[boxesCoordinates] = reduced[boxesCoordinates] || {
+                    numbers: [],
+                    boxes: numbersAvailableBoxes[number].boxes
+                };
+                reduced[boxesCoordinates].numbers.push(number);
+                return reduced;
+            }, {});
+        Object.values(boxesWithSameNumbers)
+            .filter((x) => x.boxes.length === x.numbers.length)
+            .forEach((x) => {
+                x.boxes.forEach((box) => discardByBoxesNumbersGroupRestriction(box, x.numbers));
+            });
 
-        // TODO If two boxes have only the same two numbers, remove those numbers from other boxes
+        // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
         group.isValid =
             // Group is valid if all boxes have at least a potential candidate
             group.boxes.find((box) => !isValidBox(box)) === undefined &&
-            // and if all candidates have at least a potential box
-            Object.values(boxesPerNumber).reduce(
-                (reduced, boxes) => reduced && boxes.length > 0,
+            // and if all numbers have at least a potential box
+            Object.values(numbersAvailableBoxes).reduce(
+                (reduced, numberAvailableBoxes) => reduced && numberAvailableBoxes.boxes.length > 0,
                 true
             );
     });
@@ -211,7 +242,8 @@ export const isValidCandidate = (candidate: Candidate, useCandidateInferring = t
     candidate.isValid &&
     (!useCandidateInferring ||
         (!candidate.isDiscardedByBoxSingleCandidateInPeerBox &&
-            !candidate.isDiscardedByGroupSingleCandidateInSameBox));
+            !candidate.isDiscardedByGroupSingleCandidateInSameBox &&
+            !candidate.isDiscardedByBoxesNumbersGroupRestriction));
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
     const nextBoxes = sudoku.boxes.map(
@@ -223,6 +255,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                             impact: -1,
                             impactWithoutInferring: -1,
                             isBoxSingleCandidate: true,
+                            isDiscardedByBoxesNumbersGroupRestriction: false,
                             isDiscardedByBoxSingleCandidateInPeerBox: false,
                             isDiscardedByGroupSingleCandidateInSameBox: false,
                             isGroupSingleCandidate: true,
@@ -245,6 +278,7 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
                         impact: -2,
                         impactWithoutInferring: -2,
                         isBoxSingleCandidate: false,
+                        isDiscardedByBoxesNumbersGroupRestriction: false,
                         isDiscardedByBoxSingleCandidateInPeerBox: false,
                         isDiscardedByGroupSingleCandidateInSameBox: false,
                         isGroupSingleCandidate: false,
