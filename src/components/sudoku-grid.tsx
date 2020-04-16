@@ -35,6 +35,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
     const [automaticInferring, setAutomaticInferring] = useState(false);
 
+    const automaticInferringHandler = () => {
+        setAutomaticInferring(!automaticInferring);
+    };
+
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
     };
@@ -55,14 +59,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         setHighlightMaximumImpact(!highlightMaximumImpact);
     };
 
-    const lockSelectedBoxHandler = () => {
-        if (selectedBoxNumber !== undefined) {
-            props.lockBox(selectedBoxNumber.box, selectedBoxNumber.number);
-            setSelectedBoxNumber(undefined);
-        }
-    };
-
-    const selectRandomMaximumImpactBox = () => {
+    const lockRandomMaximumImpactBox = () => {
         const maximumImpactBoxes = props.sudoku.boxes.filter((box) =>
             box.candidates.find(
                 (candidate) =>
@@ -76,14 +73,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         );
         const randomCandidate = getRandomElement(maximumImpactCandidates);
 
-        setSelectedBoxNumber({
-            box: randomBox,
-            number: randomCandidate.number
-        });
+        props.lockBox(randomBox, randomCandidate.number);
     };
 
-    const automaticInferringHandler = () => {
-        setAutomaticInferring(!automaticInferring);
+    const lockSelectedBoxHandler = () => {
+        if (selectedBoxNumber !== undefined) {
+            props.lockBox(selectedBoxNumber.box, selectedBoxNumber.number);
+            setSelectedBoxNumber(undefined);
+        }
     };
 
     return (
@@ -144,20 +141,17 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               props.sudoku.maximumImpact === candidate.impact;
 
                                           const candidateClickHandler = () => {
-                                              if (
-                                                  !isInvalidCandidate &&
-                                                  (selectedBoxNumber === undefined ||
-                                                      selectedBoxNumber.box !== box)
-                                              ) {
+                                              const isCandidateSelected =
+                                                  selectedBoxNumber !== undefined &&
+                                                  selectedBoxNumber.box === box &&
+                                                  selectedBoxNumber.number === candidate.number;
+
+                                              if (!isCandidateSelected && !isInvalidCandidate) {
                                                   setSelectedBoxNumber({
                                                       box,
                                                       number: candidate.number
                                                   });
-                                              } else if (
-                                                  !isInvalidCandidate &&
-                                                  selectedBoxNumber !== undefined &&
-                                                  selectedBoxNumber.box === box
-                                              ) {
+                                              } else if (isCandidateSelected) {
                                                   lockSelectedBoxHandler();
                                               }
                                           };
@@ -272,13 +266,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <div>
                         <h3>Actions</h3>
                         <p>
-                            <button type="button" onClick={selectRandomMaximumImpactBox}>
-                                Select random candidate (with maximum impact)
+                            <button type="button" onClick={lockSelectedBoxHandler}>
+                                Lock selected box
                             </button>
                         </p>
                         <p>
-                            <button type="button" onClick={lockSelectedBoxHandler}>
-                                Lock selected box
+                            <button type="button" onClick={lockRandomMaximumImpactBox}>
+                                Lock random candidate (with maximum impact)
                             </button>
                         </p>
                         <p>
