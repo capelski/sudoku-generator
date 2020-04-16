@@ -61,20 +61,28 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     };
 
     const lockRandomMaximumImpactBox = () => {
-        const maximumImpactBoxes = props.sudoku.boxes.filter((box) =>
-            box.candidates.find(
+        const maximumImpactBoxes = props.sudoku.boxes.filter(
+            (box) =>
+                !box.isLocked &&
+                box.candidates.find(
+                    (candidate) =>
+                        isValidCandidate(candidate) &&
+                        candidate.impact === props.sudoku.maximumImpact
+                )
+        );
+
+        if (maximumImpactBoxes.length > 0) {
+            const randomBox = getRandomElement(maximumImpactBoxes);
+
+            const maximumImpactCandidates = randomBox.candidates.filter(
                 (candidate) =>
                     isValidCandidate(candidate) && candidate.impact === props.sudoku.maximumImpact
-            )
-        );
-        const randomBox = getRandomElement(maximumImpactBoxes);
+            );
+            const randomCandidate = getRandomElement(maximumImpactCandidates);
 
-        const maximumImpactCandidates = randomBox.candidates.filter(
-            (candidate) => candidate.impact === props.sudoku.maximumImpact
-        );
-        const randomCandidate = getRandomElement(maximumImpactCandidates);
-
-        props.lockBox(randomBox, randomCandidate.number);
+            console.log('Locking', randomCandidate.number, 'in', randomBox.row, randomBox.column);
+            props.lockBox(randomBox, randomCandidate.number);
+        }
     };
 
     const lockSelectedBoxHandler = () => {
