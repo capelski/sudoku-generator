@@ -15,14 +15,6 @@ export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
 };
 
-export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
-    boxes.filter(
-        (box) =>
-            !box.isLocked &&
-            box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
-            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
-    );
-
 const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
     box.candidates
         .filter(
@@ -151,6 +143,69 @@ export const getGroups = (boxes: Box[]): SudokuGroups =>
         { columns: {}, regions: {}, rows: {} }
     );
 
+export const getNextBoxes = (boxes: Box[], selectedBox: Box, selectedNumber: number) =>
+    boxes.map(
+        (box): Box => {
+            if (box.isLocked) {
+                return box;
+            } else if (box === selectedBox) {
+                return getNextBoxLocked(box, selectedNumber);
+            } else {
+                return getNextBoxOpened(box, selectedBox, selectedNumber);
+            }
+        }
+    );
+
+export const getNextBoxLocked = (currentBox: Box, selectedNumber: number) => ({
+    candidates: currentBox.candidates.map(
+        (candidate): Candidate => ({
+            impact: -1,
+            impactWithoutInferring: -1,
+            isBoxSingleCandidate: true,
+            isDiscardedByBoxesNumbersGroupRestriction: false,
+            isDiscardedByBoxSingleCandidateInPeerBox: false,
+            isDiscardedByGroupSingleCandidateInSameBox: false,
+            isGroupSingleCandidate: true,
+            isValid: candidate.number === selectedNumber,
+            number: candidate.number
+        })
+    ),
+    column: currentBox.column,
+    isLocked: true,
+    maximumImpact: -1,
+    peerBoxes: [], // Some peer boxes might not exist here yet
+    number: selectedNumber,
+    region: currentBox.region,
+    row: currentBox.row
+});
+
+export const getNextBoxOpened = (currentBox: Box, selectedBox: Box, selectedNumber: number) => {
+    const isPeerBox = arePeerBoxes(currentBox, selectedBox);
+    const nextCandidates = currentBox.candidates.map(
+        (candidate): Candidate => ({
+            impact: -2,
+            impactWithoutInferring: -2,
+            isBoxSingleCandidate: false,
+            isDiscardedByBoxesNumbersGroupRestriction: false,
+            isDiscardedByBoxSingleCandidateInPeerBox: false,
+            isDiscardedByGroupSingleCandidateInSameBox: false,
+            isGroupSingleCandidate: false,
+            isValid: candidate.isValid && (!isPeerBox || candidate.number !== selectedNumber),
+            number: candidate.number
+        })
+    );
+
+    return {
+        candidates: nextCandidates,
+        column: currentBox.column,
+        isLocked: false,
+        peerBoxes: [], // Some peer boxes might not exist here yet
+        maximumImpact: -2,
+        region: currentBox.region,
+        row: currentBox.row
+    };
+};
+
 export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<NumberAvailableBoxes> => {
     const numbersAvailableBoxes: NumericDictionary<NumberAvailableBoxes> = {};
     boxes
@@ -177,6 +232,28 @@ export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<Number
 
 export const getRandomElement = <T>(array: T[]) =>
     array[Math.round(Math.random() * (array.length - 1))];
+
+export const getSerializableSudoku = (sudoku: Sudoku): Sudoku => ({
+    ...sudoku,
+    boxes: sudoku.boxes.map((box) => ({
+        ...box,
+        peerBoxes: [] // Would cause cyclic dependencies
+    })),
+    groups: {
+        // Would cause cyclic dependencies
+        columns: {},
+        regions: {},
+        rows: {}
+    }
+});
+
+export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
+    boxes.filter(
+        (box) =>
+            !box.isLocked &&
+            box.candidates.filter((candidate) => isValidCandidate(candidate)).length === 1 &&
+            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
+    );
 
 export const inferByGroup = (groups: NumericDictionary<Group>) => {
     Object.values(groups).forEach((group) => {
@@ -246,64 +323,9 @@ export const isValidCandidate = (candidate: Candidate, useCandidateInferring = t
             !candidate.isDiscardedByBoxesNumbersGroupRestriction));
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
-    const nextBoxes = sudoku.boxes.map(
-        (box): Box => {
-            if (box === selectedBox) {
-                return {
-                    candidates: box.candidates.map(
-                        (candidate): Candidate => ({
-                            impact: -1,
-                            impactWithoutInferring: -1,
-                            isBoxSingleCandidate: true,
-                            isDiscardedByBoxesNumbersGroupRestriction: false,
-                            isDiscardedByBoxSingleCandidateInPeerBox: false,
-                            isDiscardedByGroupSingleCandidateInSameBox: false,
-                            isGroupSingleCandidate: true,
-                            isValid: candidate.number === selectedNumber,
-                            number: candidate.number
-                        })
-                    ),
-                    column: box.column,
-                    isLocked: true,
-                    maximumImpact: -1,
-                    peerBoxes: [], // Some peer boxes might not exist here yet
-                    number: selectedNumber,
-                    region: box.region,
-                    row: box.row
-                };
-            } else if (!box.isLocked) {
-                const isPeerBox = arePeerBoxes(box, selectedBox);
-                const nextCandidates = box.candidates.map(
-                    (candidate): Candidate => ({
-                        impact: -2,
-                        impactWithoutInferring: -2,
-                        isBoxSingleCandidate: false,
-                        isDiscardedByBoxesNumbersGroupRestriction: false,
-                        isDiscardedByBoxSingleCandidateInPeerBox: false,
-                        isDiscardedByGroupSingleCandidateInSameBox: false,
-                        isGroupSingleCandidate: false,
-                        isValid:
-                            candidate.isValid &&
-                            (!isPeerBox || candidate.number !== selectedNumber),
-                        number: candidate.number
-                    })
-                );
-
-                return {
-                    candidates: nextCandidates,
-                    column: box.column,
-                    isLocked: false,
-                    peerBoxes: [], // Some peer boxes might not exist here yet
-                    maximumImpact: -2,
-                    region: box.region,
-                    row: box.row
-                };
-            } else {
-                return box;
-            }
-        }
-    );
+    const nextBoxes = getNextBoxes(sudoku.boxes, selectedBox, selectedNumber);
     const nextGroups = getGroups(nextBoxes);
+
     nextBoxes.forEach((nextBox) => {
         nextBox.peerBoxes = getBoxPeers(nextGroups, nextBox);
     });
@@ -334,6 +356,13 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
         regionSize: sudoku.regionSize,
         size: sudoku.size
     };
+};
+
+export const rehydrateSudoku = (serializedSudoku: Sudoku) => {
+    serializedSudoku.groups = getGroups(serializedSudoku.boxes);
+    serializedSudoku.boxes.forEach((box) => {
+        box.peerBoxes = getBoxPeers(serializedSudoku.groups, box);
+    });
 };
 
 export const setBoxSingleCandidate = (box: Box) => {
