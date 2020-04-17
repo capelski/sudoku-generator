@@ -62,7 +62,7 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
 
         group.isValid =
             group.boxes.find((box) => hasBoxAPotentialCandidate(box)) !== undefined &&
-            // and if all numbers have at least a potential box
+            // TODO Remove: if following would happen, some of the boxes would not have a potential candidate
             Object.values(numbersAvailableBoxes).reduce(
                 (reduced, numberAvailableBoxes) => reduced && numberAvailableBoxes.boxes.length > 0,
                 true
