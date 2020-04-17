@@ -9,7 +9,7 @@ import {
     isDiscardedCandidate
 } from '../logic/sudoku-logic';
 
-interface BoxNumber {
+interface BoxCandidate {
     box: Box;
     number: number;
 }
@@ -32,7 +32,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [displayCandidates, setDisplayCandidates] = useState(true);
     const [highlightDiscardedCandidates, setHighlightDiscardedCandidates] = useState(true);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
-    const [selectedBoxNumber, setSelectedBoxNumber] = useState<BoxNumber | undefined>(undefined);
+    const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
+        undefined
+    );
 
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
@@ -80,10 +82,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         }
     };
 
-    const lockSelectedBoxHandler = () => {
-        if (selectedBoxNumber !== undefined) {
-            props.lockBox(selectedBoxNumber.box, selectedBoxNumber.number);
-            setSelectedBoxNumber(undefined);
+    const lockSelectedCandidateHandler = () => {
+        if (selectedBoxCandidate !== undefined) {
+            props.lockBox(selectedBoxCandidate.box, selectedBoxCandidate.number);
+            setSelectedBoxCandidate(undefined);
         }
     };
 
@@ -94,8 +96,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <div className={`sudoku-grid size-${props.sudoku.size}`}>
                         {props.sudoku.boxes.map((box) => {
                             const isSelectedBoxPeer =
-                                selectedBoxNumber !== undefined &&
-                                arePeerBoxes(selectedBoxNumber.box, box);
+                                selectedBoxCandidate !== undefined &&
+                                arePeerBoxes(selectedBoxCandidate.box, box);
 
                             return (
                                 <div
@@ -125,17 +127,17 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   : candidate.impactWithoutDiscards;
 
                                               const isSelectedCandidate =
-                                                  selectedBoxNumber !== undefined &&
-                                                  selectedBoxNumber.box === box &&
-                                                  selectedBoxNumber.number === candidate.number;
+                                                  selectedBoxCandidate !== undefined &&
+                                                  selectedBoxCandidate.box === box &&
+                                                  selectedBoxCandidate.number === candidate.number;
 
                                               const isAffectedCandidate =
                                                   !box.isLocked &&
                                                   (!highlightDiscardedCandidates ||
                                                       !isCandidateDiscarded) &&
                                                   isSelectedBoxPeer &&
-                                                  selectedBoxNumber!.box !== box &&
-                                                  selectedBoxNumber!.number === candidate.number;
+                                                  selectedBoxCandidate!.box !== box &&
+                                                  selectedBoxCandidate!.number === candidate.number;
 
                                               const isMaximumImpactCandidate =
                                                   highlightMaximumImpact &&
@@ -143,21 +145,22 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                                               const candidateClickHandler = () => {
                                                   const isCandidateSelected =
-                                                      selectedBoxNumber !== undefined &&
-                                                      selectedBoxNumber.box === box &&
-                                                      selectedBoxNumber.number === candidate.number;
+                                                      selectedBoxCandidate !== undefined &&
+                                                      selectedBoxCandidate.box === box &&
+                                                      selectedBoxCandidate.number ===
+                                                          candidate.number;
 
                                                   // TODO Allow locking discarded candidates
                                                   if (
                                                       !isCandidateDiscarded &&
                                                       !isCandidateSelected
                                                   ) {
-                                                      setSelectedBoxNumber({
+                                                      setSelectedBoxCandidate({
                                                           box,
                                                           number: candidate.number
                                                       });
                                                   } else if (!isCandidateDiscarded) {
-                                                      lockSelectedBoxHandler();
+                                                      lockSelectedCandidateHandler();
                                                   }
                                               };
 
@@ -292,8 +295,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <div>
                         <h3>Actions</h3>
                         <p>
-                            <button type="button" onClick={lockSelectedBoxHandler}>
-                                Lock selected box
+                            <button type="button" onClick={lockSelectedCandidateHandler}>
+                                Lock selected candidate
+                            </button>
+                        </p>
+                        <p>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedBoxCandidate(undefined)}
+                            >
+                                Unselect selected candidate
                             </button>
                         </p>
                         <p>
