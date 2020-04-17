@@ -13,19 +13,22 @@ import './style/main.scss';
 
 const initialSudokuList = [getEmptySudoku(3)];
 
-const persistSudokuList = (sudokuList: Sudoku[]) => {
-    const serializableSudokuList = sudokuList.map(getSerializableSudoku);
-    localStorage.setItem('sudokuList', JSON.stringify(serializableSudokuList));
+const persistSudokuStatus = (sudokuList: Sudoku[], sudokuIndex: number) => {
+    const sudokuStatus = {
+        sudokuList: sudokuList.map(getSerializableSudoku),
+        sudokuIndex
+    };
+    localStorage.setItem('sudokuStatus', JSON.stringify(sudokuStatus));
 };
 
-const retrieveSudokuList = (): Sudoku[] | undefined => {
-    let sudokuList: Sudoku[] | undefined;
-    const serializedSudokuList = localStorage.getItem('sudokuList');
-    if (serializedSudokuList) {
-        sudokuList = JSON.parse(serializedSudokuList) as Sudoku[];
-        sudokuList.forEach(rehydrateSudoku);
+const retrieveSudokuStatus = (): { sudokuIndex: number; sudokuList: Sudoku[] } | undefined => {
+    let sudokuStatus: { sudokuIndex: number; sudokuList: Sudoku[] } | undefined;
+    const serializedSudokuStatus = localStorage.getItem('sudokuStatus');
+    if (serializedSudokuStatus) {
+        sudokuStatus = JSON.parse(serializedSudokuStatus);
+        sudokuStatus!.sudokuList.forEach(rehydrateSudoku);
     }
-    return sudokuList;
+    return sudokuStatus;
 };
 
 const App = () => {
@@ -33,10 +36,10 @@ const App = () => {
     const [sudokuList, setSudokuList] = useState<Sudoku[]>(initialSudokuList);
 
     useEffect(() => {
-        const sudokuList = retrieveSudokuList();
-        if (sudokuList) {
-            setSudokuList(sudokuList);
-            setSudokuIndex(sudokuList.length - 1);
+        const sudokuStatus = retrieveSudokuStatus();
+        if (sudokuStatus) {
+            setSudokuList(sudokuStatus.sudokuList);
+            setSudokuIndex(sudokuStatus.sudokuIndex);
         }
     }, []);
 
@@ -50,27 +53,37 @@ const App = () => {
             const currentSudoku = sudokuList[sudokuIndex];
             const nextSudoku = lockBox(currentSudoku, selectedBox, selectedNumber);
             const nextSudokuList = sudokuList.splice(0, sudokuIndex + 1).concat([nextSudoku]);
+            const nextSudokuIndex = sudokuIndex + 1;
+
             setSudokuList(nextSudokuList);
-            persistSudokuList(nextSudokuList);
-            setSudokuIndex(sudokuIndex + 1);
+            setSudokuIndex(nextSudokuIndex);
+
+            persistSudokuStatus(nextSudokuList, nextSudokuIndex);
         } else {
             console.error("Nah! Can't do that");
         }
     };
 
     const nextSudoku = () => {
-        setSudokuIndex(Math.min(sudokuIndex + 1, sudokuList.length - 1));
+        const nextIndex = Math.min(sudokuIndex + 1, sudokuList.length - 1);
+        setSudokuIndex(nextIndex);
+        persistSudokuStatus(sudokuList, nextIndex);
     };
 
     const previousSudoku = () => {
-        setSudokuIndex(Math.max(sudokuIndex - 1, 0));
+        const previousIndex = Math.max(sudokuIndex - 1, 0);
+        setSudokuIndex(previousIndex);
+        persistSudokuStatus(sudokuList, previousIndex);
     };
 
     const setRegionSize = (regionSize: number) => {
         const emptySudokuList = [getEmptySudoku(regionSize)];
+        const initialIndex = 0;
+
         setSudokuList(emptySudokuList);
-        persistSudokuList(emptySudokuList);
-        setSudokuIndex(0);
+        setSudokuIndex(initialIndex);
+
+        persistSudokuStatus(emptySudokuList, initialIndex);
     };
 
     return (
