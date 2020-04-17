@@ -4,7 +4,6 @@ import { SudokuGrid } from './components/sudoku-grid';
 import {
     getEmptySudoku,
     getSerializableSudoku,
-    isDiscardedCandidate,
     lockBox,
     rehydrateSudoku
 } from './logic/sudoku-logic';
@@ -19,7 +18,11 @@ const persistSudokuStatus = (sudokuList: Sudoku[], sudokuIndex: number) => {
         sudokuList: sudokuList.map(getSerializableSudoku),
         sudokuIndex
     };
-    localStorage.setItem('sudokuStatus', JSON.stringify(sudokuStatus));
+    try {
+        localStorage.setItem('sudokuStatus', JSON.stringify(sudokuStatus));
+    } catch {
+        console.error('Cannot persist this sudoku anymore');
+    }
 };
 
 const retrieveSudokuStatus = (): { sudokuIndex: number; sudokuList: Sudoku[] } | undefined => {
@@ -45,14 +48,7 @@ const App = () => {
     }, []);
 
     const lockBoxWrapper = (selectedBox: Box, selectedNumber: number) => {
-        if (
-            // TODO Allow locking discarded candidates
-            !selectedBox.isLocked &&
-            selectedBox.candidates.find(
-                (candidate) =>
-                    candidate.number === selectedNumber && !isDiscardedCandidate(candidate)
-            )
-        ) {
+        if (!selectedBox.isLocked) {
             const currentSudoku = sudokuList[sudokuIndex];
             const nextSudoku = lockBox(currentSudoku, selectedBox, selectedNumber);
             const nextSudokuList = sudokuList.splice(0, sudokuIndex + 1).concat([nextSudoku]);
@@ -63,7 +59,7 @@ const App = () => {
 
             persistSudokuStatus(nextSudokuList, nextSudokuIndex);
         } else {
-            console.error("Nah! Can't do that");
+            console.error('Box is already locked');
         }
     };
 

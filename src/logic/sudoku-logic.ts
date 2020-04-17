@@ -17,10 +17,7 @@ export const arePeerBoxes = (a: Box, b: Box) => {
 
 const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
     box.candidates
-        .filter(
-            (candidate) =>
-                !isDiscardedCandidate(candidate) && numbers.indexOf(candidate.number) === -1
-        )
+        .filter((candidate) => numbers.indexOf(candidate.number) === -1)
         .forEach((candidate) => {
             candidate.isDiscardedByBoxesNumbersGroupRestriction = true;
         });
@@ -30,24 +27,24 @@ export const discardByBoxSingleCandidate = (box: Box) => {
     const singleCandidateIndex = box.candidates.findIndex(
         (candidate) => !isDiscardedCandidate(candidate)
     );
-    console.log(
-        'Setting candidate',
-        box.candidates[singleCandidateIndex].number,
-        'in box',
-        box.row,
-        box.column
-    );
-    box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
-    box.peerBoxes
-        .filter(
-            (peerBox) =>
-                !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[singleCandidateIndex])
-        )
-        .forEach((peerBox) => {
-            peerBox.candidates[
-                singleCandidateIndex
-            ].isDiscardedByBoxSingleCandidateInPeerBox = true;
-        });
+    // This condition is necessary, because box might not have any valid candidate at the time of execution
+    if (singleCandidateIndex > -1) {
+        console.log(
+            'Setting candidate',
+            box.candidates[singleCandidateIndex].number,
+            'in box',
+            box.row,
+            box.column
+        );
+        box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
+        box.peerBoxes
+            .filter((peerBox) => !peerBox.isLocked)
+            .forEach((peerBox) => {
+                peerBox.candidates[
+                    singleCandidateIndex
+                ].isDiscardedByBoxSingleCandidateInPeerBox = true;
+            });
+    }
 };
 
 export const discardByGroup = (groups: NumericDictionary<Group>) => {
@@ -65,7 +62,7 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
         // TODO If a number must be placed in a subset of a row or column for a given region, remove the numbers from the rest of the rows or regions
 
         // If two numbers can only be placed in the same two boxes, discard other candidates for that boxes
-        const boxesWithSameNumbers = Object.keys(numbersAvailableBoxes)
+        const numbersWithSameBoxes = Object.keys(numbersAvailableBoxes)
             .map((numberKey) => parseInt(numberKey))
             .reduce<StringDictionary<BoxesNumbersGroupRestriction>>((reduced, number) => {
                 const boxesCoordinates = numbersAvailableBoxes[number].boxesCoordinates;
@@ -76,7 +73,7 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
                 reduced[boxesCoordinates].numbers.push(number);
                 return reduced;
             }, {});
-        Object.values(boxesWithSameNumbers)
+        Object.values(numbersWithSameBoxes)
             .filter((x) => x.boxes.length === x.numbers.length)
             .forEach((x) => {
                 x.boxes.forEach((box) => discardByBoxesNumbersGroupRestriction(box, x.numbers));
@@ -84,9 +81,11 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
 
         // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
+        // TODO Write the group isValid based on whether all candidates appear once, or have the hability to appear once
         group.isValid =
-            group.boxes.find((box) => hasBoxAPotentialCandidate(box)) !== undefined &&
-            // TODO Remove: if following would happen, some of the boxes would not have a potential candidate
+            group.boxes.find((box) => !hasBoxAPotentialCandidate(box)) === undefined &&
+            Object.values(numbersWithSameBoxes).filter((x) => x.boxes.length < x.numbers.length)
+                .length === 0 &&
             Object.values(numbersAvailableBoxes).reduce(
                 (reduced, numberAvailableBoxes) => reduced && numberAvailableBoxes.boxes.length > 0,
                 true
@@ -96,22 +95,15 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
 
 export const discardByGroupSingleCandidate = (box: Box, number: number) => {
     const candidateIndex = box.candidates.findIndex((candidate) => candidate.number === number);
-    box.candidates.forEach((candidate, currentCandidateIndex) => {
-        if (!isDiscardedCandidate(candidate)) {
-            if (currentCandidateIndex === candidateIndex) {
-                box.candidates[currentCandidateIndex].isGroupSingleCandidate = true;
-            } else {
-                box.candidates[
-                    currentCandidateIndex
-                ].isDiscardedByGroupSingleCandidateInSameBox = true;
-            }
+    box.candidates.forEach((_, currentCandidateIndex) => {
+        if (currentCandidateIndex === candidateIndex) {
+            box.candidates[currentCandidateIndex].isGroupSingleCandidate = true;
+        } else {
+            box.candidates[currentCandidateIndex].isDiscardedByGroupSingleCandidateInSameBox = true;
         }
     });
     box.peerBoxes
-        .filter(
-            (peerBox) =>
-                !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[candidateIndex])
-        )
+        .filter((peerBox) => !peerBox.isLocked)
         .forEach((peerBox) => {
             peerBox.candidates[candidateIndex].isDiscardedByBoxSingleCandidateInPeerBox = true;
         });

@@ -150,17 +150,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                       selectedBoxCandidate.number ===
                                                           candidate.number;
 
-                                                  // TODO Allow locking discarded candidates
-                                                  if (
-                                                      !isCandidateDiscarded &&
-                                                      !isCandidateSelected
-                                                  ) {
+                                                  if (isCandidateSelected) {
+                                                      lockSelectedCandidateHandler();
+                                                  } else {
                                                       setSelectedBoxCandidate({
                                                           box,
                                                           number: candidate.number
                                                       });
-                                                  } else if (!isCandidateDiscarded) {
-                                                      lockSelectedCandidateHandler();
                                                   }
                                               };
 
