@@ -26,7 +26,7 @@ const retrieveSudokuStatus = (): { sudokuIndex: number; sudokuList: Sudoku[] } |
     const serializedSudokuStatus = localStorage.getItem('sudokuStatus');
     if (serializedSudokuStatus) {
         sudokuStatus = JSON.parse(serializedSudokuStatus);
-        sudokuStatus!.sudokuList.forEach(rehydrateSudoku);
+        sudokuStatus!.sudokuList = sudokuStatus!.sudokuList.map(rehydrateSudoku);
     }
     return sudokuStatus;
 };

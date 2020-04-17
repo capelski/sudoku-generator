@@ -143,21 +143,8 @@ export const getGroups = (boxes: Box[]): SudokuGroups =>
         { columns: {}, regions: {}, rows: {} }
     );
 
-export const getNextBoxes = (boxes: Box[], selectedBox: Box, selectedNumber: number) =>
-    boxes.map(
-        (box): Box => {
-            if (box.isLocked) {
-                return box;
-            } else if (box === selectedBox) {
-                return getNextBoxLocked(box, selectedNumber);
-            } else {
-                return getNextBoxOpened(box, selectedBox, selectedNumber);
-            }
-        }
-    );
-
-export const getNextBoxLocked = (currentBox: Box, selectedNumber: number) => ({
-    candidates: currentBox.candidates.map(
+export const getNextLockedBox = (currentBox: Box, selectedNumber: number) => {
+    const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
             impact: -1,
             impactWithoutInferring: -1,
@@ -169,17 +156,21 @@ export const getNextBoxLocked = (currentBox: Box, selectedNumber: number) => ({
             isValid: candidate.number === selectedNumber,
             number: candidate.number
         })
-    ),
-    column: currentBox.column,
-    isLocked: true,
-    maximumImpact: -1,
-    peerBoxes: [], // Some peer boxes might not exist here yet
-    number: selectedNumber,
-    region: currentBox.region,
-    row: currentBox.row
-});
+    );
 
-export const getNextBoxOpened = (currentBox: Box, selectedBox: Box, selectedNumber: number) => {
+    return {
+        candidates: nextCandidates,
+        column: currentBox.column,
+        isLocked: true,
+        maximumImpact: -1,
+        peerBoxes: [], // Some peer boxes might not exist here yet
+        number: selectedNumber,
+        region: currentBox.region,
+        row: currentBox.row
+    };
+};
+
+export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber: number) => {
     const isPeerBox = arePeerBoxes(currentBox, selectedBox);
     const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
@@ -255,6 +246,41 @@ export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
             box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
     );
 
+export const getUpdatedSudoku = (sudoku: Sudoku, nextBoxes: Box[]): Sudoku => {
+    const nextGroup = getGroups(nextBoxes);
+
+    nextBoxes.forEach((nextBox) => {
+        nextBox.peerBoxes = getBoxPeers(nextGroup, nextBox);
+    });
+
+    discardInferableCandidates(nextBoxes, nextGroup);
+
+    // Update candidates impact after discarding candidates based on inferring
+    nextBoxes.forEach((nextBox) => {
+        nextBox.candidates.forEach((_candidate, candidateIndex) => {
+            setCandidateImpact(nextBox, candidateIndex);
+        });
+
+        nextBox.maximumImpact = nextBox.candidates.reduce(
+            (reduced, candidate) => Math.max(reduced, candidate.impact),
+            0
+        );
+    });
+
+    const sudokuMaximumImpact = nextBoxes.reduce(
+        (reduced, box) => Math.max(reduced, box.maximumImpact),
+        0
+    );
+
+    return {
+        boxes: nextBoxes,
+        groups: nextGroup,
+        maximumImpact: sudokuMaximumImpact,
+        regionSize: sudoku.regionSize,
+        size: sudoku.size
+    };
+};
+
 export const inferByGroup = (groups: NumericDictionary<Group>) => {
     Object.values(groups).forEach((group) => {
         const numbersAvailableBoxes = getNumbersAvailableBoxes(group.boxes);
@@ -323,47 +349,22 @@ export const isValidCandidate = (candidate: Candidate, useCandidateInferring = t
             !candidate.isDiscardedByBoxesNumbersGroupRestriction));
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
-    const nextBoxes = getNextBoxes(sudoku.boxes, selectedBox, selectedNumber);
-    const nextGroups = getGroups(nextBoxes);
-
-    nextBoxes.forEach((nextBox) => {
-        nextBox.peerBoxes = getBoxPeers(nextGroups, nextBox);
-    });
-
-    discardInferableCandidates(nextBoxes, nextGroups);
-
-    // Update candidates impact after discarding candidates based on inferring
-    nextBoxes.forEach((nextBox) => {
-        nextBox.candidates.forEach((_candidate, candidateIndex) => {
-            setCandidateImpact(nextBox, candidateIndex);
-        });
-
-        nextBox.maximumImpact = nextBox.candidates.reduce(
-            (reduced, candidate) => Math.max(reduced, candidate.impact),
-            0
-        );
-    });
-
-    const sudokuMaximumImpact = nextBoxes.reduce(
-        (reduced, nextBox) => Math.max(reduced, nextBox.maximumImpact),
-        0
+    const boxesAfterLock = sudoku.boxes.map(
+        (box): Box => {
+            if (box.isLocked) {
+                return box;
+            } else if (box === selectedBox) {
+                return getNextLockedBox(box, selectedNumber);
+            } else {
+                return getNextOpenBox(box, selectedBox, selectedNumber);
+            }
+        }
     );
-
-    return {
-        boxes: nextBoxes,
-        groups: nextGroups,
-        maximumImpact: sudokuMaximumImpact,
-        regionSize: sudoku.regionSize,
-        size: sudoku.size
-    };
+    return getUpdatedSudoku(sudoku, boxesAfterLock);
 };
 
-export const rehydrateSudoku = (serializedSudoku: Sudoku) => {
-    serializedSudoku.groups = getGroups(serializedSudoku.boxes);
-    serializedSudoku.boxes.forEach((box) => {
-        box.peerBoxes = getBoxPeers(serializedSudoku.groups, box);
-    });
-};
+export const rehydrateSudoku = (serializedSudoku: Sudoku): Sudoku =>
+    getUpdatedSudoku(serializedSudoku, serializedSudoku.boxes);
 
 export const setBoxSingleCandidate = (box: Box) => {
     const singleCandidateIndex = box.candidates.findIndex((candidate) =>
