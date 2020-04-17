@@ -146,7 +146,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   selectedBoxNumber!.number === candidate.number;
 
                                               const isMaximumImpactCandidate =
-                                                  candidatesDisplayMode === 'impact' &&
                                                   highlightMaximumImpact &&
                                                   props.sudoku.maximumImpact === candidate.impact;
 
