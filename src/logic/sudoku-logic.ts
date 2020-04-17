@@ -26,6 +26,30 @@ const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
         });
 };
 
+export const discardByBoxSingleCandidate = (box: Box) => {
+    const singleCandidateIndex = box.candidates.findIndex(
+        (candidate) => !isDiscardedCandidate(candidate)
+    );
+    console.log(
+        'Setting candidate',
+        box.candidates[singleCandidateIndex].number,
+        'in box',
+        box.row,
+        box.column
+    );
+    box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
+    box.peerBoxes
+        .filter(
+            (peerBox) =>
+                !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[singleCandidateIndex])
+        )
+        .forEach((peerBox) => {
+            peerBox.candidates[
+                singleCandidateIndex
+            ].isDiscardedByBoxSingleCandidateInPeerBox = true;
+        });
+};
+
 export const discardByGroup = (groups: NumericDictionary<Group>) => {
     Object.values(groups).forEach((group) => {
         const numbersAvailableBoxes = getNumbersAvailableBoxes(group.boxes);
@@ -35,7 +59,7 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
             .filter((number) => numbersAvailableBoxes[number].boxes.length === 1)
             .forEach((number) => {
                 const box = numbersAvailableBoxes[number].boxes[0];
-                setGroupSingleCandidate(box, number);
+                discardByGroupSingleCandidate(box, number);
             });
 
         // TODO If a number must be placed in a subset of a row or column for a given region, remove the numbers from the rest of the rows or regions
@@ -70,6 +94,29 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
     });
 };
 
+export const discardByGroupSingleCandidate = (box: Box, number: number) => {
+    const candidateIndex = box.candidates.findIndex((candidate) => candidate.number === number);
+    box.candidates.forEach((candidate, currentCandidateIndex) => {
+        if (!isDiscardedCandidate(candidate)) {
+            if (currentCandidateIndex === candidateIndex) {
+                box.candidates[currentCandidateIndex].isGroupSingleCandidate = true;
+            } else {
+                box.candidates[
+                    currentCandidateIndex
+                ].isDiscardedByGroupSingleCandidateInSameBox = true;
+            }
+        }
+    });
+    box.peerBoxes
+        .filter(
+            (peerBox) =>
+                !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[candidateIndex])
+        )
+        .forEach((peerBox) => {
+            peerBox.candidates[candidateIndex].isDiscardedByBoxSingleCandidateInPeerBox = true;
+        });
+};
+
 export const discardCandidates = (boxes: Box[], groups: SudokuGroups) => {
     for (;;) {
         for (;;) {
@@ -77,7 +124,7 @@ export const discardCandidates = (boxes: Box[], groups: SudokuGroups) => {
             if (unnoticedSingleCandidateBoxes.length === 0) {
                 break;
             }
-            unnoticedSingleCandidateBoxes.forEach(setBoxSingleCandidate);
+            unnoticedSingleCandidateBoxes.forEach(discardByBoxSingleCandidate);
             console.log('End of single candidates discard round');
         }
 
@@ -359,30 +406,6 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
 export const rehydrateSudoku = (serializedSudoku: Sudoku): Sudoku =>
     getUpdatedSudoku(serializedSudoku, serializedSudoku.boxes);
 
-export const setBoxSingleCandidate = (box: Box) => {
-    const singleCandidateIndex = box.candidates.findIndex(
-        (candidate) => !isDiscardedCandidate(candidate)
-    );
-    console.log(
-        'Setting candidate',
-        box.candidates[singleCandidateIndex].number,
-        'in box',
-        box.row,
-        box.column
-    );
-    box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
-    box.peerBoxes
-        .filter(
-            (peerBox) =>
-                !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[singleCandidateIndex])
-        )
-        .forEach((peerBox) => {
-            peerBox.candidates[
-                singleCandidateIndex
-            ].isDiscardedByBoxSingleCandidateInPeerBox = true;
-        });
-};
-
 export const setCandidateImpact = (box: Box, candidateIndex: number) => {
     const candidate = box.candidates[candidateIndex];
     candidate.impact = isDiscardedCandidate(candidate)
@@ -393,27 +416,4 @@ export const setCandidateImpact = (box: Box, candidateIndex: number) => {
           ).length;
 
     candidate.impactWithoutDiscards = box.peerBoxes.filter((peerBox) => !peerBox.isLocked).length;
-};
-
-export const setGroupSingleCandidate = (box: Box, number: number) => {
-    const candidateIndex = box.candidates.findIndex((candidate) => candidate.number === number);
-    box.candidates.forEach((candidate, currentCandidateIndex) => {
-        if (!isDiscardedCandidate(candidate)) {
-            if (currentCandidateIndex === candidateIndex) {
-                box.candidates[currentCandidateIndex].isGroupSingleCandidate = true;
-            } else {
-                box.candidates[
-                    currentCandidateIndex
-                ].isDiscardedByGroupSingleCandidateInSameBox = true;
-            }
-        }
-    });
-    box.peerBoxes
-        .filter(
-            (peerBox) =>
-                !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[candidateIndex])
-        )
-        .forEach((peerBox) => {
-            peerBox.candidates[candidateIndex].isDiscardedByBoxSingleCandidateInPeerBox = true;
-        });
 };
