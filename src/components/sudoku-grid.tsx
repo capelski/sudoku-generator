@@ -22,7 +22,7 @@ interface GridProps {
     locksNumber: number;
     nextSudoku: () => void;
     previousSudoku: () => void;
-    setRegionSize: (size: number) => void;
+    resetSudoku: (size: number) => void;
     sudoku: Sudoku;
 }
 
@@ -231,7 +231,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <p>
                         <input
                             type="radio"
-                            onClick={() => props.setRegionSize(2)}
+                            onClick={() => props.resetSudoku(2)}
                             checked={props.sudoku.size === 4}
                         />{' '}
                         4x4
@@ -239,7 +239,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <p>
                         <input
                             type="radio"
-                            onClick={() => props.setRegionSize(3)}
+                            onClick={() => props.resetSudoku(3)}
                             checked={props.sudoku.size === 9}
                         />{' '}
                         9x9
@@ -319,6 +319,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <button type="button" onClick={props.nextSudoku}>
                                 Next lock
+                            </button>
+                        </p>
+                        <p>
+                            <button
+                                type="button"
+                                onClick={() => props.resetSudoku(props.sudoku.regionSize)}
+                            >
+                                Clear sudoku
                             </button>
                         </p>
                     </div>

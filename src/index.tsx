@@ -76,7 +76,7 @@ const App = () => {
         persistSudokuStatus(sudokuList, previousIndex);
     };
 
-    const setRegionSize = (regionSize: number) => {
+    const resetSudoku = (regionSize: number) => {
         const emptySudokuList = [getEmptySudoku(regionSize)];
         const initialIndex = 0;
 
@@ -92,7 +92,7 @@ const App = () => {
             locksNumber={sudokuIndex}
             nextSudoku={nextSudoku}
             previousSudoku={previousSudoku}
-            setRegionSize={setRegionSize}
+            resetSudoku={resetSudoku}
             sudoku={sudokuList[sudokuIndex]}
         />
     );
