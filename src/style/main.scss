@@ -20,14 +20,16 @@ $candidateSize: 25px;
             align-items: center;
             cursor: pointer;
 
-            &.invalid-candidate {
-                font-style: italic;
-                background-color: #efefef;
+            &.box-single-candidate,
+            &.group-single-candidate {
+                background-color: lightgreen;
             }
 
+            &.discarded-by-lock,
             &.discarded-by-box-single-candidate-in-peer-box,
             &.discarded-by-group-single-candidate-in-same-box,
             &.discarded-by-boxes-numbers-group-restriction {
+                font-style: italic;
                 background-color: #f6b2b2;
             }
 
@@ -48,33 +50,24 @@ $candidateSize: 25px;
             }
         }
 
-        &.resolved-box {
+        &.locked-box {
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 25px;
         }
 
-        &.inferable-box {
-            background-color: lightgreen;
-
-            .sudoku-candidate.box-single-candidate,
-            .sudoku-candidate.group-single-candidate {
-                background-color: lightgreen;
-            }
-        }
-
         &.inside-invalid-column,
         &.inside-invalid-region,
         &.inside-invalid-row {
-            background-color: lightcoral;
+            background-color: #fbe0e0;
 
-            .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate) {
-                background-color: lightcoral;
-            }
-
-            .sudoku-candidate.invalid-candidate {
-                background-color: #d87373;
+            .sudoku-candidate
+                :not(.discarded-by-lock)
+                :not(.discarded-by-box-single-candidate-in-peer-box)
+                :not(.discarded-by-group-single-candidate-in-same-box)
+                :not(.discarded-by-boxes-numbers-group-restriction) {
+                background-color: #fbe0e0;
             }
         }
     }
@@ -83,11 +76,9 @@ $candidateSize: 25px;
         grid-template-columns: repeat(4, $candidateSize * 2);
 
         .sudoku-box {
-            &.open-box {
-                grid-template-columns: repeat(2, $candidateSize);
-            }
+            grid-template-columns: repeat(2, $candidateSize);
 
-            &.resolved-box {
+            &.locked-box {
                 height: $candidateSize * 2;
             }
 
@@ -123,11 +114,9 @@ $candidateSize: 25px;
         grid-template-columns: repeat(9, $candidateSize * 3);
 
         .sudoku-box {
-            &.open-box {
-                grid-template-columns: repeat(3, $candidateSize);
-            }
+            grid-template-columns: repeat(3, $candidateSize);
 
-            &.resolved-box {
+            &.locked-box {
                 height: $candidateSize * 3;
             }
 

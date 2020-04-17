@@ -4,6 +4,7 @@ import { SudokuGrid } from './components/sudoku-grid';
 import {
     getEmptySudoku,
     getSerializableSudoku,
+    isDiscardedCandidate,
     lockBox,
     rehydrateSudoku
 } from './logic/sudoku-logic';
@@ -45,9 +46,11 @@ const App = () => {
 
     const lockBoxWrapper = (selectedBox: Box, selectedNumber: number) => {
         if (
+            // TODO Allow locking discarded candidates
             !selectedBox.isLocked &&
             selectedBox.candidates.find(
-                (candidate) => candidate.number === selectedNumber && candidate.isValid
+                (candidate) =>
+                    candidate.number === selectedNumber && !isDiscardedCandidate(candidate)
             )
         ) {
             const currentSudoku = sudokuList[sudokuIndex];

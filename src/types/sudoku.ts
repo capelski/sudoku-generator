@@ -22,13 +22,13 @@ export interface BoxGroups {
 
 export interface Candidate {
     impact: number;
-    impactWithoutInferring: number;
+    impactWithoutDiscards: number;
     isBoxSingleCandidate: boolean;
     isDiscardedByBoxesNumbersGroupRestriction: boolean;
     isDiscardedByBoxSingleCandidateInPeerBox: boolean;
     isDiscardedByGroupSingleCandidateInSameBox: boolean;
+    isDiscardedByLock: boolean;
     isGroupSingleCandidate: boolean;
-    isValid: boolean;
     number: number;
 }
 
