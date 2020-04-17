@@ -298,13 +298,13 @@ export const inferByGroup = (groups: NumericDictionary<Group>) => {
     });
 };
 
-export const isBoxInInvalidGroup = (sudoku: Sudoku, box: Box) => {
-    const isInvalidColumn = !sudoku.groups.columns[box.column].isValid;
-    const isInvalidRegion = !sudoku.groups.regions[box.region].isValid;
-    const isInvalidRow = !sudoku.groups.rows[box.row].isValid;
+export const isBoxColumnInvalid = (sudoku: Sudoku, box: Box) =>
+    !sudoku.groups.columns[box.column].isValid;
 
-    return isInvalidColumn || isInvalidRegion || isInvalidRow;
-};
+export const isBoxRegionInvalid = (sudoku: Sudoku, box: Box) =>
+    !sudoku.groups.regions[box.region].isValid;
+
+export const isBoxRowInvalid = (sudoku: Sudoku, box: Box) => !sudoku.groups.rows[box.row].isValid;
 
 export const isInferableBox = (box: Box) =>
     !box.isLocked &&

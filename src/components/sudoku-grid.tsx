@@ -3,10 +3,12 @@ import { Sudoku, Box } from '../types/sudoku';
 import {
     arePeerBoxes,
     getRandomElement,
-    isBoxInInvalidGroup,
+    isBoxColumnInvalid,
+    isBoxRegionInvalid,
+    isBoxRowInvalid,
+    isInferableBox,
     isValidBox,
     isValidCandidate,
-    isInferableBox,
     getBoxInferredNumber
 } from '../logic/sudoku-logic';
 
@@ -111,8 +113,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     className={`sudoku-box ${
                                         isResolvedBox ? 'resolved-box' : 'open-box'
                                     }${
-                                        isBoxInInvalidGroup(props.sudoku, box)
-                                            ? ' inside-invalid-group'
+                                        isBoxColumnInvalid(props.sudoku, box)
+                                            ? ' inside-invalid-column'
+                                            : ''
+                                    }${
+                                        isBoxRegionInvalid(props.sudoku, box)
+                                            ? ' inside-invalid-region'
+                                            : ''
+                                    }${
+                                        isBoxRowInvalid(props.sudoku, box)
+                                            ? ' inside-invalid-row'
                                             : ''
                                     }${isInvalidBox ? ' invalid-box' : ''}${
                                         highlightInferableCandidates && isBoxInferable

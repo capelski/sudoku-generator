@@ -64,7 +64,9 @@ $candidateSize: 25px;
             }
         }
 
-        &.inside-invalid-group {
+        &.inside-invalid-column,
+        &.inside-invalid-region,
+        &.inside-invalid-row {
             background-color: lightcoral;
 
             .sudoku-candidate:not(.affected-candidate):not(.selected-candidate):not(.invalid-candidate) {
