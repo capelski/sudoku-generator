@@ -293,6 +293,8 @@ export const inferByGroup = (groups: NumericDictionary<Group>) => {
                 setGroupSingleCandidate(box, number);
             });
 
+        // TODO If a number must be placed in a subset of a row or column for a given region, remove the numbers from the rest of the rows or regions
+
         // If two numbers can only be placed in the same two boxes, discard other candidates for that boxes
         const boxesWithSameNumbers = Object.keys(numbersAvailableBoxes)
             .map((numberKey) => parseInt(numberKey))
