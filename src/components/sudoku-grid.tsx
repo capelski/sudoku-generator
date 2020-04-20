@@ -74,8 +74,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                             const isLatestLockedBox =
                                 props.sudoku.latestLockedBox &&
-                                props.sudoku.latestLockedBox.column === box.column &&
-                                props.sudoku.latestLockedBox.row === box.row;
+                                props.sudoku.latestLockedBox.id === box.id;
 
                             return (
                                 <div

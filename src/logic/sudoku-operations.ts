@@ -15,8 +15,8 @@ export const getBoxGroups = (sudokuGroups: SudokuGroups, box: Box): BoxGroups =>
 export const getBoxPeers = (sudokuGroups: SudokuGroups, box: Box): Box[] => {
     const boxGroups = getBoxGroups(sudokuGroups, box);
     return boxGroups.column.boxes
-        .filter((peerBox) => peerBox !== box)
-        .concat(boxGroups.row.boxes.filter((peerBox) => peerBox !== box))
+        .filter((peerBox) => peerBox.id !== box.id)
+        .concat(boxGroups.row.boxes.filter((peerBox) => peerBox.id !== box.id))
         .concat(
             boxGroups.region.boxes.filter(
                 (peerBox) => peerBox.column !== box.column && peerBox.row !== box.row
@@ -45,6 +45,7 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                         })
                     ),
                     column: columnIndex,
+                    id: `${rowIndex}-${columnIndex}`,
                     isLocked: false,
                     maximumImpact: initialImpact,
                     peerBoxes: [], // Some peer boxes might not exist here yet

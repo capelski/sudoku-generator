@@ -32,13 +32,6 @@ export const discardByBoxSingleCandidate = (box: Box) => {
     );
     // This condition is necessary, because box might not have any valid candidate at the time of execution
     if (singleCandidateIndex > -1) {
-        console.log(
-            'Setting candidate',
-            box.candidates[singleCandidateIndex].number,
-            'in box',
-            box.row,
-            box.column
-        );
         box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
         box.peerBoxes
             .filter((peerBox) => !peerBox.isLocked)
@@ -135,7 +128,7 @@ export const discardCandidates = (boxes: Box[], groups: SudokuGroups) => {
     }
 };
 
-export const getNextLockedBox = (currentBox: Box, selectedNumber: number) => {
+export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box => {
     const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
             impact: -1,
@@ -153,6 +146,7 @@ export const getNextLockedBox = (currentBox: Box, selectedNumber: number) => {
     return {
         candidates: nextCandidates,
         column: currentBox.column,
+        id: currentBox.id,
         isLocked: true,
         maximumImpact: -1,
         peerBoxes: [], // Some peer boxes might not exist here yet
@@ -162,7 +156,7 @@ export const getNextLockedBox = (currentBox: Box, selectedNumber: number) => {
     };
 };
 
-export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber: number) => {
+export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber: number): Box => {
     const isPeerBox = arePeerBoxes(currentBox, selectedBox);
     const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
@@ -182,6 +176,7 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
     return {
         candidates: nextCandidates,
         column: currentBox.column,
+        id: currentBox.id,
         isLocked: false,
         peerBoxes: [], // Some peer boxes might not exist here yet
         maximumImpact: -2,
@@ -206,7 +201,7 @@ export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<Number
     });
     Object.values(numbersAvailableBoxes).forEach((numberAvailableBoxes) => {
         numberAvailableBoxes.boxesCoordinates = numberAvailableBoxes.boxes
-            .map((box) => box.row + '-' + box.column)
+            .map((box) => box.id)
             .join();
     });
     return numbersAvailableBoxes;
