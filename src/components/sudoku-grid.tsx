@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
+import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
 import {
     getRandomElement,
     isBoxColumnInvalid,
     isBoxRegionInvalid,
     isBoxRowInvalid
-} from '../logic/sudoku-logic';
-import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
+} from '../logic/sudoku-rules';
 
 interface BoxCandidate {
     box: Box;

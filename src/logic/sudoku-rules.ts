@@ -246,7 +246,7 @@ export const getUpdatedSudoku = (
         nextBox.peerBoxes = getBoxPeers(nextGroup, nextBox);
     });
 
-    // discardCandidates(nextBoxes, nextGroup);
+    discardCandidates(nextBoxes, nextGroup);
 
     // Update candidates impact after discarding
     nextBoxes.forEach((nextBox) => {
