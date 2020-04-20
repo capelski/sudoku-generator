@@ -1,14 +1,4 @@
-import {
-    Box,
-    BoxesNumbersGroupRestriction,
-    Candidate,
-    Group,
-    NumberAvailableBoxes,
-    NumericDictionary,
-    StringDictionary,
-    Sudoku,
-    SudokuGroups
-} from '../types/sudoku';
+import { Box, Candidate, Sudoku } from '../types/sudoku';
 import {
     getGroups,
     getBoxPeers,
@@ -18,127 +8,122 @@ import {
 } from './sudoku-operations';
 import { getRandomElement } from './utilities';
 
-const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
-    box.candidates
-        .filter((candidate) => numbers.indexOf(candidate.number) === -1)
-        .forEach((candidate) => {
-            candidate.isDiscardedByBoxesNumbersGroupRestriction = true;
-        });
-};
+// const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
+//     box.candidates
+//         .filter((candidate) => numbers.indexOf(candidate.number) === -1)
+//         .forEach((candidate) => {
+//             candidate.isDiscardedByBoxesNumbersGroupRestriction = true;
+//         });
+// };
 
-export const discardByBoxSingleCandidate = (box: Box) => {
-    const singleCandidateIndex = box.candidates.findIndex(
-        (candidate) => !isCandidateDiscarded(candidate)
-    );
-    // This condition is necessary, because box might not have any valid candidate at the time of execution
-    if (singleCandidateIndex > -1) {
-        box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
-        box.peerBoxes
-            .filter((peerBox) => !peerBox.isLocked)
-            .forEach((peerBox) => {
-                peerBox.candidates[
-                    singleCandidateIndex
-                ].isDiscardedByBoxSingleCandidateInPeerBox = true;
-            });
-    }
-};
+// export const discardByBoxSingleCandidate = (box: Box) => {
+//     const singleCandidateIndex = box.candidates.findIndex(
+//         (candidate) => !isCandidateDiscarded(candidate)
+//     );
+//     // This condition is necessary, because box might not have any valid candidate at the time of execution
+//     if (singleCandidateIndex > -1) {
+//         box.candidates[singleCandidateIndex].isBoxSingleCandidate = true;
+//         box.peerBoxes
+//             .filter((peerBox) => !peerBox.isLocked)
+//             .forEach((peerBox) => {
+//                 peerBox.candidates[
+//                     singleCandidateIndex
+//                 ].isDiscardedByBoxSingleCandidateInPeerBox = true;
+//             });
+//     }
+// };
 
-export const discardByGroup = (groups: NumericDictionary<Group>) => {
-    Object.values(groups).forEach((group) => {
-        const numbersAvailableBoxes = getNumbersAvailableBoxes(group.boxes);
+// export const discardByGroup = (groups: NumericDictionary<Group>) => {
+//     Object.values(groups).forEach((group) => {
+//         const numbersAvailableBoxes = getNumbersAvailableBoxes(group.boxes);
 
-        Object.keys(numbersAvailableBoxes)
-            .map((numberKey) => parseInt(numberKey))
-            .filter((number) => numbersAvailableBoxes[number].boxes.length === 1)
-            .forEach((number) => {
-                const box = numbersAvailableBoxes[number].boxes[0];
-                discardByGroupSingleCandidate(box, number);
-            });
+//         Object.keys(numbersAvailableBoxes)
+//             .map((numberKey) => parseInt(numberKey))
+//             .filter((number) => numbersAvailableBoxes[number].boxes.length === 1)
+//             .forEach((number) => {
+//                 const box = numbersAvailableBoxes[number].boxes[0];
+//                 discardByGroupSingleCandidate(box, number);
+//             });
 
-        // TODO If a number must be placed in a subset of a row or column for a given region, remove the numbers from the rest of the rows or regions
+//         // TODO If a number must be placed in a subset of a row or column for a given region, remove the numbers from the rest of the rows or regions
 
-        // If two numbers can only be placed in the same two boxes, discard other candidates for that boxes
-        const numbersWithSameBoxes = Object.keys(numbersAvailableBoxes)
-            .map((numberKey) => parseInt(numberKey))
-            .reduce<StringDictionary<BoxesNumbersGroupRestriction>>((reduced, number) => {
-                const boxesCoordinates = numbersAvailableBoxes[number].boxesCoordinates;
-                reduced[boxesCoordinates] = reduced[boxesCoordinates] || {
-                    numbers: [],
-                    boxes: numbersAvailableBoxes[number].boxes
-                };
-                reduced[boxesCoordinates].numbers.push(number);
-                return reduced;
-            }, {});
-        Object.values(numbersWithSameBoxes)
-            .filter((x) => x.boxes.length === x.numbers.length)
-            .forEach((x) => {
-                x.boxes.forEach((box) => discardByBoxesNumbersGroupRestriction(box, x.numbers));
-            });
+//         // If two numbers can only be placed in the same two boxes, discard other candidates for that boxes
+//         const numbersWithSameBoxes = Object.keys(numbersAvailableBoxes)
+//             .map((numberKey) => parseInt(numberKey))
+//             .reduce<StringDictionary<BoxesNumbersGroupRestriction>>((reduced, number) => {
+//                 const boxesCoordinates = numbersAvailableBoxes[number].boxesCoordinates;
+//                 reduced[boxesCoordinates] = reduced[boxesCoordinates] || {
+//                     numbers: [],
+//                     boxes: numbersAvailableBoxes[number].boxes
+//                 };
+//                 reduced[boxesCoordinates].numbers.push(number);
+//                 return reduced;
+//             }, {});
+//         Object.values(numbersWithSameBoxes)
+//             .filter((x) => x.boxes.length === x.numbers.length)
+//             .forEach((x) => {
+//                 x.boxes.forEach((box) => discardByBoxesNumbersGroupRestriction(box, x.numbers));
+//             });
 
-        // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
+//         // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
-        // TODO Write the group isValid based on whether all candidates appear once, or have the ability to appear once
-        group.isValid =
-            group.boxes.find((box) => !hasBoxAPotentialCandidate(box)) === undefined &&
-            Object.values(numbersWithSameBoxes).filter((x) => x.boxes.length < x.numbers.length)
-                .length === 0 &&
-            Object.values(numbersAvailableBoxes).reduce(
-                (reduced, numberAvailableBoxes) => reduced && numberAvailableBoxes.boxes.length > 0,
-                true
-            );
-    });
-};
+//         // TODO Write the group isValid based on whether all candidates appear once, or have the ability to appear once
+//         group.isValid =
+//             group.boxes.find((box) => !hasBoxAPotentialCandidate(box)) === undefined &&
+//             Object.values(numbersWithSameBoxes).filter((x) => x.boxes.length < x.numbers.length)
+//                 .length === 0 &&
+//             Object.values(numbersAvailableBoxes).reduce(
+//                 (reduced, numberAvailableBoxes) => reduced && numberAvailableBoxes.boxes.length > 0,
+//                 true
+//             );
+//     });
+// };
 
-export const discardByGroupSingleCandidate = (box: Box, number: number) => {
-    const candidateIndex = box.candidates.findIndex((candidate) => candidate.number === number);
-    box.candidates.forEach((_, currentCandidateIndex) => {
-        if (currentCandidateIndex === candidateIndex) {
-            box.candidates[currentCandidateIndex].isGroupSingleCandidate = true;
-        } else {
-            box.candidates[currentCandidateIndex].isDiscardedByGroupSingleCandidateInSameBox = true;
-        }
-    });
-    box.peerBoxes
-        .filter((peerBox) => !peerBox.isLocked)
-        .forEach((peerBox) => {
-            peerBox.candidates[candidateIndex].isDiscardedByBoxSingleCandidateInPeerBox = true;
-        });
-};
+// export const discardByGroupSingleCandidate = (box: Box, number: number) => {
+//     const candidateIndex = box.candidates.findIndex((candidate) => candidate.number === number);
+//     box.candidates.forEach((_, currentCandidateIndex) => {
+//         if (currentCandidateIndex === candidateIndex) {
+//             box.candidates[currentCandidateIndex].isGroupSingleCandidate = true;
+//         } else {
+//             box.candidates[currentCandidateIndex].isDiscardedByGroupSingleCandidateInSameBox = true;
+//         }
+//     });
+//     box.peerBoxes
+//         .filter((peerBox) => !peerBox.isLocked)
+//         .forEach((peerBox) => {
+//             peerBox.candidates[candidateIndex].isDiscardedByBoxSingleCandidateInPeerBox = true;
+//         });
+// };
 
-export const discardCandidates = (boxes: Box[], groups: SudokuGroups) => {
-    for (;;) {
-        for (;;) {
-            const unnoticedSingleCandidateBoxes = getUnnoticedSingleCandidateBoxes(boxes);
-            if (unnoticedSingleCandidateBoxes.length === 0) {
-                break;
-            }
-            unnoticedSingleCandidateBoxes.forEach(discardByBoxSingleCandidate);
-            console.log('End of single candidates discard round');
-        }
+// export const discardCandidates = (boxes: Box[], groups: SudokuGroups) => {
+//     for (;;) {
+//         for (;;) {
+//             const unnoticedSingleCandidateBoxes = getUnnoticedSingleCandidateBoxes(boxes);
+//             if (unnoticedSingleCandidateBoxes.length === 0) {
+//                 break;
+//             }
+//             unnoticedSingleCandidateBoxes.forEach(discardByBoxSingleCandidate);
+//             console.log('End of single candidates discard round');
+//         }
 
-        discardByGroup(groups.columns);
-        discardByGroup(groups.regions);
-        discardByGroup(groups.rows);
-        console.log('End of group candidates discard round');
+//         discardByGroup(groups.columns);
+//         discardByGroup(groups.regions);
+//         discardByGroup(groups.rows);
+//         console.log('End of group candidates discard round');
 
-        const unnoticedSingleCandidateBoxes = getUnnoticedSingleCandidateBoxes(boxes);
-        if (unnoticedSingleCandidateBoxes.length === 0) {
-            break;
-        }
-    }
-};
+//         const unnoticedSingleCandidateBoxes = getUnnoticedSingleCandidateBoxes(boxes);
+//         if (unnoticedSingleCandidateBoxes.length === 0) {
+//             break;
+//         }
+//     }
+// };
 
 export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box => {
     const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
             impact: -1,
             impactWithoutDiscards: -1,
-            isBoxSingleCandidate: true,
-            isDiscardedByBoxesNumbersGroupRestriction: false,
-            isDiscardedByBoxSingleCandidateInPeerBox: false,
-            isDiscardedByGroupSingleCandidateInSameBox: false,
             isDiscardedByLock: candidate.number !== selectedNumber,
-            isGroupSingleCandidate: true,
             number: candidate.number
         })
     );
@@ -162,13 +147,8 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
         (candidate): Candidate => ({
             impact: -2,
             impactWithoutDiscards: -2,
-            isBoxSingleCandidate: false,
-            isDiscardedByBoxesNumbersGroupRestriction: false,
-            isDiscardedByBoxSingleCandidateInPeerBox: false,
-            isDiscardedByGroupSingleCandidateInSameBox: false,
             isDiscardedByLock:
                 candidate.isDiscardedByLock || (isPeerBox && candidate.number === selectedNumber),
-            isGroupSingleCandidate: false,
             number: candidate.number
         })
     );
@@ -185,49 +165,49 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
     };
 };
 
-export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<NumberAvailableBoxes> => {
-    const numbersAvailableBoxes: NumericDictionary<NumberAvailableBoxes> = {};
-    boxes.forEach((box) => {
-        box.candidates
-            .filter((candidate) => !isCandidateDiscarded(candidate))
-            .forEach((candidate) => {
-                numbersAvailableBoxes[candidate.number] = numbersAvailableBoxes[
-                    candidate.number
-                ] || {
-                    boxes: []
-                };
-                numbersAvailableBoxes[candidate.number].boxes.push(box);
-            });
-    });
-    Object.values(numbersAvailableBoxes).forEach((numberAvailableBoxes) => {
-        numberAvailableBoxes.boxesCoordinates = numberAvailableBoxes.boxes
-            .map((box) => box.id)
-            .join();
-    });
-    return numbersAvailableBoxes;
-};
+// export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<NumberAvailableBoxes> => {
+//     const numbersAvailableBoxes: NumericDictionary<NumberAvailableBoxes> = {};
+//     boxes.forEach((box) => {
+//         box.candidates
+//             .filter((candidate) => !isCandidateDiscarded(candidate))
+//             .forEach((candidate) => {
+//                 numbersAvailableBoxes[candidate.number] = numbersAvailableBoxes[
+//                     candidate.number
+//                 ] || {
+//                     boxes: []
+//                 };
+//                 numbersAvailableBoxes[candidate.number].boxes.push(box);
+//             });
+//     });
+//     Object.values(numbersAvailableBoxes).forEach((numberAvailableBoxes) => {
+//         numberAvailableBoxes.boxesCoordinates = numberAvailableBoxes.boxes
+//             .map((box) => box.id)
+//             .join();
+//     });
+//     return numbersAvailableBoxes;
+// };
 
-export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
-    boxes.filter(
-        (box) =>
-            !box.isLocked &&
-            // TODO They should not always be marked as box single candidate
-            box.candidates.filter((candidate) => !isCandidateDiscarded(candidate)).length === 1 &&
-            box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
-    );
+// export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
+//     boxes.filter(
+//         (box) =>
+//             !box.isLocked &&
+//             // TODO They should not always be marked as box single candidate
+//             box.candidates.filter((candidate) => !isCandidateDiscarded(candidate)).length === 1 &&
+//             box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
+//     );
 
 export const getUpdatedSudoku = (
     sudoku: Sudoku,
     nextBoxes: Box[],
     latestLockedBox?: Box
 ): Sudoku => {
-    const nextGroup = getGroups(nextBoxes);
+    const nextGroups = getGroups(nextBoxes);
 
     nextBoxes.forEach((nextBox) => {
-        nextBox.peerBoxes = getBoxPeers(nextGroup, nextBox);
+        nextBox.peerBoxes = getBoxPeers(nextGroups, nextBox);
     });
 
-    discardCandidates(nextBoxes, nextGroup);
+    // discardCandidates(nextBoxes, nextGroup);
 
     // Update candidates impact after discarding
     nextBoxes.forEach((nextBox) => {
@@ -248,7 +228,7 @@ export const getUpdatedSudoku = (
 
     return {
         boxes: nextBoxes,
-        groups: nextGroup,
+        groups: nextGroups,
         latestLockedBox: latestLockedBox,
         maximumImpact: sudokuMaximumImpact,
         regionSize: sudoku.regionSize,

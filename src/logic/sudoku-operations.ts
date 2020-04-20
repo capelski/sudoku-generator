@@ -35,12 +35,7 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                         (_z, candidateIndex): Candidate => ({
                             impact: initialImpact,
                             impactWithoutDiscards: initialImpact,
-                            isBoxSingleCandidate: false,
-                            isDiscardedByBoxesNumbersGroupRestriction: false,
-                            isDiscardedByBoxSingleCandidateInPeerBox: false,
-                            isDiscardedByGroupSingleCandidateInSameBox: false,
                             isDiscardedByLock: false,
-                            isGroupSingleCandidate: false,
                             number: candidateIndex + 1
                         })
                     ),
@@ -114,11 +109,7 @@ export const getSerializableSudoku = (sudoku: Sudoku): Sudoku => ({
     }
 });
 
-export const isCandidateDiscarded = (candidate: Candidate) =>
-    candidate.isDiscardedByLock ||
-    candidate.isDiscardedByBoxSingleCandidateInPeerBox ||
-    candidate.isDiscardedByGroupSingleCandidateInSameBox ||
-    candidate.isDiscardedByBoxesNumbersGroupRestriction;
+export const isCandidateDiscarded = (candidate: Candidate) => candidate.isDiscardedByLock;
 
 export const updateCandidateImpact = (box: Box, candidateIndex: number) => {
     const candidate = box.candidates[candidateIndex];

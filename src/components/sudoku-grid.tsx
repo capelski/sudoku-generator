@@ -159,33 +159,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               : ''
                                                       }${
                                                           highlightDiscardedCandidates &&
-                                                          candidate.isBoxSingleCandidate
-                                                              ? ' box-single-candidate'
-                                                              : ''
-                                                      }${
-                                                          highlightDiscardedCandidates &&
-                                                          candidate.isGroupSingleCandidate
-                                                              ? ' group-single-candidate'
-                                                              : ''
-                                                      }${
-                                                          highlightDiscardedCandidates &&
                                                           candidate.isDiscardedByLock
                                                               ? ' discarded-by-lock'
-                                                              : ''
-                                                      }${
-                                                          highlightDiscardedCandidates &&
-                                                          candidate.isDiscardedByBoxSingleCandidateInPeerBox
-                                                              ? ' discarded-by-box-single-candidate-in-peer-box'
-                                                              : ''
-                                                      }${
-                                                          highlightDiscardedCandidates &&
-                                                          candidate.isDiscardedByGroupSingleCandidateInSameBox
-                                                              ? ' discarded-by-group-single-candidate-in-same-box'
-                                                              : ''
-                                                      }${
-                                                          highlightDiscardedCandidates &&
-                                                          candidate.isDiscardedByBoxesNumbersGroupRestriction
-                                                              ? ' discarded-by-boxes-numbers-group-restriction'
                                                               : ''
                                                       }`}
                                                       onClick={candidateClickHandler}

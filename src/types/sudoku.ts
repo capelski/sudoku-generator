@@ -24,12 +24,7 @@ export interface BoxGroups {
 export interface Candidate {
     impact: number;
     impactWithoutDiscards: number;
-    isBoxSingleCandidate: boolean;
-    isDiscardedByBoxesNumbersGroupRestriction: boolean;
-    isDiscardedByBoxSingleCandidateInPeerBox: boolean;
-    isDiscardedByGroupSingleCandidateInSameBox: boolean;
     isDiscardedByLock: boolean;
-    isGroupSingleCandidate: boolean;
     number: number;
 }
 
