@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
 import {
-    arePeerBoxes,
     getRandomElement,
     isBoxColumnInvalid,
     isBoxRegionInvalid,
-    isBoxRowInvalid,
-    isDiscardedCandidate
+    isBoxRowInvalid
 } from '../logic/sudoku-logic';
+import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
 
 interface BoxCandidate {
     box: Box;
@@ -62,7 +61,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                 !box.isLocked &&
                 box.candidates.find(
                     (candidate) =>
-                        !isDiscardedCandidate(candidate) &&
+                        !isCandidateDiscarded(candidate) &&
                         candidate.impact === props.sudoku.maximumImpact
                 )
         );
@@ -72,7 +71,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
             const maximumImpactCandidates = randomBox.candidates.filter(
                 (candidate) =>
-                    !isDiscardedCandidate(candidate) &&
+                    !isCandidateDiscarded(candidate) &&
                     candidate.impact === props.sudoku.maximumImpact
             );
             const randomCandidate = getRandomElement(maximumImpactCandidates);
@@ -125,9 +124,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     {box.isLocked
                                         ? box.number
                                         : box.candidates.map((candidate) => {
-                                              const isCandidateDiscarded =
+                                              const isDiscardedCandidate =
                                                   highlightDiscardedCandidates &&
-                                                  isDiscardedCandidate(candidate);
+                                                  isCandidateDiscarded(candidate);
 
                                               const candidateImpact = highlightDiscardedCandidates
                                                   ? candidate.impact
@@ -141,7 +140,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               const isAffectedCandidate =
                                                   !box.isLocked &&
                                                   (!highlightDiscardedCandidates ||
-                                                      !isCandidateDiscarded) &&
+                                                      !isDiscardedCandidate) &&
                                                   isSelectedBoxPeer &&
                                                   selectedBoxCandidate!.box !== box &&
                                                   selectedBoxCandidate!.number === candidate.number;

@@ -1,7 +1,6 @@
 import {
     Box,
     BoxesNumbersGroupRestriction,
-    BoxGroups,
     Candidate,
     Group,
     NumberAvailableBoxes,
@@ -10,10 +9,7 @@ import {
     Sudoku,
     SudokuGroups
 } from '../types/sudoku';
-
-export const arePeerBoxes = (a: Box, b: Box) => {
-    return a.column === b.column || a.region === b.region || a.row === b.row;
-};
+import { getGroups, getBoxPeers, arePeerBoxes, isCandidateDiscarded } from './sudoku-operations';
 
 const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
     box.candidates
@@ -25,7 +21,7 @@ const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
 
 export const discardByBoxSingleCandidate = (box: Box) => {
     const singleCandidateIndex = box.candidates.findIndex(
-        (candidate) => !isDiscardedCandidate(candidate)
+        (candidate) => !isCandidateDiscarded(candidate)
     );
     // This condition is necessary, because box might not have any valid candidate at the time of execution
     if (singleCandidateIndex > -1) {
@@ -81,7 +77,7 @@ export const discardByGroup = (groups: NumericDictionary<Group>) => {
 
         // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
-        // TODO Write the group isValid based on whether all candidates appear once, or have the hability to appear once
+        // TODO Write the group isValid based on whether all candidates appear once, or have the ability to appear once
         group.isValid =
             group.boxes.find((box) => !hasBoxAPotentialCandidate(box)) === undefined &&
             Object.values(numbersWithSameBoxes).filter((x) => x.boxes.length < x.numbers.length)
@@ -132,101 +128,9 @@ export const discardCandidates = (boxes: Box[], groups: SudokuGroups) => {
     }
 };
 
-export const getBoxGroups = (sudokuGroups: SudokuGroups, box: Box): BoxGroups => {
-    return {
-        column: sudokuGroups.columns[box.column],
-        region: sudokuGroups.regions[box.region],
-        row: sudokuGroups.rows[box.row]
-    };
-};
-
-export const getBoxPeers = (sudokuGroups: SudokuGroups, box: Box): Box[] => {
-    const boxGroups = getBoxGroups(sudokuGroups, box);
-    return boxGroups.column.boxes
-        .filter((peerBox) => peerBox !== box)
-        .concat(boxGroups.row.boxes.filter((peerBox) => peerBox !== box))
-        .concat(
-            boxGroups.region.boxes.filter(
-                (peerBox) => peerBox.column !== box.column && peerBox.row !== box.row
-            )
-        );
-};
-
-export const getEmptySudoku = (regionSize: number): Sudoku => {
-    const size = regionSize * regionSize;
-    const initialImpact = 2 * (size - 1) + (regionSize - 1) * (regionSize - 1);
-    const boxes = [...Array(size)]
-        .map((_x, rowIndex) =>
-            [...Array(size)].map(
-                (_y, columnIndex): Box => ({
-                    candidates: [...Array(size)].map(
-                        (_z, candidateIndex): Candidate => ({
-                            impact: initialImpact,
-                            impactWithoutDiscards: initialImpact,
-                            isBoxSingleCandidate: false,
-                            isDiscardedByBoxesNumbersGroupRestriction: false,
-                            isDiscardedByBoxSingleCandidateInPeerBox: false,
-                            isDiscardedByGroupSingleCandidateInSameBox: false,
-                            isDiscardedByLock: false,
-                            isGroupSingleCandidate: false,
-                            number: candidateIndex + 1
-                        })
-                    ),
-                    column: columnIndex,
-                    isLocked: false,
-                    maximumImpact: initialImpact,
-                    peerBoxes: [], // Some peer boxes might not exist here yet
-                    region:
-                        Math.floor(rowIndex / regionSize) * regionSize +
-                        Math.floor(columnIndex / regionSize),
-                    row: rowIndex
-                })
-            )
-        )
-        .reduce<Box[]>((reduced, boxes) => reduced.concat(boxes), []);
-
-    const groups = getGroups(boxes);
-
-    boxes.forEach((box) => {
-        box.peerBoxes = getBoxPeers(groups, box);
-    });
-
-    return {
-        boxes,
-        groups,
-        latestLockedBox: undefined,
-        maximumImpact: initialImpact,
-        regionSize,
-        size
-    };
-};
-
-export const getGroups = (boxes: Box[]): SudokuGroups =>
-    boxes.reduce<SudokuGroups>(
-        (reduced, box) => {
-            reduced.columns[box.column] = reduced.columns[box.column] || {
-                isValid: true,
-                boxes: []
-            };
-            reduced.regions[box.region] = reduced.regions[box.region] || {
-                isValid: true,
-                boxes: []
-            };
-            reduced.rows[box.row] = reduced.rows[box.row] || { isValid: true, boxes: [] };
-
-            reduced.columns[box.column].boxes.push(box);
-            reduced.regions[box.region].boxes.push(box);
-            reduced.rows[box.row].boxes.push(box);
-
-            return reduced;
-        },
-        { columns: {}, regions: {}, rows: {} }
-    );
-
 export const getNextLockedBox = (currentBox: Box, selectedNumber: number) => {
     const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
-            // TODO The impact of the candidate needs to be computed actually
             impact: -1,
             impactWithoutDiscards: -1,
             isBoxSingleCandidate: true,
@@ -281,20 +185,18 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
 
 export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<NumberAvailableBoxes> => {
     const numbersAvailableBoxes: NumericDictionary<NumberAvailableBoxes> = {};
-    boxes
-        .filter((box) => !box.isLocked)
-        .forEach((box) => {
-            box.candidates
-                .filter((candidate) => !isDiscardedCandidate(candidate))
-                .forEach((candidate) => {
-                    numbersAvailableBoxes[candidate.number] = numbersAvailableBoxes[
-                        candidate.number
-                    ] || {
-                        boxes: []
-                    };
-                    numbersAvailableBoxes[candidate.number].boxes.push(box);
-                });
-        });
+    boxes.forEach((box) => {
+        box.candidates
+            .filter((candidate) => !isCandidateDiscarded(candidate))
+            .forEach((candidate) => {
+                numbersAvailableBoxes[candidate.number] = numbersAvailableBoxes[
+                    candidate.number
+                ] || {
+                    boxes: []
+                };
+                numbersAvailableBoxes[candidate.number].boxes.push(box);
+            });
+    });
     Object.values(numbersAvailableBoxes).forEach((numberAvailableBoxes) => {
         numberAvailableBoxes.boxesCoordinates = numberAvailableBoxes.boxes
             .map((box) => box.row + '-' + box.column)
@@ -329,7 +231,7 @@ export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
         (box) =>
             !box.isLocked &&
             // TODO They should not always be marked as box single candidate
-            box.candidates.filter((candidate) => !isDiscardedCandidate(candidate)).length === 1 &&
+            box.candidates.filter((candidate) => !isCandidateDiscarded(candidate)).length === 1 &&
             box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
     );
 
@@ -344,7 +246,7 @@ export const getUpdatedSudoku = (
         nextBox.peerBoxes = getBoxPeers(nextGroup, nextBox);
     });
 
-    discardCandidates(nextBoxes, nextGroup);
+    // discardCandidates(nextBoxes, nextGroup);
 
     // Update candidates impact after discarding
     nextBoxes.forEach((nextBox) => {
@@ -374,7 +276,7 @@ export const getUpdatedSudoku = (
 };
 
 export const hasBoxAPotentialCandidate = (box: Box) =>
-    box.candidates.find((candidate) => !isDiscardedCandidate(candidate)) !== undefined;
+    box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) !== undefined;
 
 export const isBoxColumnInvalid = (sudoku: Sudoku, box: Box) =>
     !sudoku.groups.columns[box.column].isValid;
@@ -383,12 +285,6 @@ export const isBoxRegionInvalid = (sudoku: Sudoku, box: Box) =>
     !sudoku.groups.regions[box.region].isValid;
 
 export const isBoxRowInvalid = (sudoku: Sudoku, box: Box) => !sudoku.groups.rows[box.row].isValid;
-
-export const isDiscardedCandidate = (candidate: Candidate) =>
-    candidate.isDiscardedByLock ||
-    candidate.isDiscardedByBoxSingleCandidateInPeerBox ||
-    candidate.isDiscardedByGroupSingleCandidateInSameBox ||
-    candidate.isDiscardedByBoxesNumbersGroupRestriction;
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
     const boxesAfterLock = sudoku.boxes.map(
@@ -410,11 +306,11 @@ export const rehydrateSudoku = (serializedSudoku: Sudoku): Sudoku =>
 
 export const setCandidateImpact = (box: Box, candidateIndex: number) => {
     const candidate = box.candidates[candidateIndex];
-    candidate.impact = isDiscardedCandidate(candidate)
+    candidate.impact = isCandidateDiscarded(candidate)
         ? -1
         : box.peerBoxes.filter(
               (peerBox) =>
-                  !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[candidateIndex])
+                  !peerBox.isLocked && !isCandidateDiscarded(peerBox.candidates[candidateIndex])
           ).length;
 
     candidate.impactWithoutDiscards = box.peerBoxes.filter((peerBox) => !peerBox.isLocked).length;
