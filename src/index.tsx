@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { SudokuGrid } from './components/sudoku-grid';
-import { getEmptySudoku } from './logic/sudoku-operations';
-import { getSerializableSudoku, lockBox, rehydrateSudoku } from './logic/sudoku-rules';
+import { getEmptySudoku, getSerializableSudoku } from './logic/sudoku-operations';
+import { lockBox, rehydrateSudoku } from './logic/sudoku-rules';
 import { Box, Sudoku } from './types/sudoku';
 
 import './style/main.scss';

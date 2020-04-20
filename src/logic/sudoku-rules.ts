@@ -9,7 +9,14 @@ import {
     Sudoku,
     SudokuGroups
 } from '../types/sudoku';
-import { getGroups, getBoxPeers, arePeerBoxes, isCandidateDiscarded } from './sudoku-operations';
+import {
+    getGroups,
+    getBoxPeers,
+    arePeerBoxes,
+    isCandidateDiscarded,
+    updateCandidateImpact
+} from './sudoku-operations';
+import { getRandomElement } from './utilities';
 
 const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
     box.candidates
@@ -205,27 +212,6 @@ export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<Number
     return numbersAvailableBoxes;
 };
 
-export const getRandomElement = <T>(array: T[]) =>
-    array[Math.round(Math.random() * (array.length - 1))];
-
-export const getSerializableSudoku = (sudoku: Sudoku): Sudoku => ({
-    ...sudoku,
-    boxes: sudoku.boxes.map((box) => ({
-        ...box,
-        peerBoxes: [] // Would cause cyclic dependencies
-    })),
-    latestLockedBox: sudoku.latestLockedBox && {
-        ...sudoku.latestLockedBox,
-        peerBoxes: []
-    },
-    groups: {
-        // Would cause cyclic dependencies
-        columns: {},
-        regions: {},
-        rows: {}
-    }
-});
-
 export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
     boxes.filter(
         (box) =>
@@ -251,7 +237,7 @@ export const getUpdatedSudoku = (
     // Update candidates impact after discarding
     nextBoxes.forEach((nextBox) => {
         nextBox.candidates.forEach((_candidate, candidateIndex) => {
-            setCandidateImpact(nextBox, candidateIndex);
+            updateCandidateImpact(nextBox, candidateIndex);
         });
 
         nextBox.maximumImpact = nextBox.candidates.reduce(
@@ -301,17 +287,28 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
     return getUpdatedSudoku(sudoku, boxesAfterLock, selectedBox);
 };
 
+export const lockRandomMaximumImpactBox = (sudoku: Sudoku) => {
+    const maximumImpactBoxes = sudoku.boxes.filter(
+        (box) =>
+            !box.isLocked &&
+            box.candidates.find(
+                (candidate) =>
+                    !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
+            )
+    );
+
+    if (maximumImpactBoxes.length > 0) {
+        const randomBox = getRandomElement(maximumImpactBoxes);
+
+        const maximumImpactCandidates = randomBox.candidates.filter(
+            (candidate) =>
+                !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
+        );
+        const randomCandidate = getRandomElement(maximumImpactCandidates);
+
+        lockBox(sudoku, randomBox, randomCandidate.number);
+    }
+};
+
 export const rehydrateSudoku = (serializedSudoku: Sudoku): Sudoku =>
     getUpdatedSudoku(serializedSudoku, serializedSudoku.boxes, serializedSudoku.latestLockedBox);
-
-export const setCandidateImpact = (box: Box, candidateIndex: number) => {
-    const candidate = box.candidates[candidateIndex];
-    candidate.impact = isCandidateDiscarded(candidate)
-        ? -1
-        : box.peerBoxes.filter(
-              (peerBox) =>
-                  !peerBox.isLocked && !isCandidateDiscarded(peerBox.candidates[candidateIndex])
-          ).length;
-
-    candidate.impactWithoutDiscards = box.peerBoxes.filter((peerBox) => !peerBox.isLocked).length;
-};

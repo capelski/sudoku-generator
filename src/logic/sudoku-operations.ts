@@ -95,8 +95,38 @@ export const getGroups = (boxes: Box[]): SudokuGroups =>
         { columns: {}, regions: {}, rows: {} }
     );
 
+export const getSerializableSudoku = (sudoku: Sudoku): Sudoku => ({
+    ...sudoku,
+    boxes: sudoku.boxes.map((box) => ({
+        ...box,
+        peerBoxes: [] // Would cause cyclic dependencies
+    })),
+    latestLockedBox: sudoku.latestLockedBox && {
+        ...sudoku.latestLockedBox,
+        peerBoxes: []
+    },
+    groups: {
+        // Would cause cyclic dependencies
+        columns: {},
+        regions: {},
+        rows: {}
+    }
+});
+
 export const isCandidateDiscarded = (candidate: Candidate) =>
     candidate.isDiscardedByLock ||
     candidate.isDiscardedByBoxSingleCandidateInPeerBox ||
     candidate.isDiscardedByGroupSingleCandidateInSameBox ||
     candidate.isDiscardedByBoxesNumbersGroupRestriction;
+
+export const updateCandidateImpact = (box: Box, candidateIndex: number) => {
+    const candidate = box.candidates[candidateIndex];
+    candidate.impact = isCandidateDiscarded(candidate)
+        ? -1
+        : box.peerBoxes.filter(
+              (peerBox) =>
+                  !peerBox.isLocked && !isCandidateDiscarded(peerBox.candidates[candidateIndex])
+          ).length;
+
+    candidate.impactWithoutDiscards = box.peerBoxes.filter((peerBox) => !peerBox.isLocked).length;
+};

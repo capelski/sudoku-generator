@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
 import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
 import {
-    getRandomElement,
     isBoxColumnInvalid,
     isBoxRegionInvalid,
-    isBoxRowInvalid
+    isBoxRowInvalid,
+    lockRandomMaximumImpactBox
 } from '../logic/sudoku-rules';
 
 interface BoxCandidate {
@@ -53,32 +53,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const highlightMaximumImpactHandler = () => {
         setHighlightMaximumImpact(!highlightMaximumImpact);
-    };
-
-    const lockRandomMaximumImpactBox = () => {
-        const maximumImpactBoxes = props.sudoku.boxes.filter(
-            (box) =>
-                !box.isLocked &&
-                box.candidates.find(
-                    (candidate) =>
-                        !isCandidateDiscarded(candidate) &&
-                        candidate.impact === props.sudoku.maximumImpact
-                )
-        );
-
-        if (maximumImpactBoxes.length > 0) {
-            const randomBox = getRandomElement(maximumImpactBoxes);
-
-            const maximumImpactCandidates = randomBox.candidates.filter(
-                (candidate) =>
-                    !isCandidateDiscarded(candidate) &&
-                    candidate.impact === props.sudoku.maximumImpact
-            );
-            const randomCandidate = getRandomElement(maximumImpactCandidates);
-
-            console.log('Locking', randomCandidate.number, 'in', randomBox.row, randomBox.column);
-            props.lockBox(randomBox, randomCandidate.number);
-        }
     };
 
     const lockSelectedCandidateHandler = () => {
@@ -310,7 +284,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             </button>
                         </p>
                         <p>
-                            <button type="button" onClick={lockRandomMaximumImpactBox}>
+                            <button
+                                type="button"
+                                onClick={() => lockRandomMaximumImpactBox(props.sudoku)}
+                            >
                                 Lock random candidate (with maximum impact)
                             </button>
                         </p>
