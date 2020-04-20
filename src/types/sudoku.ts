@@ -1,7 +1,7 @@
 export interface Box {
     candidates: Candidate[];
     column: number;
-    id: string;
+    id: number;
     isLocked: boolean;
     maximumImpact: number;
     number?: number;
@@ -25,6 +25,8 @@ export interface Candidate {
     impact: number;
     impactWithoutDiscards: number;
     isDiscardedByLock: boolean;
+    isTheOnlyCandidateLeftForAPeerBox: boolean;
+    isTheOnlyCandidateLeftForThisBox: boolean;
     number: number;
 }
 

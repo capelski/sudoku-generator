@@ -162,6 +162,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           candidate.isDiscardedByLock
                                                               ? ' discarded-by-lock'
                                                               : ''
+                                                      }${
+                                                          highlightDiscardedCandidates &&
+                                                          candidate.isTheOnlyCandidateLeftForThisBox
+                                                              ? ' only-candidate-left-for-this-box'
+                                                              : ''
+                                                      }${
+                                                          highlightDiscardedCandidates &&
+                                                          candidate.isTheOnlyCandidateLeftForAPeerBox
+                                                              ? ' only-candidate-left-for-a-peer-box'
+                                                              : ''
                                                       }`}
                                                       onClick={candidateClickHandler}
                                                   >

@@ -36,11 +36,13 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                             impact: initialImpact,
                             impactWithoutDiscards: initialImpact,
                             isDiscardedByLock: false,
+                            isTheOnlyCandidateLeftForAPeerBox: false,
+                            isTheOnlyCandidateLeftForThisBox: false,
                             number: candidateIndex + 1
                         })
                     ),
                     column: columnIndex,
-                    id: `${rowIndex}-${columnIndex}`,
+                    id: rowIndex * size + columnIndex,
                     isLocked: false,
                     maximumImpact: initialImpact,
                     peerBoxes: [], // Some peer boxes might not exist here yet

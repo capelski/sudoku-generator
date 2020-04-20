@@ -118,11 +118,59 @@ import { getRandomElement } from './utilities';
 //     }
 // };
 
+export const addPeerBoxesToBoxQueue = (boxQueue: Box[], peerBoxes: Box[]) => {
+    const boxQueueIds = boxQueue.map((b) => b.id);
+    peerBoxes
+        .filter((pb) => !pb.isLocked && boxQueueIds.indexOf(pb.id) === -1)
+        .forEach((pb) => {
+            boxQueue.splice(boxQueue.length, 0, pb);
+        });
+};
+
+export const doesBoxNeedToUpdateOnlyLeftCandidate = (box: Box) => {
+    let doesIt = false;
+    const doesBoxHaveOnlyOneCandidateLeft =
+        box.candidates.filter((candidate) => !candidate.isDiscardedByLock).length === 1;
+
+    if (doesBoxHaveOnlyOneCandidateLeft) {
+        const onlyCandidateLeft = box.candidates.find((candidate) => !candidate.isDiscardedByLock)!;
+
+        doesIt = !onlyCandidateLeft.isTheOnlyCandidateLeftForThisBox;
+    }
+
+    return doesIt;
+};
+
+export const updateOnlyLeftCandidate = (boxQueue: Box[], box: Box) => {
+    const onlyCandidateLeftIndex = box.candidates.findIndex(
+        (candidate) => !candidate.isDiscardedByLock
+    );
+    box.candidates[onlyCandidateLeftIndex].isTheOnlyCandidateLeftForThisBox = true;
+    box.peerBoxes.forEach(
+        (pb) => (pb.candidates[onlyCandidateLeftIndex].isTheOnlyCandidateLeftForAPeerBox = true)
+    );
+    addPeerBoxesToBoxQueue(boxQueue, box.peerBoxes);
+};
+
+export const discardCandidates = (boxQueue: Box[]) => {
+    const currentBox = boxQueue.shift();
+
+    if (currentBox) {
+        if (doesBoxNeedToUpdateOnlyLeftCandidate(currentBox)) {
+            updateOnlyLeftCandidate(boxQueue, currentBox);
+        }
+
+        discardCandidates(boxQueue);
+    }
+};
+
 export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box => {
     const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
             impact: -1,
             impactWithoutDiscards: -1,
+            isTheOnlyCandidateLeftForAPeerBox: false,
+            isTheOnlyCandidateLeftForThisBox: false,
             isDiscardedByLock: candidate.number !== selectedNumber,
             number: candidate.number
         })
@@ -147,6 +195,8 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
         (candidate): Candidate => ({
             impact: -2,
             impactWithoutDiscards: -2,
+            isTheOnlyCandidateLeftForAPeerBox: false,
+            isTheOnlyCandidateLeftForThisBox: false,
             isDiscardedByLock:
                 candidate.isDiscardedByLock || (isPeerBox && candidate.number === selectedNumber),
             number: candidate.number
@@ -207,6 +257,7 @@ export const getUpdatedSudoku = (
         nextBox.peerBoxes = getBoxPeers(nextGroups, nextBox);
     });
 
+    discardCandidates(nextBoxes.filter((box) => !box.isLocked));
     // discardCandidates(nextBoxes, nextGroup);
 
     // Update candidates impact after discarding
