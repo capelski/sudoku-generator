@@ -194,6 +194,7 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
     return {
         boxes,
         groups,
+        latestLockedBox: undefined,
         maximumImpact: initialImpact,
         regionSize,
         size
@@ -311,6 +312,10 @@ export const getSerializableSudoku = (sudoku: Sudoku): Sudoku => ({
         ...box,
         peerBoxes: [] // Would cause cyclic dependencies
     })),
+    latestLockedBox: sudoku.latestLockedBox && {
+        ...sudoku.latestLockedBox,
+        peerBoxes: []
+    },
     groups: {
         // Would cause cyclic dependencies
         columns: {},
@@ -328,7 +333,11 @@ export const getUnnoticedSingleCandidateBoxes = (boxes: Box[]) =>
             box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
     );
 
-export const getUpdatedSudoku = (sudoku: Sudoku, nextBoxes: Box[]): Sudoku => {
+export const getUpdatedSudoku = (
+    sudoku: Sudoku,
+    nextBoxes: Box[],
+    latestLockedBox?: Box
+): Sudoku => {
     const nextGroup = getGroups(nextBoxes);
 
     nextBoxes.forEach((nextBox) => {
@@ -357,6 +366,7 @@ export const getUpdatedSudoku = (sudoku: Sudoku, nextBoxes: Box[]): Sudoku => {
     return {
         boxes: nextBoxes,
         groups: nextGroup,
+        latestLockedBox: latestLockedBox,
         maximumImpact: sudokuMaximumImpact,
         regionSize: sudoku.regionSize,
         size: sudoku.size
@@ -392,11 +402,11 @@ export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number
             }
         }
     );
-    return getUpdatedSudoku(sudoku, boxesAfterLock);
+    return getUpdatedSudoku(sudoku, boxesAfterLock, selectedBox);
 };
 
 export const rehydrateSudoku = (serializedSudoku: Sudoku): Sudoku =>
-    getUpdatedSudoku(serializedSudoku, serializedSudoku.boxes);
+    getUpdatedSudoku(serializedSudoku, serializedSudoku.boxes, serializedSudoku.latestLockedBox);
 
 export const setCandidateImpact = (box: Box, candidateIndex: number) => {
     const candidate = box.candidates[candidateIndex];

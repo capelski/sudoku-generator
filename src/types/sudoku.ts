@@ -49,6 +49,7 @@ export type StringDictionary<T> = { [key: string]: T };
 export interface Sudoku {
     boxes: Box[];
     groups: SudokuGroups;
+    latestLockedBox?: Box;
     maximumImpact: number;
     regionSize: number;
     size: number;

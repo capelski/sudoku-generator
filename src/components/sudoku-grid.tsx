@@ -99,9 +99,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 selectedBoxCandidate !== undefined &&
                                 arePeerBoxes(selectedBoxCandidate.box, box);
 
+                            const isLatestLockedBox =
+                                props.sudoku.latestLockedBox &&
+                                props.sudoku.latestLockedBox.column === box.column &&
+                                props.sudoku.latestLockedBox.row === box.row;
+
                             return (
                                 <div
                                     className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
+                                        isLatestLockedBox ? ' latest-locked-box' : ''
+                                    }${
                                         isBoxColumnInvalid(props.sudoku, box)
                                             ? ' inside-invalid-column'
                                             : ''
