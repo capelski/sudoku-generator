@@ -30,6 +30,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     );
     const [displayCandidates, setDisplayCandidates] = useState(true);
     const [highlightDiscardedCandidates, setHighlightDiscardedCandidates] = useState(true);
+    const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
@@ -49,6 +50,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const highlightDiscardedCandidatesHandler = () => {
         setHighlightDiscardedCandidates(!highlightDiscardedCandidates);
+    };
+
+    const highlightInvalidGroupsHandler = () => {
+        setHighlightInvalidGroups(!highlightInvalidGroups);
     };
 
     const highlightMaximumImpactHandler = () => {
@@ -81,17 +86,19 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
                                         isLatestLockedBox ? ' latest-locked-box' : ''
                                     }${
-                                        isBoxColumnValid(props.sudoku, box)
-                                            ? ''
-                                            : ' inside-invalid-column'
+                                        highlightInvalidGroups &&
+                                        !isBoxColumnValid(props.sudoku, box)
+                                            ? ' inside-invalid-column'
+                                            : ''
                                     }${
-                                        isBoxRegionValid(props.sudoku, box)
-                                            ? ''
-                                            : ' inside-invalid-region'
+                                        highlightInvalidGroups &&
+                                        !isBoxRegionValid(props.sudoku, box)
+                                            ? ' inside-invalid-region'
+                                            : ''
                                     }${
-                                        isBoxRowValid(props.sudoku, box)
-                                            ? ''
-                                            : ' inside-invalid-row'
+                                        highlightInvalidGroups && !isBoxRowValid(props.sudoku, box)
+                                            ? ' inside-invalid-row'
+                                            : ''
                                     }`}
                                 >
                                     {box.isLocked
@@ -241,6 +248,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 checked={highlightDiscardedCandidates}
                             />{' '}
                             Highlight discarded candidates
+                        </p>
+
+                        <p>
+                            <input
+                                type="checkbox"
+                                onClick={highlightInvalidGroupsHandler}
+                                checked={highlightInvalidGroups}
+                            />{' '}
+                            Highlight invalid groups
                         </p>
 
                         <p>

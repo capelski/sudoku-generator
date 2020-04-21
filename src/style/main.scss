@@ -62,10 +62,10 @@ $candidateSize: 25px;
         &.inside-invalid-column,
         &.inside-invalid-region,
         &.inside-invalid-row {
-            background-color: #ffd27f;
+            background-color: #ffe4b2;
 
             .sudoku-candidate:not(.discarded-by-lock):not(.only-candidate-left-for-a-peer-box) {
-                background-color: #ffd27f;
+                background-color: #ffe4b2;
             }
         }
     }
