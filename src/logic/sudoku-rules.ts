@@ -258,7 +258,14 @@ export const updateGroupsValidations = (groups: NumericDictionary<Group>) => {
             (numberOccurrences) => numberOccurrences > 1
         );
 
-        group.isValid = !hasTwoLockedBoxesWithSameNumber;
+        const hasAnyBoxWithoutCandidates =
+            group.boxes.find(
+                (box) =>
+                    box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) ===
+                    undefined
+            ) !== undefined;
+
+        group.isValid = !hasTwoLockedBoxesWithSameNumber && !hasAnyBoxWithoutCandidates;
     });
 };
 
