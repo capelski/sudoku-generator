@@ -45,6 +45,7 @@ export const discardCandidates = (boxQueue: Box[]) => {
         }
 
         // TODO Discard candidates by other means here
+        // - bound boxes
 
         discardCandidates(boxQueue);
     }
@@ -77,19 +78,27 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
         .map((_x, rowIndex) =>
             [...Array(size)].map(
                 (_y, columnIndex): Box => ({
-                    candidates: [...Array(size)].map(
-                        (_z, candidateIndex): Candidate => ({
-                            impact: initialImpact,
-                            impactWithoutDiscards: initialImpact,
-                            isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
-                            isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
-                            isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
-                            isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
-                            isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
-                            isDiscardedBecauseOfLock: false,
-                            number: candidateIndex + 1
-                        })
-                    ),
+                    candidates: [...Array(size)]
+                        .map(
+                            (_z, candidateIndex): Candidate => ({
+                                impact: initialImpact,
+                                impactWithoutDiscards: initialImpact,
+                                isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
+                                isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
+                                isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
+                                isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
+                                isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
+                                isDiscardedBecauseOfLock: false,
+                                number: candidateIndex + 1
+                            })
+                        )
+                        .reduce<NumericDictionary<Candidate>>(
+                            (reduced, candidate) => ({
+                                ...reduced,
+                                [candidate.number]: candidate
+                            }),
+                            {}
+                        ),
                     column: columnIndex,
                     id: rowIndex * size + columnIndex,
                     isLocked: false,
@@ -164,19 +173,25 @@ export const getGroups = (boxes: Box[]): SudokuGroups => {
 };
 
 export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box => {
-    const nextCandidates = currentBox.candidates.map(
-        (candidate): Candidate => ({
-            impact: -1,
-            impactWithoutDiscards: -1,
-            isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
-            isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
-            isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
-            isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
-            isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
-            isDiscardedBecauseOfLock: candidate.number !== selectedNumber,
-            number: candidate.number
-        })
-    );
+    const nextCandidates = Object.keys(currentBox.candidates)
+        .map((number) => parseInt(number))
+        .map(
+            (number): Candidate => ({
+                impact: -1,
+                impactWithoutDiscards: -1,
+                isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
+                isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
+                isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
+                isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
+                isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
+                isDiscardedBecauseOfLock: number !== selectedNumber,
+                number: number
+            })
+        )
+        .reduce<NumericDictionary<Candidate>>(
+            (reduced, candidate) => ({ ...reduced, [candidate.number]: candidate }),
+            {}
+        );
 
     return {
         candidates: nextCandidates,
@@ -194,21 +209,27 @@ export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box =
 
 export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber: number): Box => {
     const isPeerBox = arePeerBoxes(currentBox, selectedBox);
-    const nextCandidates = currentBox.candidates.map(
-        (candidate): Candidate => ({
-            impact: -2,
-            impactWithoutDiscards: -2,
-            isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
-            isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
-            isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
-            isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
-            isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
-            isDiscardedBecauseOfLock:
-                candidate.isDiscardedBecauseOfLock ||
-                (isPeerBox && candidate.number === selectedNumber),
-            number: candidate.number
-        })
-    );
+    const nextCandidates = Object.keys(currentBox.candidates)
+        .map((number) => parseInt(number))
+        .map(
+            (number): Candidate => ({
+                impact: -2,
+                impactWithoutDiscards: -2,
+                isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
+                isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
+                isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
+                isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
+                isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
+                isDiscardedBecauseOfLock:
+                    currentBox.candidates[number].isDiscardedBecauseOfLock ||
+                    (isPeerBox && number === selectedNumber),
+                number
+            })
+        )
+        .reduce<NumericDictionary<Candidate>>(
+            (reduced, candidate) => ({ ...reduced, [candidate.number]: candidate }),
+            {}
+        );
 
     return {
         candidates: nextCandidates,
@@ -227,7 +248,7 @@ export const getRandomMaximumImpactBox = (sudoku: Sudoku): BoxCandidate | undefi
     const maximumImpactBoxes = sudoku.boxes.filter(
         (box) =>
             !box.isLocked &&
-            box.candidates.find(
+            Object.values(box.candidates).find(
                 (candidate) =>
                     !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
             )
@@ -236,7 +257,7 @@ export const getRandomMaximumImpactBox = (sudoku: Sudoku): BoxCandidate | undefi
     if (maximumImpactBoxes.length > 0) {
         const randomBox = getRandomElement(maximumImpactBoxes);
 
-        const maximumImpactCandidates = randomBox.candidates.filter(
+        const maximumImpactCandidates = Object.values(randomBox.candidates).filter(
             (candidate) =>
                 !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
         );
@@ -331,11 +352,13 @@ export const updateCandidateImpact = (box: Box, candidateIndex: number) => {
 
 export const updateCandidatesImpact = (boxes: Box[]) => {
     boxes.forEach((nextBox) => {
-        nextBox.candidates.forEach((_candidate, candidateIndex) => {
-            updateCandidateImpact(nextBox, candidateIndex);
-        });
+        Object.keys(nextBox.candidates)
+            .map((number) => parseInt(number))
+            .forEach((number) => {
+                updateCandidateImpact(nextBox, number);
+            });
 
-        nextBox.maximumImpact = nextBox.candidates.reduce(
+        nextBox.maximumImpact = Object.values(nextBox.candidates).reduce(
             (reduced, candidate) => Math.max(reduced, candidate.impact),
             0
         );
@@ -345,7 +368,7 @@ export const updateCandidatesImpact = (boxes: Box[]) => {
 export const updateGroupAvailableBoxesPerNumber = (group: Group) => {
     group.availableBoxesPerNumber = {};
     group.boxes.forEach((box) => {
-        box.candidates.forEach((candidate) => {
+        Object.values(box.candidates).forEach((candidate) => {
             group.availableBoxesPerNumber[candidate.number] =
                 group.availableBoxesPerNumber[candidate.number] || [];
             if (!isCandidateDiscarded(candidate)) {

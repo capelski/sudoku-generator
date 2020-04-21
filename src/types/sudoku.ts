@@ -1,6 +1,5 @@
 export interface Box {
-    // TODO Turn into NumericDictionary
-    candidates: Candidate[];
+    candidates: NumericDictionary<Candidate>;
     column: number;
     groups: BoxGroups;
     id: number;

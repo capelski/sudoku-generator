@@ -100,7 +100,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 >
                                     {box.isLocked
                                         ? box.number
-                                        : box.candidates.map((candidate) => {
+                                        : Object.values(box.candidates).map((candidate) => {
                                               const isDiscardedCandidate =
                                                   highlightDiscardedCandidates &&
                                                   isCandidateDiscarded(candidate);
