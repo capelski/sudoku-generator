@@ -11,6 +11,11 @@ export interface Box {
     row: number;
 }
 
+export interface BoxCandidate {
+    box: Box;
+    number: number;
+}
+
 export interface BoxesNumbersGroupRestriction {
     numbers: number[];
     boxes: Box[];

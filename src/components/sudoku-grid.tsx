@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import { Sudoku, Box } from '../types/sudoku';
+import { Box, BoxCandidate, Sudoku } from '../types/sudoku';
 import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
-import { lockRandomMaximumImpactBox } from '../logic/sudoku-rules';
-
-interface BoxCandidate {
-    box: Box;
-    number: number;
-}
+import { getRandomMaximumImpactBox } from '../logic/sudoku-rules';
 
 type CandidateDisplayMode = 'number' | 'impact';
 
@@ -53,6 +48,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const highlightMaximumImpactHandler = () => {
         setHighlightMaximumImpact(!highlightMaximumImpact);
+    };
+
+    const lockRandomMaximumImpactBox = () => {
+        const boxCandidate = getRandomMaximumImpactBox(props.sudoku);
+        if (boxCandidate) {
+            props.lockBox(boxCandidate.box, boxCandidate.number);
+        } else {
+            console.log('No box left to lock!');
+        }
     };
 
     const lockSelectedCandidateHandler = () => {
@@ -277,10 +281,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             </button>
                         </p>
                         <p>
-                            <button
-                                type="button"
-                                onClick={() => lockRandomMaximumImpactBox(props.sudoku)}
-                            >
+                            <button type="button" onClick={lockRandomMaximumImpactBox}>
                                 Lock random candidate (with maximum impact)
                             </button>
                         </p>
