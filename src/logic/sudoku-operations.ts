@@ -262,6 +262,7 @@ export const getSerializableSudoku = (sudoku: Sudoku): Sudoku => ({
     latestLockedBox: sudoku.latestLockedBox && {
         ...sudoku.latestLockedBox,
         // Would cause cyclic dependencies
+        groups: {} as any,
         peerBoxes: []
     },
     // Would cause cyclic dependencies

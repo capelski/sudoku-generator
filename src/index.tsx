@@ -18,9 +18,11 @@ const persistSudokuStatus = (sudokuList: Sudoku[], sudokuIndex: number) => {
         sudokuList: sudokuList.map(getSerializableSudoku),
         sudokuIndex
     };
+
     try {
         localStorage.setItem('sudokuStatus', JSON.stringify(sudokuStatus));
-    } catch {
+    } catch (error) {
+        console.error(error);
         console.error('Cannot persist this sudoku anymore');
     }
 };
