@@ -9,11 +9,13 @@ import {
     SudokuGroups
 } from '../types/sudoku';
 import {
-    doesBoxNeedToUpdateOnlyLeftCandidate,
+    doesBoxHaveOnlyOneNonDiscardedCandidate,
+    doesGroupHaveABoxWithoutCandidates,
     doesGroupHaveTwoLockedBoxesWithSameNumber,
+    doesGroupNeedToPlaceANumberInCertainBox,
     isCandidateDiscarded,
-    updateOnlyLeftCandidate,
-    doesGroupHaveABoxWithoutCandidates
+    placeGroupNumberInCertainBox,
+    updateOnlyLeftCandidate as updateOnlyNonDiscardedCandidate
 } from './sudoku-rules';
 import { getRandomElement } from './utilities';
 
@@ -25,8 +27,21 @@ export const discardCandidates = (boxQueue: Box[]) => {
     const currentBox = boxQueue.shift();
 
     if (currentBox) {
-        if (doesBoxNeedToUpdateOnlyLeftCandidate(currentBox)) {
-            updateOnlyLeftCandidate(boxQueue, currentBox);
+        if (doesBoxHaveOnlyOneNonDiscardedCandidate(currentBox)) {
+            updateOnlyNonDiscardedCandidate(boxQueue, currentBox);
+        }
+
+        if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.column)) {
+            placeGroupNumberInCertainBox(currentBox.groups.column, boxQueue);
+            updateGroupAvailableBoxesPerNumber(currentBox.groups.column);
+        }
+        if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.region)) {
+            placeGroupNumberInCertainBox(currentBox.groups.region, boxQueue);
+            updateGroupAvailableBoxesPerNumber(currentBox.groups.region);
+        }
+        if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.row)) {
+            placeGroupNumberInCertainBox(currentBox.groups.row, boxQueue);
+            updateGroupAvailableBoxesPerNumber(currentBox.groups.row);
         }
 
         // TODO Discard candidates by other means here
@@ -66,9 +81,12 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                         (_z, candidateIndex): Candidate => ({
                             impact: initialImpact,
                             impactWithoutDiscards: initialImpact,
-                            isDiscardedByLock: false,
-                            isTheOnlyCandidateLeftForAPeerBox: false,
-                            isTheOnlyCandidateLeftForThisBox: false,
+                            isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
+                            isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
+                            isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
+                            isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
+                            isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
+                            isDiscardedBecauseOfLock: false,
                             number: candidateIndex + 1
                         })
                     ),
@@ -104,18 +122,30 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
     };
 };
 
-export const getGroups = (boxes: Box[]): SudokuGroups =>
-    boxes.reduce<SudokuGroups>(
+export const getGroups = (boxes: Box[]): SudokuGroups => {
+    const groups = boxes.reduce<SudokuGroups>(
         (reduced, box) => {
-            reduced.columns[box.column] = reduced.columns[box.column] || {
-                isValid: true,
-                boxes: []
-            };
-            reduced.regions[box.region] = reduced.regions[box.region] || {
-                isValid: true,
-                boxes: []
-            };
-            reduced.rows[box.row] = reduced.rows[box.row] || { isValid: true, boxes: [] };
+            reduced.columns[box.column] =
+                reduced.columns[box.column] ||
+                ({
+                    availableBoxesPerNumber: {},
+                    boxes: [],
+                    isValid: true
+                } as Group);
+            reduced.regions[box.region] =
+                reduced.regions[box.region] ||
+                ({
+                    availableBoxesPerNumber: {},
+                    boxes: [],
+                    isValid: true
+                } as Group);
+            reduced.rows[box.row] =
+                reduced.rows[box.row] ||
+                ({
+                    availableBoxesPerNumber: {},
+                    boxes: [],
+                    isValid: true
+                } as Group);
 
             reduced.columns[box.column].boxes.push(box);
             reduced.regions[box.region].boxes.push(box);
@@ -126,14 +156,24 @@ export const getGroups = (boxes: Box[]): SudokuGroups =>
         { columns: {}, regions: {}, rows: {} }
     );
 
+    Object.values(groups.columns).forEach(updateGroupAvailableBoxesPerNumber);
+    Object.values(groups.regions).forEach(updateGroupAvailableBoxesPerNumber);
+    Object.values(groups.rows).forEach(updateGroupAvailableBoxesPerNumber);
+
+    return groups;
+};
+
 export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box => {
     const nextCandidates = currentBox.candidates.map(
         (candidate): Candidate => ({
             impact: -1,
             impactWithoutDiscards: -1,
-            isTheOnlyCandidateLeftForAPeerBox: false,
-            isTheOnlyCandidateLeftForThisBox: false,
-            isDiscardedByLock: candidate.number !== selectedNumber,
+            isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
+            isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
+            isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
+            isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
+            isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
+            isDiscardedBecauseOfLock: candidate.number !== selectedNumber,
             number: candidate.number
         })
     );
@@ -158,10 +198,14 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
         (candidate): Candidate => ({
             impact: -2,
             impactWithoutDiscards: -2,
-            isTheOnlyCandidateLeftForAPeerBox: false,
-            isTheOnlyCandidateLeftForThisBox: false,
-            isDiscardedByLock:
-                candidate.isDiscardedByLock || (isPeerBox && candidate.number === selectedNumber),
+            isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
+            isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
+            isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
+            isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
+            isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
+            isDiscardedBecauseOfLock:
+                candidate.isDiscardedBecauseOfLock ||
+                (isPeerBox && candidate.number === selectedNumber),
             number: candidate.number
         })
     );
@@ -294,6 +338,19 @@ export const updateCandidatesImpact = (boxes: Box[]) => {
             (reduced, candidate) => Math.max(reduced, candidate.impact),
             0
         );
+    });
+};
+
+export const updateGroupAvailableBoxesPerNumber = (group: Group) => {
+    group.availableBoxesPerNumber = {};
+    group.boxes.forEach((box) => {
+        box.candidates.forEach((candidate) => {
+            group.availableBoxesPerNumber[candidate.number] =
+                group.availableBoxesPerNumber[candidate.number] || [];
+            if (!isCandidateDiscarded(candidate)) {
+                group.availableBoxesPerNumber[candidate.number].push(box);
+            }
+        });
     });
 };
 

@@ -20,13 +20,16 @@ $candidateSize: 25px;
             align-items: center;
             cursor: pointer;
 
-            &.only-candidate-left-for-this-box {
+            &.chosen-because-is-only-candidate-left-for-this-box,
+            &.chosen-because-this-box-must-hold-this-number-for-some-group {
                 font-style: italic;
                 background-color: #bcf4bc;
             }
 
-            &.discarded-by-lock,
-            &.only-candidate-left-for-a-peer-box {
+            &.discarded-because-of-lock,
+            &.discarded-because-is-only-candidate-left-for-a-peer-box,
+            &.discarded-because-peer-box-must-hold-this-number-for-some-group,
+            &.discarded-because-this-box-must-hold-another-number-for-some-group {
                 font-style: italic;
                 background-color: #fbe0e0;
             }
@@ -64,7 +67,11 @@ $candidateSize: 25px;
         &.inside-invalid-row {
             background-color: #ffe4b2;
 
-            .sudoku-candidate:not(.discarded-by-lock):not(.only-candidate-left-for-a-peer-box) {
+            .sudoku-candidate
+                :not(.discarded-because-of-lock)
+                :not(.discarded-because-is-only-candidate-left-for-a-peer-box)
+                :not(.discarded-because-peer-box-must-hold-this-number-for-some-group)
+                :not(.discarded-because-this-box-must-hold-another-number-for-some-group) {
                 background-color: #ffe4b2;
             }
         }

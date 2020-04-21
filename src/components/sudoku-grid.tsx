@@ -163,18 +163,33 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               : ''
                                                       }${
                                                           highlightDiscardedCandidates &&
-                                                          candidate.isDiscardedByLock
-                                                              ? ' discarded-by-lock'
+                                                          candidate.isDiscardedBecauseOfLock
+                                                              ? ' discarded-because-of-lock'
                                                               : ''
                                                       }${
                                                           highlightDiscardedCandidates &&
-                                                          candidate.isTheOnlyCandidateLeftForThisBox
-                                                              ? ' only-candidate-left-for-this-box'
+                                                          candidate.isChosenBecauseIsTheOnlyCandidateLeftForThisBox
+                                                              ? ' chosen-because-is-only-candidate-left-for-this-box'
                                                               : ''
                                                       }${
                                                           highlightDiscardedCandidates &&
-                                                          candidate.isTheOnlyCandidateLeftForAPeerBox
-                                                              ? ' only-candidate-left-for-a-peer-box'
+                                                          candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox
+                                                              ? ' discarded-because-is-only-candidate-left-for-a-peer-box'
+                                                              : ''
+                                                      }${
+                                                          highlightDiscardedCandidates &&
+                                                          candidate.isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup
+                                                              ? ' chosen-because-this-box-must-hold-this-number-for-some-group'
+                                                              : ''
+                                                      }${
+                                                          highlightDiscardedCandidates &&
+                                                          candidate.isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup
+                                                              ? ' discarded-because-peer-box-must-hold-this-number-for-some-group'
+                                                              : ''
+                                                      }${
+                                                          highlightDiscardedCandidates &&
+                                                          candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup
+                                                              ? ' discarded-because-this-box-must-hold-another-number-for-some-group'
                                                               : ''
                                                       }`}
                                                       onClick={candidateClickHandler}

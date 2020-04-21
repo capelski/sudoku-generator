@@ -1,4 +1,5 @@
 export interface Box {
+    // TODO Turn into NumericDictionary
     candidates: Candidate[];
     column: number;
     groups: BoxGroups;
@@ -30,20 +31,19 @@ export interface BoxGroups {
 export interface Candidate {
     impact: number;
     impactWithoutDiscards: number;
-    isDiscardedByLock: boolean;
-    isTheOnlyCandidateLeftForAPeerBox: boolean;
-    isTheOnlyCandidateLeftForThisBox: boolean;
+    isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: boolean;
+    isChosenBecauseIsTheOnlyCandidateLeftForThisBox: boolean;
+    isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: boolean;
+    isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: boolean;
+    isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: boolean;
+    isDiscardedBecauseOfLock: boolean;
     number: number;
 }
 
 export interface Group {
+    availableBoxesPerNumber: NumericDictionary<Box[]>;
     boxes: Box[];
     isValid: boolean;
-}
-
-export interface NumberAvailableBoxes {
-    boxes: Box[];
-    boxesCoordinates: string;
 }
 
 export type NumericDictionary<T> = { [key: number]: T };

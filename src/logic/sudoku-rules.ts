@@ -119,18 +119,18 @@ export const addPeerBoxesToBoxQueue = (boxQueue: Box[], peerBoxes: Box[]) => {
         });
 };
 
-export const doesBoxNeedToUpdateOnlyLeftCandidate = (box: Box) => {
-    let doesIt = false;
-    const doesBoxHaveOnlyOneCandidateLeft =
-        box.candidates.filter((candidate) => !candidate.isDiscardedByLock).length === 1;
+export const doesBoxHaveOnlyOneNonDiscardedCandidate = (box: Box) => {
+    const nonDiscardedCandidates = box.candidates.filter(
+        (candidate) => !isCandidateDiscarded(candidate)
+    );
 
-    if (doesBoxHaveOnlyOneCandidateLeft) {
-        const onlyCandidateLeft = box.candidates.find((candidate) => !candidate.isDiscardedByLock)!;
-
-        doesIt = !onlyCandidateLeft.isTheOnlyCandidateLeftForThisBox;
+    let result = false;
+    if (nonDiscardedCandidates.length === 1) {
+        const singleNonDiscardedCandidate = nonDiscardedCandidates[0];
+        result = !isCandidateChosen(singleNonDiscardedCandidate);
     }
 
-    return doesIt;
+    return result;
 };
 
 export const doesGroupHaveABoxWithoutCandidates = (group: Group) =>
@@ -146,6 +146,26 @@ export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
     return Object.values(lockedBoxesNumbersOccurrences).find(
         (numberOccurrences) => numberOccurrences > 1
     );
+};
+
+export const doesGroupNeedToPlaceANumberInCertainBox = (group: Group) => {
+    const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
+        .map((number) => parseInt(number))
+        .filter((number) => {
+            const boxesPerNumber = group.availableBoxesPerNumber[number];
+            let doesIt = false;
+
+            if (boxesPerNumber.length === 1 && !boxesPerNumber[0].isLocked) {
+                const targetCandidate = boxesPerNumber[0].candidates.find(
+                    (candidate) => candidate.number === number
+                );
+                doesIt = !isCandidateChosen(targetCandidate!);
+            }
+
+            return doesIt;
+        });
+
+    return numbersWithOnlyOneBoxLeft.length > 0;
 };
 
 // export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<NumberAvailableBoxes> => {
@@ -182,15 +202,57 @@ export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
 export const isBoxOutOfCandidates = (box: Box) =>
     box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) === undefined;
 
-export const isCandidateDiscarded = (candidate: Candidate) => candidate.isDiscardedByLock;
+export const isCandidateChosen = (candidate: Candidate) =>
+    candidate.isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup ||
+    candidate.isChosenBecauseIsTheOnlyCandidateLeftForThisBox;
+
+export const isCandidateDiscarded = (candidate: Candidate) =>
+    candidate.isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup ||
+    candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup ||
+    candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox ||
+    candidate.isDiscardedBecauseOfLock;
+
+export const placeGroupNumberInCertainBox = (group: Group, boxQueue: Box[]) => {
+    const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
+        .map((number) => parseInt(number))
+        .filter((number) => {
+            const boxesPerNumber = group.availableBoxesPerNumber[number];
+            return boxesPerNumber.length === 1 && !boxesPerNumber[0].isLocked;
+        });
+
+    numbersWithOnlyOneBoxLeft.forEach((number) => {
+        const targetBox = group.availableBoxesPerNumber[number][0];
+        const candidateIndex = targetBox.candidates.findIndex(
+            (candidate) => candidate.number === number
+        );
+        targetBox.candidates.forEach((candidate) => {
+            if (candidate === targetBox.candidates[candidateIndex]) {
+                candidate.isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup = true;
+            } else if (!isCandidateDiscarded(candidate)) {
+                candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup = true;
+            }
+        });
+        targetBox.peerBoxes
+            .filter((pb) => !pb.isLocked)
+            .forEach((peerBox) => {
+                peerBox.candidates[
+                    candidateIndex
+                ].isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup = true;
+            });
+        addPeerBoxesToBoxQueue(boxQueue, targetBox.peerBoxes);
+    });
+};
 
 export const updateOnlyLeftCandidate = (boxQueue: Box[], box: Box) => {
     const onlyCandidateLeftIndex = box.candidates.findIndex(
-        (candidate) => !candidate.isDiscardedByLock
+        (candidate) => !isCandidateDiscarded(candidate)
     );
-    box.candidates[onlyCandidateLeftIndex].isTheOnlyCandidateLeftForThisBox = true;
+    box.candidates[onlyCandidateLeftIndex].isChosenBecauseIsTheOnlyCandidateLeftForThisBox = true;
     box.peerBoxes.forEach(
-        (pb) => (pb.candidates[onlyCandidateLeftIndex].isTheOnlyCandidateLeftForAPeerBox = true)
+        (pb) =>
+            (pb.candidates[
+                onlyCandidateLeftIndex
+            ].isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox = true)
     );
     addPeerBoxesToBoxQueue(boxQueue, box.peerBoxes);
 };
