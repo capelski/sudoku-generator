@@ -1,13 +1,4 @@
-import { Box, BoxCandidate, Candidate, Group, NumericDictionary, Sudoku } from '../types/sudoku';
-import {
-    arePeerBoxes,
-    getBoxGroups,
-    getBoxPeers,
-    getGroups,
-    isCandidateDiscarded,
-    updateCandidateImpact
-} from './sudoku-operations';
-import { getRandomElement } from './utilities';
+import { Box, Candidate, Group, NumericDictionary } from '../types/sudoku';
 
 // const discardByBoxesNumbersGroupRestriction = (box: Box, numbers: number[]) => {
 //     box.candidates
@@ -128,20 +119,6 @@ export const addPeerBoxesToBoxQueue = (boxQueue: Box[], peerBoxes: Box[]) => {
         });
 };
 
-export const discardCandidates = (boxQueue: Box[]) => {
-    const currentBox = boxQueue.shift();
-
-    if (currentBox) {
-        if (doesBoxNeedToUpdateOnlyLeftCandidate(currentBox)) {
-            updateOnlyLeftCandidate(boxQueue, currentBox);
-        }
-
-        // TODO Discard candidates by other means here
-
-        discardCandidates(boxQueue);
-    }
-};
-
 export const doesBoxNeedToUpdateOnlyLeftCandidate = (box: Box) => {
     let doesIt = false;
     const doesBoxHaveOnlyOneCandidateLeft =
@@ -156,57 +133,19 @@ export const doesBoxNeedToUpdateOnlyLeftCandidate = (box: Box) => {
     return doesIt;
 };
 
-export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box => {
-    const nextCandidates = currentBox.candidates.map(
-        (candidate): Candidate => ({
-            impact: -1,
-            impactWithoutDiscards: -1,
-            isTheOnlyCandidateLeftForAPeerBox: false,
-            isTheOnlyCandidateLeftForThisBox: false,
-            isDiscardedByLock: candidate.number !== selectedNumber,
-            number: candidate.number
-        })
+export const doesGroupHaveABoxWithoutCandidates = (group: Group) =>
+    group.boxes.find((box) => isBoxOutOfCandidates(box)) !== undefined;
+
+export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
+    const lockedBoxesNumbersOccurrences = group.boxes
+        .filter((box) => box.isLocked)
+        .reduce<NumericDictionary<number>>((reduced, lockedBox) => {
+            return { ...reduced, [lockedBox.number!]: (reduced[lockedBox.number!] || 0) + 1 };
+        }, {});
+
+    return Object.values(lockedBoxesNumbersOccurrences).find(
+        (numberOccurrences) => numberOccurrences > 1
     );
-
-    return {
-        candidates: nextCandidates,
-        column: currentBox.column,
-        groups: {} as any, // Will be set later, since all boxes must be defined
-        id: currentBox.id,
-        isLocked: true,
-        maximumImpact: -1,
-        peerBoxes: [], // Will be set later, since all boxes must be defined
-        number: selectedNumber,
-        region: currentBox.region,
-        row: currentBox.row
-    };
-};
-
-export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber: number): Box => {
-    const isPeerBox = arePeerBoxes(currentBox, selectedBox);
-    const nextCandidates = currentBox.candidates.map(
-        (candidate): Candidate => ({
-            impact: -2,
-            impactWithoutDiscards: -2,
-            isTheOnlyCandidateLeftForAPeerBox: false,
-            isTheOnlyCandidateLeftForThisBox: false,
-            isDiscardedByLock:
-                candidate.isDiscardedByLock || (isPeerBox && candidate.number === selectedNumber),
-            number: candidate.number
-        })
-    );
-
-    return {
-        candidates: nextCandidates,
-        column: currentBox.column,
-        groups: {} as any, // Will be set later, since all boxes must be defined
-        id: currentBox.id,
-        isLocked: false,
-        peerBoxes: [], // Will be set later, since all boxes must be defined
-        maximumImpact: -2,
-        region: currentBox.region,
-        row: currentBox.row
-    };
 };
 
 // export const getNumbersAvailableBoxes = (boxes: Box[]): NumericDictionary<NumberAvailableBoxes> => {
@@ -240,123 +179,10 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
 //             box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
 //     );
 
-export const getRandomMaximumImpactBox = (sudoku: Sudoku): BoxCandidate | undefined => {
-    const maximumImpactBoxes = sudoku.boxes.filter(
-        (box) =>
-            !box.isLocked &&
-            box.candidates.find(
-                (candidate) =>
-                    !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
-            )
-    );
+export const isBoxOutOfCandidates = (box: Box) =>
+    box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) === undefined;
 
-    if (maximumImpactBoxes.length > 0) {
-        const randomBox = getRandomElement(maximumImpactBoxes);
-
-        const maximumImpactCandidates = randomBox.candidates.filter(
-            (candidate) =>
-                !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
-        );
-        const randomCandidate = getRandomElement(maximumImpactCandidates);
-
-        return {
-            box: randomBox,
-            number: randomCandidate.number
-        };
-    }
-
-    return undefined;
-};
-
-export const getUpdatedSudoku = (
-    sudoku: Sudoku,
-    nextBoxes: Box[],
-    latestLockedBox?: Box
-): Sudoku => {
-    const nextGroups = getGroups(nextBoxes);
-
-    nextBoxes.forEach((nextBox) => {
-        nextBox.peerBoxes = getBoxPeers(nextGroups, nextBox);
-        nextBox.groups = getBoxGroups(nextGroups, nextBox);
-    });
-
-    discardCandidates(nextBoxes.filter((box) => !box.isLocked));
-    // discardCandidates(nextBoxes, nextGroup);
-
-    updateGroupsValidations(nextGroups.columns);
-    updateGroupsValidations(nextGroups.regions);
-    updateGroupsValidations(nextGroups.rows);
-
-    // Update candidates impact after discarding
-    nextBoxes.forEach((nextBox) => {
-        nextBox.candidates.forEach((_candidate, candidateIndex) => {
-            updateCandidateImpact(nextBox, candidateIndex);
-        });
-
-        nextBox.maximumImpact = nextBox.candidates.reduce(
-            (reduced, candidate) => Math.max(reduced, candidate.impact),
-            0
-        );
-    });
-
-    const sudokuMaximumImpact = nextBoxes.reduce(
-        (reduced, box) => Math.max(reduced, box.maximumImpact),
-        0
-    );
-
-    return {
-        boxes: nextBoxes,
-        groups: nextGroups,
-        latestLockedBox: latestLockedBox,
-        maximumImpact: sudokuMaximumImpact,
-        regionSize: sudoku.regionSize,
-        size: sudoku.size
-    };
-};
-
-export const hasBoxAPotentialCandidate = (box: Box) =>
-    box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) !== undefined;
-
-export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
-    const boxesAfterLock = sudoku.boxes.map(
-        (box): Box => {
-            if (box.isLocked) {
-                return box;
-            } else if (box === selectedBox) {
-                return getNextLockedBox(box, selectedNumber);
-            } else {
-                return getNextOpenBox(box, selectedBox, selectedNumber);
-            }
-        }
-    );
-    return getUpdatedSudoku(sudoku, boxesAfterLock, selectedBox);
-};
-
-export const rehydrateSudoku = (serializedSudoku: Sudoku): Sudoku =>
-    getUpdatedSudoku(serializedSudoku, serializedSudoku.boxes, serializedSudoku.latestLockedBox);
-
-export const updateGroupsValidations = (groups: NumericDictionary<Group>) => {
-    Object.values(groups).forEach((group) => {
-        const lockedBoxesNumbersOccurrences = group.boxes
-            .filter((box) => box.isLocked)
-            .reduce<NumericDictionary<number>>((reduced, lockedBox) => {
-                return { ...reduced, [lockedBox.number!]: (reduced[lockedBox.number!] || 0) + 1 };
-            }, {});
-
-        const hasTwoLockedBoxesWithSameNumber = Object.values(lockedBoxesNumbersOccurrences).find(
-            (numberOccurrences) => numberOccurrences > 1
-        );
-
-        const hasAnyBoxWithoutCandidates =
-            group.boxes.find(
-                (box) =>
-                    box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) ===
-                    undefined
-            ) !== undefined;
-
-        group.isValid = !hasTwoLockedBoxesWithSameNumber && !hasAnyBoxWithoutCandidates;
-    });
-};
+export const isCandidateDiscarded = (candidate: Candidate) => candidate.isDiscardedByLock;
 
 export const updateOnlyLeftCandidate = (boxQueue: Box[], box: Box) => {
     const onlyCandidateLeftIndex = box.candidates.findIndex(

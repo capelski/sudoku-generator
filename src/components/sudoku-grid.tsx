@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, BoxCandidate, Sudoku } from '../types/sudoku';
-import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
-import { getRandomMaximumImpactBox } from '../logic/sudoku-rules';
+import { arePeerBoxes, getRandomMaximumImpactBox } from '../logic/sudoku-operations';
+import { isCandidateDiscarded } from '../logic/sudoku-rules';
 
 type CandidateDisplayMode = 'number' | 'impact';
 
