@@ -1,6 +1,7 @@
 export interface Box {
     candidates: Candidate[];
     column: number;
+    groups: BoxGroups;
     id: number;
     isLocked: boolean;
     maximumImpact: number;

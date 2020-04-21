@@ -1,8 +1,9 @@
 import { Box, Candidate, Group, NumericDictionary, Sudoku } from '../types/sudoku';
 import {
-    getGroups,
-    getBoxPeers,
     arePeerBoxes,
+    getBoxGroups,
+    getBoxPeers,
+    getGroups,
     isCandidateDiscarded,
     updateCandidateImpact
 } from './sudoku-operations';
@@ -160,6 +161,8 @@ export const discardCandidates = (boxQueue: Box[]) => {
             updateOnlyLeftCandidate(boxQueue, currentBox);
         }
 
+        // TODO Discard candidates by other means here
+
         discardCandidates(boxQueue);
     }
 };
@@ -179,10 +182,11 @@ export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box =
     return {
         candidates: nextCandidates,
         column: currentBox.column,
+        groups: {} as any, // Will be set later, since all boxes must be defined
         id: currentBox.id,
         isLocked: true,
         maximumImpact: -1,
-        peerBoxes: [], // Some peer boxes might not exist here yet
+        peerBoxes: [], // Will be set later, since all boxes must be defined
         number: selectedNumber,
         region: currentBox.region,
         row: currentBox.row
@@ -206,9 +210,10 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
     return {
         candidates: nextCandidates,
         column: currentBox.column,
+        groups: {} as any, // Will be set later, since all boxes must be defined
         id: currentBox.id,
         isLocked: false,
-        peerBoxes: [], // Some peer boxes might not exist here yet
+        peerBoxes: [], // Will be set later, since all boxes must be defined
         maximumImpact: -2,
         region: currentBox.region,
         row: currentBox.row
@@ -278,6 +283,7 @@ export const getUpdatedSudoku = (
 
     nextBoxes.forEach((nextBox) => {
         nextBox.peerBoxes = getBoxPeers(nextGroups, nextBox);
+        nextBox.groups = getBoxGroups(nextGroups, nextBox);
     });
 
     discardCandidates(nextBoxes.filter((box) => !box.isLocked));
@@ -316,14 +322,6 @@ export const getUpdatedSudoku = (
 
 export const hasBoxAPotentialCandidate = (box: Box) =>
     box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) !== undefined;
-
-export const isBoxColumnValid = (sudoku: Sudoku, box: Box) =>
-    sudoku.groups.columns[box.column].isValid;
-
-export const isBoxRegionValid = (sudoku: Sudoku, box: Box) =>
-    sudoku.groups.regions[box.region].isValid;
-
-export const isBoxRowValid = (sudoku: Sudoku, box: Box) => sudoku.groups.rows[box.row].isValid;
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
     const boxesAfterLock = sudoku.boxes.map(

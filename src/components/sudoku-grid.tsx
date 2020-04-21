@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
 import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
-import {
-    isBoxColumnValid,
-    isBoxRegionValid,
-    isBoxRowValid,
-    lockRandomMaximumImpactBox
-} from '../logic/sudoku-rules';
+import { lockRandomMaximumImpactBox } from '../logic/sudoku-rules';
 
 interface BoxCandidate {
     box: Box;
@@ -86,17 +81,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
                                         isLatestLockedBox ? ' latest-locked-box' : ''
                                     }${
-                                        highlightInvalidGroups &&
-                                        !isBoxColumnValid(props.sudoku, box)
+                                        highlightInvalidGroups && !box.groups.column.isValid
                                             ? ' inside-invalid-column'
                                             : ''
                                     }${
-                                        highlightInvalidGroups &&
-                                        !isBoxRegionValid(props.sudoku, box)
+                                        highlightInvalidGroups && !box.groups.region.isValid
                                             ? ' inside-invalid-region'
                                             : ''
                                     }${
-                                        highlightInvalidGroups && !isBoxRowValid(props.sudoku, box)
+                                        highlightInvalidGroups && !box.groups.row.isValid
                                             ? ' inside-invalid-row'
                                             : ''
                                     }`}

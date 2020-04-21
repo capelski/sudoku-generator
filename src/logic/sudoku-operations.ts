@@ -44,8 +44,9 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                     column: columnIndex,
                     id: rowIndex * size + columnIndex,
                     isLocked: false,
+                    groups: {} as any, // Will be set later, since all boxes must be defined
                     maximumImpact: initialImpact,
-                    peerBoxes: [], // Some peer boxes might not exist here yet
+                    peerBoxes: [], // Will be set later, since all boxes must be defined
                     region:
                         Math.floor(rowIndex / regionSize) * regionSize +
                         Math.floor(columnIndex / regionSize),
@@ -59,6 +60,7 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
 
     boxes.forEach((box) => {
         box.peerBoxes = getBoxPeers(groups, box);
+        box.groups = getBoxGroups(groups, box);
     });
 
     return {
@@ -97,18 +99,17 @@ export const getSerializableSudoku = (sudoku: Sudoku): Sudoku => ({
     ...sudoku,
     boxes: sudoku.boxes.map((box) => ({
         ...box,
-        peerBoxes: [] // Would cause cyclic dependencies
+        // Would cause cyclic dependencies
+        groups: {} as any,
+        peerBoxes: []
     })),
     latestLockedBox: sudoku.latestLockedBox && {
         ...sudoku.latestLockedBox,
+        // Would cause cyclic dependencies
         peerBoxes: []
     },
-    groups: {
-        // Would cause cyclic dependencies
-        columns: {},
-        regions: {},
-        rows: {}
-    }
+    // Would cause cyclic dependencies
+    groups: {} as any
 });
 
 export const isCandidateDiscarded = (candidate: Candidate) => candidate.isDiscardedByLock;
