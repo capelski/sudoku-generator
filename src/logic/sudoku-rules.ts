@@ -1,4 +1,4 @@
-import { Box, Candidate, Sudoku } from '../types/sudoku';
+import { Box, Candidate, Group, NumericDictionary, Sudoku } from '../types/sudoku';
 import {
     getGroups,
     getBoxPeers,
@@ -246,6 +246,22 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
 //             box.candidates.filter((candidate) => candidate.isBoxSingleCandidate).length === 0
 //     );
 
+export const updateGroupsValidations = (groups: NumericDictionary<Group>) => {
+    Object.values(groups).forEach((group) => {
+        const lockedBoxesNumbersOccurrences = group.boxes
+            .filter((box) => box.isLocked)
+            .reduce<NumericDictionary<number>>((reduced, lockedBox) => {
+                return { ...reduced, [lockedBox.number!]: (reduced[lockedBox.number!] || 0) + 1 };
+            }, {});
+
+        const hasTwoLockedBoxesWithSameNumber = Object.values(lockedBoxesNumbersOccurrences).find(
+            (numberOccurrences) => numberOccurrences > 1
+        );
+
+        group.isValid = !hasTwoLockedBoxesWithSameNumber;
+    });
+};
+
 export const getUpdatedSudoku = (
     sudoku: Sudoku,
     nextBoxes: Box[],
@@ -259,6 +275,10 @@ export const getUpdatedSudoku = (
 
     discardCandidates(nextBoxes.filter((box) => !box.isLocked));
     // discardCandidates(nextBoxes, nextGroup);
+
+    updateGroupsValidations(nextGroups.columns);
+    updateGroupsValidations(nextGroups.regions);
+    updateGroupsValidations(nextGroups.rows);
 
     // Update candidates impact after discarding
     nextBoxes.forEach((nextBox) => {
@@ -290,13 +310,13 @@ export const getUpdatedSudoku = (
 export const hasBoxAPotentialCandidate = (box: Box) =>
     box.candidates.find((candidate) => !isCandidateDiscarded(candidate)) !== undefined;
 
-export const isBoxColumnInvalid = (sudoku: Sudoku, box: Box) =>
-    !sudoku.groups.columns[box.column].isValid;
+export const isBoxColumnValid = (sudoku: Sudoku, box: Box) =>
+    sudoku.groups.columns[box.column].isValid;
 
-export const isBoxRegionInvalid = (sudoku: Sudoku, box: Box) =>
-    !sudoku.groups.regions[box.region].isValid;
+export const isBoxRegionValid = (sudoku: Sudoku, box: Box) =>
+    sudoku.groups.regions[box.region].isValid;
 
-export const isBoxRowInvalid = (sudoku: Sudoku, box: Box) => !sudoku.groups.rows[box.row].isValid;
+export const isBoxRowValid = (sudoku: Sudoku, box: Box) => sudoku.groups.rows[box.row].isValid;
 
 export const lockBox = (sudoku: Sudoku, selectedBox: Box, selectedNumber: number): Sudoku => {
     const boxesAfterLock = sudoku.boxes.map(

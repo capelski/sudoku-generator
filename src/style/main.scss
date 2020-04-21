@@ -59,19 +59,15 @@ $candidateSize: 25px;
             }
         }
 
-        //     &.inside-invalid-column,
-        //     &.inside-invalid-region,
-        //     &.inside-invalid-row {
-        //         background-color: #fbe0e0;
+        &.inside-invalid-column,
+        &.inside-invalid-region,
+        &.inside-invalid-row {
+            background-color: #ffd27f;
 
-        //         .sudoku-candidate
-        //             :not(.discarded-by-lock)
-        //             :not(.discarded-by-box-single-candidate-in-peer-box)
-        //             :not(.discarded-by-group-single-candidate-in-same-box)
-        //             :not(.discarded-by-boxes-numbers-group-restriction) {
-        //             background-color: #fbe0e0;
-        //         }
-        //     }
+            .sudoku-candidate:not(.discarded-by-lock):not(.only-candidate-left-for-a-peer-box) {
+                background-color: #ffd27f;
+            }
+        }
     }
 
     &.size-4 {

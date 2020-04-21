@@ -31,8 +31,8 @@ export interface Candidate {
 }
 
 export interface Group {
-    isValid: boolean;
     boxes: Box[];
+    isValid: boolean;
 }
 
 export interface NumberAvailableBoxes {

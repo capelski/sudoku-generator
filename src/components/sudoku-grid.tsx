@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Sudoku, Box } from '../types/sudoku';
 import { arePeerBoxes, isCandidateDiscarded } from '../logic/sudoku-operations';
 import {
-    isBoxColumnInvalid,
-    isBoxRegionInvalid,
-    isBoxRowInvalid,
+    isBoxColumnValid,
+    isBoxRegionValid,
+    isBoxRowValid,
     lockRandomMaximumImpactBox
 } from '../logic/sudoku-rules';
 
@@ -81,17 +81,17 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
                                         isLatestLockedBox ? ' latest-locked-box' : ''
                                     }${
-                                        isBoxColumnInvalid(props.sudoku, box)
-                                            ? ' inside-invalid-column'
-                                            : ''
+                                        isBoxColumnValid(props.sudoku, box)
+                                            ? ''
+                                            : ' inside-invalid-column'
                                     }${
-                                        isBoxRegionInvalid(props.sudoku, box)
-                                            ? ' inside-invalid-region'
-                                            : ''
+                                        isBoxRegionValid(props.sudoku, box)
+                                            ? ''
+                                            : ' inside-invalid-region'
                                     }${
-                                        isBoxRowInvalid(props.sudoku, box)
-                                            ? ' inside-invalid-row'
-                                            : ''
+                                        isBoxRowValid(props.sudoku, box)
+                                            ? ''
+                                            : ' inside-invalid-row'
                                     }`}
                                 >
                                     {box.isLocked
