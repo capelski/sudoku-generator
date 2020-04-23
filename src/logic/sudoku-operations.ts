@@ -1,21 +1,25 @@
 import {
     Box,
     BoxCandidate,
+    BoxesCandidatesSet,
     BoxGroups,
     Candidate,
     Group,
     NumericDictionary,
+    StringDictionary,
     Sudoku,
     SudokuGroups
 } from '../types/sudoku';
 import {
     doesBoxHaveOnlyOneNonDiscardedCandidate,
     doesGroupHaveABoxWithoutCandidates,
-    doesGroupHaveTwoLockedBoxesWithSameNumber,
+    doesGroupHaveNonPropagatedOwnedCandidates,
     doesGroupNeedToPlaceANumberInCertainBox,
+    doesGroupHaveTwoLockedBoxesWithSameNumber,
     isCandidateDiscarded,
     placeGroupNumberInCertainBox,
-    updateOnlyLeftCandidate as updateOnlyNonDiscardedCandidate
+    restrictOwnedCandidates,
+    updateOnlyNonDiscardedCandidate
 } from './sudoku-rules';
 import { getRandomElement } from './utilities';
 
@@ -34,18 +38,36 @@ export const discardCandidates = (boxQueue: Box[]) => {
         if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.column)) {
             placeGroupNumberInCertainBox(currentBox.groups.column, boxQueue);
             updateGroupAvailableBoxesPerNumber(currentBox.groups.column);
+            updateGroupOwnedCandidates(currentBox.groups.column);
         }
         if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.region)) {
             placeGroupNumberInCertainBox(currentBox.groups.region, boxQueue);
             updateGroupAvailableBoxesPerNumber(currentBox.groups.region);
+            updateGroupOwnedCandidates(currentBox.groups.region);
         }
         if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.row)) {
             placeGroupNumberInCertainBox(currentBox.groups.row, boxQueue);
             updateGroupAvailableBoxesPerNumber(currentBox.groups.row);
+            updateGroupOwnedCandidates(currentBox.groups.row);
+        }
+
+        if (doesGroupHaveNonPropagatedOwnedCandidates(currentBox.groups.column)) {
+            restrictOwnedCandidates(currentBox.groups.column, boxQueue);
+            updateGroupAvailableBoxesPerNumber(currentBox.groups.region);
+            updateGroupOwnedCandidates(currentBox.groups.region);
+        }
+        if (doesGroupHaveNonPropagatedOwnedCandidates(currentBox.groups.region)) {
+            restrictOwnedCandidates(currentBox.groups.region, boxQueue);
+            updateGroupAvailableBoxesPerNumber(currentBox.groups.region);
+            updateGroupOwnedCandidates(currentBox.groups.region);
+        }
+        if (doesGroupHaveNonPropagatedOwnedCandidates(currentBox.groups.row)) {
+            restrictOwnedCandidates(currentBox.groups.row, boxQueue);
+            updateGroupAvailableBoxesPerNumber(currentBox.groups.row);
+            updateGroupOwnedCandidates(currentBox.groups.row);
         }
 
         // TODO Discard candidates by other means here
-        // - bound boxes
 
         discardCandidates(boxQueue);
     }
@@ -89,6 +111,7 @@ export const getEmptySudoku = (regionSize: number): Sudoku => {
                                 isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
                                 isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
                                 isDiscardedBecauseOfLock: false,
+                                isDiscardedBecauseOfOwnedCandidateInSomeGroup: false,
                                 number: candidateIndex + 1
                             })
                         )
@@ -139,21 +162,24 @@ export const getGroups = (boxes: Box[]): SudokuGroups => {
                 ({
                     availableBoxesPerNumber: {},
                     boxes: [],
-                    isValid: true
+                    isValid: true,
+                    ownedCandidates: []
                 } as Group);
             reduced.regions[box.region] =
                 reduced.regions[box.region] ||
                 ({
                     availableBoxesPerNumber: {},
                     boxes: [],
-                    isValid: true
+                    isValid: true,
+                    ownedCandidates: []
                 } as Group);
             reduced.rows[box.row] =
                 reduced.rows[box.row] ||
                 ({
                     availableBoxesPerNumber: {},
                     boxes: [],
-                    isValid: true
+                    isValid: true,
+                    ownedCandidates: []
                 } as Group);
 
             reduced.columns[box.column].boxes.push(box);
@@ -165,9 +191,18 @@ export const getGroups = (boxes: Box[]): SudokuGroups => {
         { columns: {}, regions: {}, rows: {} }
     );
 
-    Object.values(groups.columns).forEach(updateGroupAvailableBoxesPerNumber);
-    Object.values(groups.regions).forEach(updateGroupAvailableBoxesPerNumber);
-    Object.values(groups.rows).forEach(updateGroupAvailableBoxesPerNumber);
+    Object.values(groups.columns).forEach((group) => {
+        updateGroupAvailableBoxesPerNumber(group);
+        updateGroupOwnedCandidates(group);
+    });
+    Object.values(groups.regions).forEach((group) => {
+        updateGroupAvailableBoxesPerNumber(group);
+        updateGroupOwnedCandidates(group);
+    });
+    Object.values(groups.rows).forEach((group) => {
+        updateGroupAvailableBoxesPerNumber(group);
+        updateGroupOwnedCandidates(group);
+    });
 
     return groups;
 };
@@ -185,6 +220,7 @@ export const getNextLockedBox = (currentBox: Box, selectedNumber: number): Box =
                 isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
                 isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
                 isDiscardedBecauseOfLock: number !== selectedNumber,
+                isDiscardedBecauseOfOwnedCandidateInSomeGroup: false,
                 number: number
             })
         )
@@ -223,6 +259,7 @@ export const getNextOpenBox = (currentBox: Box, selectedBox: Box, selectedNumber
                 isDiscardedBecauseOfLock:
                     currentBox.candidates[number].isDiscardedBecauseOfLock ||
                     (isPeerBox && number === selectedNumber),
+                isDiscardedBecauseOfOwnedCandidateInSomeGroup: false,
                 number
             })
         )
@@ -376,6 +413,29 @@ export const updateGroupAvailableBoxesPerNumber = (group: Group) => {
             }
         });
     });
+};
+
+export const updateGroupOwnedCandidates = (group: Group) => {
+    const ownedCandidatesDictionary: StringDictionary<BoxesCandidatesSet> = {};
+
+    Object.keys(group.availableBoxesPerNumber)
+        .map((number) => parseInt(number))
+        .forEach((number) => {
+            const boxes = group.availableBoxesPerNumber[number].filter((box) => !box.isLocked);
+            const boxesKey = boxes.map((box) => box.id).join('_');
+            if (boxesKey) {
+                ownedCandidatesDictionary[boxesKey] =
+                    ownedCandidatesDictionary[boxesKey] ||
+                    ({ boxes, numbers: [] } as BoxesCandidatesSet);
+                ownedCandidatesDictionary[boxesKey].numbers.push(number);
+            }
+        });
+
+    group.ownedCandidates = Object.values(ownedCandidatesDictionary).filter(
+        (ownedCandidatesSet) =>
+            ownedCandidatesSet.boxes.length === ownedCandidatesSet.numbers.length &&
+            ownedCandidatesSet.boxes.length !== group.boxes.filter((box) => !box.isLocked).length
+    );
 };
 
 export const updateGroupsValidations = (groups: NumericDictionary<Group>) => {

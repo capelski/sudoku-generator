@@ -29,7 +29,8 @@ $candidateSize: 25px;
             &.discarded-because-of-lock,
             &.discarded-because-is-only-candidate-left-for-a-peer-box,
             &.discarded-because-peer-box-must-hold-this-number-for-some-group,
-            &.discarded-because-this-box-must-hold-another-number-for-some-group {
+            &.discarded-because-this-box-must-hold-another-number-for-some-group,
+            &.discarded-because-of-owned-candidate-in-same-group {
                 font-style: italic;
                 background-color: #fbe0e0;
             }
@@ -71,7 +72,8 @@ $candidateSize: 25px;
                 :not(.discarded-because-of-lock)
                 :not(.discarded-because-is-only-candidate-left-for-a-peer-box)
                 :not(.discarded-because-peer-box-must-hold-this-number-for-some-group)
-                :not(.discarded-because-this-box-must-hold-another-number-for-some-group) {
+                :not(.discarded-because-this-box-must-hold-another-number-for-some-group)
+                :not(.discarded-because-of-owned-candidate-in-same-group) {
                 background-color: #ffe4b2;
             }
         }

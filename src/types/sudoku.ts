@@ -16,9 +16,9 @@ export interface BoxCandidate {
     number: number;
 }
 
-export interface BoxesNumbersGroupRestriction {
-    numbers: number[];
+export interface BoxesCandidatesSet {
     boxes: Box[];
+    numbers: number[];
 }
 
 export interface BoxGroups {
@@ -36,6 +36,7 @@ export interface Candidate {
     isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: boolean;
     isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: boolean;
     isDiscardedBecauseOfLock: boolean;
+    isDiscardedBecauseOfOwnedCandidateInSomeGroup: boolean;
     number: number;
 }
 
@@ -43,6 +44,7 @@ export interface Group {
     availableBoxesPerNumber: NumericDictionary<Box[]>;
     boxes: Box[];
     isValid: boolean;
+    ownedCandidates: BoxesCandidatesSet[];
 }
 
 export type NumericDictionary<T> = { [key: number]: T };

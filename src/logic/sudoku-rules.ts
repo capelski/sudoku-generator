@@ -136,6 +136,20 @@ export const doesBoxHaveOnlyOneNonDiscardedCandidate = (box: Box) => {
 export const doesGroupHaveABoxWithoutCandidates = (group: Group) =>
     group.boxes.find((box) => isBoxOutOfCandidates(box)) !== undefined;
 
+export const doesGroupHaveNonPropagatedOwnedCandidates = (group: Group) => {
+    return (
+        group.ownedCandidates.find((ownedCandidatesSet) => {
+            return ownedCandidatesSet.boxes.find((ownedBox) =>
+                Object.values(ownedBox.candidates).find(
+                    (candidate) =>
+                        ownedCandidatesSet.numbers.indexOf(candidate.number) === -1 &&
+                        !isCandidateDiscarded(candidate)
+                )
+            );
+        }) !== undefined
+    );
+};
+
 export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
     const lockedBoxesNumbersOccurrences = group.boxes
         .filter((box) => box.isLocked)
@@ -208,7 +222,8 @@ export const isCandidateDiscarded = (candidate: Candidate) =>
     candidate.isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup ||
     candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup ||
     candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox ||
-    candidate.isDiscardedBecauseOfLock;
+    candidate.isDiscardedBecauseOfLock ||
+    candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup;
 
 export const placeGroupNumberInCertainBox = (group: Group, boxQueue: Box[]) => {
     const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
@@ -238,7 +253,30 @@ export const placeGroupNumberInCertainBox = (group: Group, boxQueue: Box[]) => {
     });
 };
 
-export const updateOnlyLeftCandidate = (boxQueue: Box[], box: Box) => {
+export const restrictOwnedCandidates = (group: Group, boxQueue: Box[]) => {
+    group.ownedCandidates.forEach((ownedCandidatesSet) => {
+        const ownedBoxesId = ownedCandidatesSet.boxes.map((box) => box.id);
+        ownedCandidatesSet.boxes.forEach((ownedBox) => {
+            Object.values(ownedBox.candidates)
+                .filter(
+                    (candidate) =>
+                        ownedCandidatesSet.numbers.indexOf(candidate.number) === -1 &&
+                        !isCandidateDiscarded(candidate)
+                )
+                .forEach((candidate) => {
+                    candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup = true;
+                });
+            addPeerBoxesToBoxQueue(
+                boxQueue,
+                ownedBox.peerBoxes.filter(
+                    (peerBox) => !peerBox.isLocked && ownedBoxesId.indexOf(peerBox.id) === -1
+                )
+            );
+        });
+    });
+};
+
+export const updateOnlyNonDiscardedCandidate = (boxQueue: Box[], box: Box) => {
     const onlyCandidateLeftNumber = Object.keys(box.candidates)
         .map((number) => parseInt(number))
         .find((number) => !isCandidateDiscarded(box.candidates[number]))!;

@@ -191,6 +191,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup
                                                               ? ' discarded-because-this-box-must-hold-another-number-for-some-group'
                                                               : ''
+                                                      }${
+                                                          highlightDiscardedCandidates &&
+                                                          candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup
+                                                              ? ' discarded-because-of-owned-candidate-in-same-group'
+                                                              : ''
                                                       }`}
                                                       onClick={candidateClickHandler}
                                                   >
