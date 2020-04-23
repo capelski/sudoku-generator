@@ -12,7 +12,7 @@ export interface Box {
 }
 
 export interface BoxCandidate {
-    box: Box;
+    boxId: number;
     number: number;
 }
 
@@ -52,11 +52,15 @@ export type NumericDictionary<T> = { [key: number]: T };
 export type StringDictionary<T> = { [key: string]: T };
 
 export interface Sudoku {
+    locksHistory: number[];
+    numbers: NumericDictionary<number>;
+    regionSize: number;
+}
+
+export interface SudokuComputedData {
     boxes: Box[];
     groups: SudokuGroups;
-    latestLockedBox?: Box;
     maximumImpact: number;
-    regionSize: number;
     size: number;
 }
 

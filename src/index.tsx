@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { SudokuGrid } from './components/sudoku-grid';
-import {
-    getEmptySudoku,
-    getSerializableSudoku,
-    lockBox,
-    rehydrateSudoku
-} from './logic/sudoku-operations';
-import { Box, Sudoku } from './types/sudoku';
+import { getEmptySudoku, lockBox } from './logic/sudoku-operations';
+import { Sudoku } from './types/sudoku';
 
 import './style/main.scss';
 
@@ -15,7 +10,7 @@ const initialSudokuList = [getEmptySudoku(3)];
 
 const persistSudokuStatus = (sudokuList: Sudoku[], sudokuIndex: number) => {
     const sudokuStatus = {
-        sudokuList: sudokuList.map(getSerializableSudoku),
+        sudokuList,
         sudokuIndex
     };
 
@@ -32,7 +27,6 @@ const retrieveSudokuStatus = (): { sudokuIndex: number; sudokuList: Sudoku[] } |
     const serializedSudokuStatus = localStorage.getItem('sudokuStatus');
     if (serializedSudokuStatus) {
         sudokuStatus = JSON.parse(serializedSudokuStatus);
-        sudokuStatus!.sudokuList = sudokuStatus!.sudokuList.map(rehydrateSudoku);
     }
     return sudokuStatus;
 };
@@ -49,20 +43,16 @@ const App = () => {
         }
     }, []);
 
-    const lockBoxWrapper = (selectedBox: Box, selectedNumber: number) => {
-        if (!selectedBox.isLocked) {
-            const currentSudoku = sudokuList[sudokuIndex];
-            const nextSudoku = lockBox(currentSudoku, selectedBox, selectedNumber);
-            const nextSudokuList = sudokuList.splice(0, sudokuIndex + 1).concat([nextSudoku]);
-            const nextSudokuIndex = sudokuIndex + 1;
+    const lockBoxWrapper = (boxId: number, number: number) => {
+        const currentSudoku = sudokuList[sudokuIndex];
+        const nextSudoku = lockBox(currentSudoku, boxId, number);
+        const nextSudokuList = sudokuList.splice(0, sudokuIndex + 1).concat([nextSudoku]);
+        const nextSudokuIndex = sudokuIndex + 1;
 
-            setSudokuList(nextSudokuList);
-            setSudokuIndex(nextSudokuIndex);
+        setSudokuList(nextSudokuList);
+        setSudokuIndex(nextSudokuIndex);
 
-            persistSudokuStatus(nextSudokuList, nextSudokuIndex);
-        } else {
-            console.error('Box is already locked');
-        }
+        persistSudokuStatus(nextSudokuList, nextSudokuIndex);
     };
 
     const nextSudoku = () => {

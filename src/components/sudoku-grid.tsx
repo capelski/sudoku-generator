@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Box, BoxCandidate, Sudoku } from '../types/sudoku';
-import { arePeerBoxes, getRandomMaximumImpactBox } from '../logic/sudoku-operations';
+import { BoxCandidate, Sudoku } from '../types/sudoku';
+import {
+    arePeerBoxes,
+    getRandomMaximumImpactBox,
+    getSudokuComputedData
+} from '../logic/sudoku-operations';
 import { isCandidateDiscarded } from '../logic/sudoku-rules';
 
 type CandidateDisplayMode = 'number' | 'impact';
 
 interface GridProps {
-    lockBox: (selectedBox: Box, selectedNumber: number) => void;
+    lockBox: (boxId: number, number: number) => void;
     locksNumber: number;
     nextSudoku: () => void;
     previousSudoku: () => void;
@@ -25,6 +29,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
     );
+    const sudokuComputedData = getSudokuComputedData(props.sudoku);
 
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
@@ -51,9 +56,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     };
 
     const lockRandomMaximumImpactBox = () => {
-        const boxCandidate = getRandomMaximumImpactBox(props.sudoku);
+        const boxCandidate = getRandomMaximumImpactBox(sudokuComputedData);
         if (boxCandidate) {
-            props.lockBox(boxCandidate.box, boxCandidate.number);
+            props.lockBox(boxCandidate.boxId, boxCandidate.number);
         } else {
             console.log('No box left to lock!');
         }
@@ -61,24 +66,27 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const lockSelectedCandidateHandler = () => {
         if (selectedBoxCandidate !== undefined) {
-            props.lockBox(selectedBoxCandidate.box, selectedBoxCandidate.number);
+            props.lockBox(selectedBoxCandidate.boxId, selectedBoxCandidate.number);
             setSelectedBoxCandidate(undefined);
         }
     };
+
+    const latestLockedBox = props.sudoku.locksHistory[props.sudoku.locksHistory.length - 1];
 
     return (
         <React.Fragment>
             <div className="screen-splitter">
                 <div>
-                    <div className={`sudoku-grid size-${props.sudoku.size}`}>
-                        {props.sudoku.boxes.map((box) => {
+                    <div className={`sudoku-grid size-${sudokuComputedData.size}`}>
+                        {sudokuComputedData.boxes.map((box) => {
                             const isSelectedBoxPeer =
                                 selectedBoxCandidate !== undefined &&
-                                arePeerBoxes(selectedBoxCandidate.box, box);
+                                arePeerBoxes(
+                                    sudokuComputedData.boxes[selectedBoxCandidate.boxId],
+                                    box
+                                );
 
-                            const isLatestLockedBox =
-                                props.sudoku.latestLockedBox &&
-                                props.sudoku.latestLockedBox.id === box.id;
+                            const isLatestLockedBox = latestLockedBox && latestLockedBox === box.id;
 
                             return (
                                 <div
@@ -111,7 +119,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                                               const isSelectedCandidate =
                                                   selectedBoxCandidate !== undefined &&
-                                                  selectedBoxCandidate.box === box &&
+                                                  selectedBoxCandidate.boxId === box.id &&
                                                   selectedBoxCandidate.number === candidate.number;
 
                                               const isAffectedCandidate =
@@ -119,17 +127,18 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   (!highlightDiscardedCandidates ||
                                                       !isDiscardedCandidate) &&
                                                   isSelectedBoxPeer &&
-                                                  selectedBoxCandidate!.box !== box &&
+                                                  selectedBoxCandidate!.boxId !== box.id &&
                                                   selectedBoxCandidate!.number === candidate.number;
 
                                               const isMaximumImpactCandidate =
                                                   highlightMaximumImpact &&
-                                                  props.sudoku.maximumImpact === candidate.impact;
+                                                  sudokuComputedData.maximumImpact ===
+                                                      candidate.impact;
 
                                               const candidateClickHandler = () => {
                                                   const isCandidateSelected =
                                                       selectedBoxCandidate !== undefined &&
-                                                      selectedBoxCandidate.box === box &&
+                                                      selectedBoxCandidate.boxId === box.id &&
                                                       selectedBoxCandidate.number ===
                                                           candidate.number;
 
@@ -137,7 +146,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                       lockSelectedCandidateHandler();
                                                   } else {
                                                       setSelectedBoxCandidate({
-                                                          box,
+                                                          boxId: box.id,
                                                           number: candidate.number
                                                       });
                                                   }
@@ -217,7 +226,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <input
                             type="radio"
                             onClick={() => props.resetSudoku(2)}
-                            checked={props.sudoku.size === 4}
+                            checked={sudokuComputedData.size === 4}
                         />{' '}
                         4x4
                     </p>
@@ -225,7 +234,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <input
                             type="radio"
                             onClick={() => props.resetSudoku(3)}
-                            checked={props.sudoku.size === 9}
+                            checked={sudokuComputedData.size === 9}
                         />{' '}
                         9x9
                     </p>
