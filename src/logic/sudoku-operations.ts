@@ -68,7 +68,9 @@ export const discardCandidatesByInferring = (boxQueue: Box[]) => {
             updateGroupOwnedCandidates(currentBox.groups.row);
         }
 
-        // TODO Discard candidates by other means here
+        // TODO If a number must be placed in a subset of a row/column for a given region, remove the number from the rest of boxes in the given region
+
+        // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
         discardCandidatesByInferring(boxQueue);
     }
