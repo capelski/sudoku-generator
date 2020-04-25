@@ -37,6 +37,7 @@ export interface Candidate {
     isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: boolean;
     isDiscardedBecauseOfLock: boolean;
     isDiscardedBecauseOfOwnedCandidateInSomeGroup: boolean;
+    isDiscardedBecauseOfRegionSubset: boolean;
     number: number;
 }
 

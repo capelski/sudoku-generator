@@ -205,6 +205,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup
                                                               ? ' discarded-because-of-owned-candidate-in-same-group'
                                                               : ''
+                                                      }${
+                                                          highlightDiscardedCandidates &&
+                                                          candidate.isDiscardedBecauseOfRegionSubset
+                                                              ? ' discarded-because-of-region-subset'
+                                                              : ''
                                                       }`}
                                                       onClick={candidateClickHandler}
                                                   >

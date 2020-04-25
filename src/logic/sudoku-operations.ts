@@ -20,7 +20,9 @@ import {
     isCandidateDiscarded,
     placeGroupNumberInCertainBox,
     restrictOwnedCandidates,
-    updateOnlyNonDiscardedCandidate
+    updateOnlyNonDiscardedCandidate,
+    doesRegionRestrictColumnOrRow,
+    restrictRegionSubset
 } from './sudoku-rules';
 import { getRandomElement } from './utilities';
 
@@ -28,51 +30,49 @@ export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
 };
 
-export const discardCandidatesByInferring = (boxQueue: Box[]) => {
+export const discardCandidatesByInferring = (boxQueue: Box[], groups: SudokuGroups) => {
     const currentBox = boxQueue.shift();
 
     if (currentBox) {
         if (doesBoxHaveOnlyOneNonDiscardedCandidate(currentBox)) {
             updateOnlyNonDiscardedCandidate(boxQueue, currentBox);
+            updateAllGroups(groups);
         }
 
         if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.column)) {
             placeGroupNumberInCertainBox(currentBox.groups.column, boxQueue);
-            updateGroupAvailableBoxesPerNumber(currentBox.groups.column);
-            updateGroupOwnedCandidates(currentBox.groups.column);
+            updateAllGroups(groups);
         }
         if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.region)) {
             placeGroupNumberInCertainBox(currentBox.groups.region, boxQueue);
-            updateGroupAvailableBoxesPerNumber(currentBox.groups.region);
-            updateGroupOwnedCandidates(currentBox.groups.region);
+            updateAllGroups(groups);
         }
         if (doesGroupNeedToPlaceANumberInCertainBox(currentBox.groups.row)) {
             placeGroupNumberInCertainBox(currentBox.groups.row, boxQueue);
-            updateGroupAvailableBoxesPerNumber(currentBox.groups.row);
-            updateGroupOwnedCandidates(currentBox.groups.row);
+            updateAllGroups(groups);
         }
 
         if (doesGroupHaveNonPropagatedOwnedCandidates(currentBox.groups.column)) {
             restrictOwnedCandidates(currentBox.groups.column, boxQueue);
-            updateGroupAvailableBoxesPerNumber(currentBox.groups.region);
-            updateGroupOwnedCandidates(currentBox.groups.region);
+            updateAllGroups(groups);
         }
         if (doesGroupHaveNonPropagatedOwnedCandidates(currentBox.groups.region)) {
             restrictOwnedCandidates(currentBox.groups.region, boxQueue);
-            updateGroupAvailableBoxesPerNumber(currentBox.groups.region);
-            updateGroupOwnedCandidates(currentBox.groups.region);
+            updateAllGroups(groups);
         }
         if (doesGroupHaveNonPropagatedOwnedCandidates(currentBox.groups.row)) {
             restrictOwnedCandidates(currentBox.groups.row, boxQueue);
-            updateGroupAvailableBoxesPerNumber(currentBox.groups.row);
-            updateGroupOwnedCandidates(currentBox.groups.row);
+            updateAllGroups(groups);
         }
 
-        // TODO If a number must be placed in a subset of a row/column for a given region, remove the number from the rest of boxes in the given region
+        if (doesRegionRestrictColumnOrRow(currentBox.region, currentBox.groups.region)) {
+            restrictRegionSubset(currentBox.region, currentBox.groups.region, boxQueue);
+            updateAllGroups(groups);
+        }
 
         // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
-        discardCandidatesByInferring(boxQueue);
+        discardCandidatesByInferring(boxQueue, groups);
     }
 };
 
@@ -203,6 +203,7 @@ export const getSudokuComputedData = (sudoku: Sudoku): SudokuComputedData => {
                                     isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
                                     isDiscardedBecauseOfLock: false,
                                     isDiscardedBecauseOfOwnedCandidateInSomeGroup: false,
+                                    isDiscardedBecauseOfRegionSubset: false,
                                     number: candidateIndex + 1
                                 })
                             )
@@ -252,7 +253,10 @@ export const getSudokuComputedData = (sudoku: Sudoku): SudokuComputedData => {
         updateGroupOwnedCandidates(group);
     });
 
-    discardCandidatesByInferring(boxes.filter((box) => !box.isLocked));
+    discardCandidatesByInferring(
+        boxes.filter((box) => !box.isLocked),
+        groups
+    );
 
     updateGroupsValidations(groups.columns);
     updateGroupsValidations(groups.regions);
@@ -279,6 +283,21 @@ export const lockBox = (sudoku: Sudoku, boxId: number, number: number): Sudoku =
         },
         regionSize: sudoku.regionSize
     };
+};
+
+export const updateAllGroups = (groups: SudokuGroups) => {
+    Object.values(groups.columns).forEach((group) => {
+        updateGroupAvailableBoxesPerNumber(group);
+        updateGroupOwnedCandidates(group);
+    });
+    Object.values(groups.regions).forEach((group) => {
+        updateGroupAvailableBoxesPerNumber(group);
+        updateGroupOwnedCandidates(group);
+    });
+    Object.values(groups.rows).forEach((group) => {
+        updateGroupAvailableBoxesPerNumber(group);
+        updateGroupOwnedCandidates(group);
+    });
 };
 
 export const updateCandidateImpact = (box: Box, candidateIndex: number) => {

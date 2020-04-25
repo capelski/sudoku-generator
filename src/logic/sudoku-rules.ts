@@ -69,6 +69,60 @@ export const doesGroupNeedToPlaceANumberInCertainBox = (group: Group) => {
     return numbersWithOnlyOneBoxLeft.length > 0;
 };
 
+export const doesRegionRestrictColumnOrRow = (regionNumber: number, region: Group) => {
+    return Object.keys(region.availableBoxesPerNumber)
+        .map((number) => parseInt(number))
+        .find((number) => {
+            const numberBoxes = region.availableBoxesPerNumber[number];
+            const boxesColumns = numberBoxes.reduce<NumericDictionary<number>>(
+                (reduced, box) => ({
+                    ...reduced,
+                    [box.column]: (reduced[box.column] || 0) + 1
+                }),
+                {}
+            );
+
+            const areAllBoxesInSameColumn =
+                Object.keys(boxesColumns).length === 1 && Object.values(boxesColumns)[0] > 1;
+
+            let areNonUpdatedCandidatesInColumn = false;
+            if (areAllBoxesInSameColumn) {
+                const column = numberBoxes[0].groups.column;
+                const columnBoxesOutsideRegion = column.boxes.filter(
+                    (box) =>
+                        box.region !== regionNumber &&
+                        !box.isLocked &&
+                        !isCandidateDiscarded(box.candidates[number])
+                );
+                areNonUpdatedCandidatesInColumn = columnBoxesOutsideRegion.length > 0;
+            }
+
+            const boxesRows = numberBoxes.reduce<NumericDictionary<number>>(
+                (reduced, box) => ({
+                    ...reduced,
+                    [box.row]: (reduced[box.row] || 0) + 1
+                }),
+                {}
+            );
+            const areAllBoxesInSameRow =
+                Object.keys(boxesRows).length === 1 && Object.values(boxesRows)[0] > 1;
+
+            let areNonUpdatedCandidatesInRow = false;
+            if (areAllBoxesInSameRow) {
+                const row = numberBoxes[0].groups.row;
+                const rowBoxesOutsideRegion = row.boxes.filter(
+                    (box) =>
+                        box.region !== regionNumber &&
+                        !box.isLocked &&
+                        !isCandidateDiscarded(box.candidates[number])
+                );
+                areNonUpdatedCandidatesInRow = rowBoxesOutsideRegion.length > 0;
+            }
+
+            return areNonUpdatedCandidatesInColumn || areNonUpdatedCandidatesInRow;
+        });
+};
+
 export const isBoxOutOfCandidates = (box: Box) =>
     Object.values(box.candidates).find((candidate) => !isCandidateDiscarded(candidate)) ===
     undefined;
@@ -82,7 +136,8 @@ export const isCandidateDiscarded = (candidate: Candidate) =>
     candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup ||
     candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox ||
     candidate.isDiscardedBecauseOfLock ||
-    candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup;
+    candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup ||
+    candidate.isDiscardedBecauseOfRegionSubset;
 
 export const placeGroupNumberInCertainBox = (group: Group, boxQueue: Box[]) => {
     const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
@@ -133,6 +188,62 @@ export const restrictOwnedCandidates = (group: Group, boxQueue: Box[]) => {
             );
         });
     });
+};
+
+export const restrictRegionSubset = (regionNumber: number, region: Group, boxQueue: Box[]) => {
+    Object.keys(region.availableBoxesPerNumber)
+        .map((number) => parseInt(number))
+        .forEach((number) => {
+            const numberBoxes = region.availableBoxesPerNumber[number];
+            const boxesColumns = numberBoxes.reduce<NumericDictionary<number>>(
+                (reduced, box) => ({
+                    ...reduced,
+                    [box.column]: (reduced[box.column] || 0) + 1
+                }),
+                {}
+            );
+            const areAllBoxesInSameColumn =
+                Object.keys(boxesColumns).length === 1 && Object.values(boxesColumns)[0] > 1;
+
+            if (areAllBoxesInSameColumn) {
+                const column = numberBoxes[0].groups.column;
+                const columnBoxesOutsideRegion = column.boxes.filter(
+                    (box) =>
+                        box.region !== regionNumber &&
+                        !box.isLocked &&
+                        !isCandidateDiscarded(box.candidates[number])
+                );
+                columnBoxesOutsideRegion.forEach((box) => {
+                    box.candidates[number].isDiscardedBecauseOfRegionSubset = true;
+                });
+
+                addPeerBoxesToBoxQueue(boxQueue, columnBoxesOutsideRegion);
+            }
+
+            const boxesRows = numberBoxes.reduce<NumericDictionary<number>>(
+                (reduced, box) => ({
+                    ...reduced,
+                    [box.row]: (reduced[box.row] || 0) + 1
+                }),
+                {}
+            );
+            const areAllBoxesInSameRow =
+                Object.keys(boxesRows).length === 1 && Object.values(boxesRows)[0] > 1;
+
+            if (areAllBoxesInSameRow) {
+                const row = numberBoxes[0].groups.row;
+                const rowBoxesOutsideRegion = row.boxes.filter(
+                    (box) =>
+                        box.region !== regionNumber &&
+                        !box.isLocked &&
+                        !isCandidateDiscarded(box.candidates[number])
+                );
+                rowBoxesOutsideRegion.forEach((box) => {
+                    box.candidates[number].isDiscardedBecauseOfRegionSubset = true;
+                });
+                addPeerBoxesToBoxQueue(boxQueue, rowBoxesOutsideRegion);
+            }
+        });
 };
 
 export const updateOnlyNonDiscardedCandidate = (boxQueue: Box[], box: Box) => {
