@@ -5,7 +5,7 @@ import {
     getRandomMaximumImpactBox,
     getSudokuComputedData
 } from '../logic/sudoku-operations';
-import { isCandidateDiscarded } from '../logic/sudoku-rules';
+import { isCandidateDiscarded, isSudokuReadyToBeSolved } from '../logic/sudoku-rules';
 
 type CandidateDisplayMode = 'number' | 'impact';
 
@@ -30,6 +30,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         undefined
     );
     const sudokuComputedData = getSudokuComputedData(props.sudoku);
+    const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
 
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
@@ -242,6 +243,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             checked={sudokuComputedData.size === 9}
                         />{' '}
                         9x9
+                    </p>
+                    <p>
+                        Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
                     </p>
 
                     <div>

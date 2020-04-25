@@ -1,4 +1,4 @@
-import { Box, Candidate, Group, NumericDictionary } from '../types/sudoku';
+import { Box, Candidate, Group, NumericDictionary, SudokuComputedData } from '../types/sudoku';
 
 export const addPeerBoxesToBoxQueue = (boxQueue: Box[], peerBoxes: Box[]) => {
     const boxQueueIds = boxQueue.map((b) => b.id);
@@ -138,6 +138,11 @@ export const isCandidateDiscarded = (candidate: Candidate) =>
     candidate.isDiscardedBecauseOfLock ||
     candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup ||
     candidate.isDiscardedBecauseOfRegionSubset;
+
+export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) =>
+    !sudokuComputedData.boxes.some(
+        (box) => !box.isLocked && !Object.values(box.candidates).some(isCandidateChosen)
+    );
 
 export const placeGroupNumberInCertainBox = (group: Group, boxQueue: Box[]) => {
     const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
