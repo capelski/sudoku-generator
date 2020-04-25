@@ -10,6 +10,7 @@ import { isCandidateDiscarded, isSudokuReadyToBeSolved } from '../logic/sudoku-r
 type CandidateDisplayMode = 'number' | 'impact';
 
 interface GridProps {
+    generateSolvableSudoku: () => void;
     lockBox: (boxId: number, number: number) => void;
     locksNumber: number;
     nextSudoku: () => void;
@@ -305,6 +306,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     </div>
                     <div>
                         <h3>Actions</h3>
+                        <p>
+                            <button type="button" onClick={props.generateSolvableSudoku}>
+                                Generate sudoku
+                            </button>
+                        </p>
+                        <br />
                         <p>
                             <button type="button" onClick={lockSelectedCandidateHandler}>
                                 Lock selected candidate

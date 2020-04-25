@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { SudokuGrid } from './components/sudoku-grid';
-import { getEmptySudoku, lockBox } from './logic/sudoku-operations';
+import {
+    getEmptySudoku,
+    lockBox,
+    getSudokuComputedData,
+    getRandomMaximumImpactBox
+} from './logic/sudoku-operations';
 import { Sudoku } from './types/sudoku';
 
 import './style/main.scss';
+import { isSudokuReadyToBeSolved } from './logic/sudoku-rules';
 
 const initialSudokuList = [getEmptySudoku(3)];
 
@@ -43,6 +49,35 @@ const App = () => {
         }
     }, []);
 
+    const generateSolvableSudoku = () => {
+        let nextSudokuList = sudokuList;
+        let nextSudokuIndex = sudokuList.length - 1;
+
+        for (;;) {
+            const currentSudoku = nextSudokuList[nextSudokuIndex];
+            const sudokuComputedData = getSudokuComputedData(currentSudoku);
+            const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
+
+            if (isSudokuReady) {
+                setSudokuList(nextSudokuList);
+                setSudokuIndex(nextSudokuIndex);
+                persistSudokuStatus(nextSudokuList, nextSudokuIndex);
+                break;
+            } else {
+                const boxCandidate = getRandomMaximumImpactBox(sudokuComputedData);
+                if (boxCandidate) {
+                    nextSudokuList.push(
+                        lockBox(currentSudoku, boxCandidate.boxId, boxCandidate.number)
+                    );
+                    nextSudokuIndex++;
+                } else {
+                    console.error("Couldn't finish");
+                    break;
+                }
+            }
+        }
+    };
+
     const lockBoxWrapper = (boxId: number, number: number) => {
         const currentSudoku = sudokuList[sudokuIndex];
         const nextSudoku = lockBox(currentSudoku, boxId, number);
@@ -79,6 +114,7 @@ const App = () => {
 
     return (
         <SudokuGrid
+            generateSolvableSudoku={generateSolvableSudoku}
             lockBox={lockBoxWrapper}
             locksNumber={sudokuIndex}
             nextSudoku={nextSudoku}
