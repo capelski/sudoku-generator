@@ -228,7 +228,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     </div>
                 </div>
                 <div className="options">
-                    <div>{props.locksNumber} locked boxes</div>
                     <p>
                         <input
                             type="radio"
@@ -246,8 +245,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         9x9
                     </p>
                     <p>
+                        <button type="button" onClick={props.generateSolvableSudoku}>
+                            Generate sudoku
+                        </button>
+                    </p>
+                    <p>
                         Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
                     </p>
+                    <div>{props.locksNumber} locked boxes</div>
 
                     <div>
                         <h3>Display options</h3>
@@ -306,11 +311,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     </div>
                     <div>
                         <h3>Actions</h3>
-                        <p>
-                            <button type="button" onClick={props.generateSolvableSudoku}>
-                                Generate sudoku
-                            </button>
-                        </p>
                         <p>
                             <button type="button" onClick={lockSelectedCandidateHandler}>
                                 Lock selected candidate
