@@ -50,8 +50,8 @@ const App = () => {
     }, []);
 
     const generateSolvableSudoku = () => {
-        let nextSudokuList = sudokuList;
-        let nextSudokuIndex = sudokuList.length - 1;
+        let nextSudokuList = [getEmptySudoku(sudokuList[sudokuIndex].regionSize)];
+        let nextSudokuIndex = 0;
 
         for (;;) {
             const currentSudoku = nextSudokuList[nextSudokuIndex];
@@ -71,8 +71,9 @@ const App = () => {
                     );
                     nextSudokuIndex++;
                 } else {
-                    console.error("Couldn't finish");
-                    break;
+                    console.error('Giving me a second, I made a mistake...');
+                    nextSudokuList = [getEmptySudoku(sudokuList[sudokuIndex].regionSize)];
+                    nextSudokuIndex = 0;
                 }
             }
         }
