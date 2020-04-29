@@ -23,8 +23,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
         'number'
     );
-    const [displayCandidates, setDisplayCandidates] = useState(true);
-    const [highlightDiscardedCandidates, setHighlightDiscardedCandidates] = useState(true);
+    const [displayCandidates, setDisplayCandidates] = useState(false);
+    const [highlightDiscardedCandidates, setHighlightDiscardedCandidates] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
@@ -227,7 +227,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         })}
                     </div>
                 </div>
-                <div>
+                <div className="options">
                     <div>{props.locksNumber} locked boxes</div>
                     <p>
                         <input
@@ -311,7 +311,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 Generate sudoku
                             </button>
                         </p>
-                        <br />
                         <p>
                             <button type="button" onClick={lockSelectedCandidateHandler}>
                                 Lock selected candidate
