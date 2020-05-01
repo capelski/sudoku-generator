@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom';
 import { SudokuGrid } from './components/sudoku-grid';
 import {
     getEmptySudoku,
-    lockBox,
+    getRandomMaximumImpactBox,
     getSudokuComputedData,
-    getRandomMaximumImpactBox
+    lockBox,
+    unlockBox
 } from './logic/sudoku-operations';
 import { Sudoku } from './types/sudoku';
 
@@ -113,6 +114,18 @@ const App = () => {
         persistSudokuStatus(emptySudokuList, initialIndex);
     };
 
+    const unlockBoxWrapper = (boxId: number) => {
+        const currentSudoku = sudokuList[sudokuIndex];
+        const nextSudoku = unlockBox(currentSudoku, boxId);
+        const nextSudokuList = sudokuList.splice(0, sudokuIndex + 1).concat([nextSudoku]);
+        const nextSudokuIndex = sudokuIndex + 1;
+
+        setSudokuList(nextSudokuList);
+        setSudokuIndex(nextSudokuIndex);
+
+        persistSudokuStatus(nextSudokuList, nextSudokuIndex);
+    };
+
     return (
         <SudokuGrid
             generateSolvableSudoku={generateSolvableSudoku}
@@ -122,6 +135,7 @@ const App = () => {
             previousSudoku={previousSudoku}
             resetSudoku={resetSudoku}
             sudoku={sudokuList[sudokuIndex]}
+            unlockBox={unlockBoxWrapper}
         />
     );
 };

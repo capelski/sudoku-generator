@@ -64,6 +64,10 @@ $candidateSize: 25px;
             }
         }
 
+        &.selected-box {
+            background-color: #566c73;
+        }
+
         &.inside-invalid-column,
         &.inside-invalid-region,
         &.inside-invalid-row {

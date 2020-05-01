@@ -285,6 +285,16 @@ export const lockBox = (sudoku: Sudoku, boxId: number, number: number): Sudoku =
     };
 };
 
+export const unlockBox = (sudoku: Sudoku, boxId: number): Sudoku => {
+    const nextNumbers = { ...sudoku.numbers };
+    delete nextNumbers[boxId];
+    return {
+        locksHistory: sudoku.locksHistory.filter((id) => id !== boxId),
+        numbers: nextNumbers,
+        regionSize: sudoku.regionSize
+    };
+};
+
 export const updateAllGroups = (groups: SudokuGroups) => {
     Object.values(groups.columns).forEach((group) => {
         updateGroupAvailableBoxesPerNumber(group);
