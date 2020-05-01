@@ -26,6 +26,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [displayCandidates, setDisplayCandidates] = useState(false);
     const [highlightDiscardedCandidates, setHighlightDiscardedCandidates] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
+    const [highlightLatestSelectedBox, setHighlightLatestSelectedBox] = useState(false);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
@@ -51,6 +52,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const highlightInvalidGroupsHandler = () => {
         setHighlightInvalidGroups(!highlightInvalidGroups);
+    };
+
+    const highlightLatestSelectedBoxHandler = () => {
+        setHighlightLatestSelectedBox(!highlightLatestSelectedBox);
     };
 
     const highlightMaximumImpactHandler = () => {
@@ -93,7 +98,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             return (
                                 <div
                                     className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
-                                        isLatestLockedBox ? ' latest-locked-box' : ''
+                                        highlightLatestSelectedBox && isLatestLockedBox
+                                            ? ' latest-locked-box'
+                                            : ''
                                     }${
                                         highlightInvalidGroups && !box.groups.column.isValid
                                             ? ' inside-invalid-column'
@@ -280,6 +287,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 checked={candidatesDisplayMode === 'impact'}
                             />{' '}
                             Show candidates impact
+                        </p>
+
+                        <p>
+                            <input
+                                type="checkbox"
+                                onClick={highlightLatestSelectedBoxHandler}
+                                checked={highlightLatestSelectedBox}
+                            />{' '}
+                            Highlight latest selected box
                         </p>
 
                         <p>
