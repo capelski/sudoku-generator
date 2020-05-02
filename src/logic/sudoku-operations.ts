@@ -5,6 +5,7 @@ import {
     BoxGroups,
     Candidate,
     Group,
+    InferringMode,
     NumericDictionary,
     StringDictionary,
     Sudoku,
@@ -29,6 +30,7 @@ import { getRandomElement } from './utilities';
 export const discardCandidatesByInferring = (
     boxes: Box[],
     groups: SudokuGroups,
+    inferringMode: InferringMode,
     iteration: number
 ) => {
     updateAllGroups(groups);
@@ -67,41 +69,44 @@ export const discardCandidatesByInferring = (
     // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
     // Going for it!
-
-    boxesWithOnlyOneCandidateAvailable.forEach((box) => choseOnlyCandidateAvailableForBox(box));
-
-    groupsWithANumberAvailableInJustOneBox.forEach((group) =>
-        choseOnlyBoxAvailableInGroupForNumber(group)
-    );
-
-    groupsWithOwnedCandidates.forEach((group) => discardOwnedCandidatesFromNonOwnerBoxes(group));
-
-    regionsWithColumnSubsetRestrictions.forEach((groupKey) => {
-        const regionNumber = parseInt(groupKey, 10);
-        discardCandidatesFromGroupBecauseOfRegionRestriction(
-            regionNumber,
-            groups.regions[regionNumber],
-            'column'
-        );
-    });
-    regionsWithRowSubsetRestrictions.forEach((groupKey) => {
-        const regionNumber = parseInt(groupKey, 10);
-        discardCandidatesFromGroupBecauseOfRegionRestriction(
-            regionNumber,
-            groups.regions[regionNumber],
-            'row'
-        );
-    });
-
-    console.log('Iteration', iteration);
     if (
-        boxesWithOnlyOneCandidateAvailable.length > 0 ||
-        groupsWithANumberAvailableInJustOneBox.length > 0 ||
-        groupsWithOwnedCandidates.length > 0 ||
-        regionsWithColumnSubsetRestrictions.length > 0 ||
-        regionsWithRowSubsetRestrictions.length > 0
+        (inferringMode === 'all' || (inferringMode === 'direct' && iteration === 1)) &&
+        (boxesWithOnlyOneCandidateAvailable.length > 0 ||
+            groupsWithANumberAvailableInJustOneBox.length > 0 ||
+            groupsWithOwnedCandidates.length > 0 ||
+            regionsWithColumnSubsetRestrictions.length > 0 ||
+            regionsWithRowSubsetRestrictions.length > 0)
     ) {
-        discardCandidatesByInferring(boxes, groups, iteration + 1);
+        boxesWithOnlyOneCandidateAvailable.forEach((box) => choseOnlyCandidateAvailableForBox(box));
+
+        groupsWithANumberAvailableInJustOneBox.forEach((group) =>
+            choseOnlyBoxAvailableInGroupForNumber(group)
+        );
+
+        groupsWithOwnedCandidates.forEach((group) =>
+            discardOwnedCandidatesFromNonOwnerBoxes(group)
+        );
+
+        regionsWithColumnSubsetRestrictions.forEach((groupKey) => {
+            const regionNumber = parseInt(groupKey, 10);
+            discardCandidatesFromGroupBecauseOfRegionRestriction(
+                regionNumber,
+                groups.regions[regionNumber],
+                'column'
+            );
+        });
+        regionsWithRowSubsetRestrictions.forEach((groupKey) => {
+            const regionNumber = parseInt(groupKey, 10);
+            discardCandidatesFromGroupBecauseOfRegionRestriction(
+                regionNumber,
+                groups.regions[regionNumber],
+                'row'
+            );
+        });
+
+        console.log('Iteration', iteration);
+
+        discardCandidatesByInferring(boxes, groups, inferringMode, iteration + 1);
     }
 };
 
@@ -211,7 +216,10 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
     return undefined;
 };
 
-export const getSudokuComputedData = (sudoku: Sudoku): SudokuComputedData => {
+export const getSudokuComputedData = (
+    sudoku: Sudoku,
+    inferringMode: InferringMode = 'all'
+): SudokuComputedData => {
     const size = sudoku.regionSize * sudoku.regionSize;
     const boxes = [...Array(size)]
         .map((_x, rowIndex) =>
@@ -268,7 +276,7 @@ export const getSudokuComputedData = (sudoku: Sudoku): SudokuComputedData => {
     });
 
     discardCandidatesByLocks(boxes.filter((box) => box.isLocked));
-    discardCandidatesByInferring(boxes, groups, 1);
+    discardCandidatesByInferring(boxes, groups, inferringMode, 1);
 
     updateGroupsValidations(groups.columns);
     updateGroupsValidations(groups.regions);

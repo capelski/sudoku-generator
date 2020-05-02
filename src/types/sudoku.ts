@@ -48,6 +48,8 @@ export interface Group {
     ownedCandidates: BoxesCandidatesSet[];
 }
 
+export type InferringMode = 'none' | 'direct' | 'all';
+
 export type NumericDictionary<T> = { [key: number]: T };
 
 export type StringDictionary<T> = { [key: string]: T };

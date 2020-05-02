@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { BoxCandidate, Sudoku } from '../types/sudoku';
+import { BoxCandidate, InferringMode, Sudoku } from '../types/sudoku';
 import { getRandomMaximumImpactBox, getSudokuComputedData } from '../logic/sudoku-operations';
-import { isCandidateDiscarded, isSudokuReadyToBeSolved, arePeerBoxes } from '../logic/sudoku-rules';
+import { isCandidateDiscarded, arePeerBoxes } from '../logic/sudoku-rules';
 
 type CandidateDisplayMode = 'number' | 'impact';
 
@@ -21,15 +21,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         'number'
     );
     const [displayCandidates, setDisplayCandidates] = useState(false);
-    const [highlightDiscardedCandidates, setHighlightDiscardedCandidates] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
     const [highlightLatestLockedBox, setHighlightLatestLockedBox] = useState(false);
     const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
+    const [inferringMode, setInferringMode] = useState<InferringMode>('none');
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
     );
-    const sudokuComputedData = getSudokuComputedData(props.sudoku);
-    const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
+    const sudokuComputedData = getSudokuComputedData(props.sudoku, inferringMode);
+    // TODO isSudokuReady is no longer valid because of inferringMode
+    // const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
 
     const displayCandidatesHandler = () => {
         setDisplayCandidates(!displayCandidates);
@@ -43,9 +44,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         setCandidatesDisplayMode('number');
     };
 
-    const highlightDiscardedCandidatesHandler = () => {
-        setHighlightDiscardedCandidates(!highlightDiscardedCandidates);
-    };
+    const highlightDiscardedCandidates = inferringMode === 'direct';
 
     const highlightInvalidGroupsHandler = () => {
         setHighlightInvalidGroups(!highlightInvalidGroups);
@@ -57,6 +56,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const highlightMaximumImpactHandler = () => {
         setHighlightMaximumImpact(!highlightMaximumImpact);
+    };
+
+    const inferringModeHandler = () => {
+        setInferringMode(inferringMode === 'none' ? 'direct' : 'none');
     };
 
     const lockRandomMaximumImpactBox = () => {
@@ -269,9 +272,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             Generate sudoku
                         </button>
                     </p>
-                    <p>
+                    {/* <p>
                         Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
-                    </p>
+                    </p> */}
                     <div>{props.locksNumber} locked boxes</div>
 
                     <div>
@@ -314,10 +317,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={highlightDiscardedCandidatesHandler}
-                                checked={highlightDiscardedCandidates}
+                                onClick={inferringModeHandler}
+                                checked={inferringMode === 'direct'}
                             />{' '}
-                            Highlight discarded candidates
+                            Highlight discarded/chosen candidates
                         </p>
 
                         <p>
