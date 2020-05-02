@@ -129,6 +129,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     selectedBoxCandidate.boxId
                                 ) > -1;
 
+                            const isCausingChoice =
+                                highlightDiscardCause &&
+                                selectedBoxCandidate &&
+                                box.causedChoices[selectedBoxCandidate.number] &&
+                                box.causedChoices[selectedBoxCandidate.number].indexOf(
+                                    selectedBoxCandidate.boxId
+                                ) > -1;
+
                             return (
                                 <div
                                     onClick={boxClickHandler}
@@ -136,7 +144,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                         isSelectedBox ? ' selected-box' : ''
                                     }${isInferableBox ? ' inferable-box' : ''}${
                                         isCausingDiscard ? ' discard-cause' : ''
-                                    }${
+                                    }${isCausingChoice ? ' choice-cause' : ''}${
                                         highlightLatestLockedBox && isLatestLockedBox
                                             ? ' latest-locked-box'
                                             : ''

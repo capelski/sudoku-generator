@@ -1,5 +1,6 @@
 export interface Box {
     candidates: NumericDictionary<Candidate>;
+    causedChoices: NumericDictionary<number[]>;
     causedDiscards: NumericDictionary<number[]>;
     column: number;
     groups: BoxGroups;

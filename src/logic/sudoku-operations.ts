@@ -236,6 +236,7 @@ export const getSudokuComputedData = (
                                 }),
                                 {}
                             ),
+                        causedChoices: {},
                         causedDiscards: {},
                         column: columnIndex,
                         id: boxId,
