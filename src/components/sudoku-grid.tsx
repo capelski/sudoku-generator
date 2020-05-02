@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { BoxCandidate, InferringMode, Sudoku } from '../types/sudoku';
-import { getRandomMaximumImpactBox, getSudokuComputedData } from '../logic/sudoku-operations';
+import { getSudokuComputedData } from '../logic/sudoku-operations';
 import { isCandidateDiscarded, arePeerBoxes } from '../logic/sudoku-rules';
+import { BoxCandidate, InferringMode, Sudoku } from '../types/sudoku';
 
 // type CandidateDisplayMode = 'number' | 'impact';
 
@@ -60,15 +60,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const inferringModeHandler = () => {
         setInferringMode(inferringMode === 'none' ? 'direct' : 'none');
-    };
-
-    const lockRandomMaximumImpactBox = () => {
-        const boxCandidate = getRandomMaximumImpactBox(sudokuComputedData);
-        if (boxCandidate) {
-            props.lockBox(boxCandidate.boxId, boxCandidate.number);
-        } else {
-            console.log('No box left to lock!');
-        }
     };
 
     const lockSelectedCandidateHandler = () => {
@@ -341,11 +332,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <div>
                         <h3>Actions</h3>
                         <p>
-                            <button type="button" onClick={lockSelectedCandidateHandler}>
-                                Lock selected candidate
-                            </button>
-                        </p>
-                        <p>
                             <button
                                 type="button"
                                 onClick={() => setSelectedBoxCandidate(undefined)}
@@ -354,18 +340,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             </button>
                         </p>
                         <p>
-                            <button type="button" onClick={lockRandomMaximumImpactBox}>
-                                Lock random candidate (with maximum impact)
-                            </button>
-                        </p>
-                        <p>
                             <button type="button" onClick={props.previousSudoku}>
-                                Previous lock
+                                Undo
                             </button>
                         </p>
                         <p>
                             <button type="button" onClick={props.nextSudoku}>
-                                Next lock
+                                Redo
                             </button>
                         </p>
                         <p>
