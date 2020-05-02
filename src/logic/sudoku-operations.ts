@@ -231,8 +231,7 @@ export const getSudokuComputedData = (
                         candidates: [...Array(size)]
                             .map(
                                 (_z, candidateIndex): Candidate => ({
-                                    impact: -2, // Will be set later, since all boxes must be defined
-                                    impactWithoutDiscards: -2, // Will be set later, since all boxes must be defined
+                                    impact: -2,
                                     isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
                                     isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
                                     isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
@@ -334,8 +333,6 @@ export const updateCandidateImpact = (box: Box, candidateIndex: number) => {
               (peerBox) =>
                   !peerBox.isLocked && !isCandidateDiscarded(peerBox.candidates[candidateIndex])
           ).length;
-
-    candidate.impactWithoutDiscards = box.peerBoxes.filter((peerBox) => !peerBox.isLocked).length;
 };
 
 export const updateCandidatesImpact = (boxes: Box[]) => {

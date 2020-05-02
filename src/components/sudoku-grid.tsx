@@ -3,7 +3,7 @@ import { BoxCandidate, InferringMode, Sudoku } from '../types/sudoku';
 import { getRandomMaximumImpactBox, getSudokuComputedData } from '../logic/sudoku-operations';
 import { isCandidateDiscarded, arePeerBoxes } from '../logic/sudoku-rules';
 
-type CandidateDisplayMode = 'number' | 'impact';
+// type CandidateDisplayMode = 'number' | 'impact';
 
 interface GridProps {
     generateSolvableSudoku: () => void;
@@ -17,9 +17,9 @@ interface GridProps {
 }
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
-    const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
-        'number'
-    );
+    // const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
+    //     'number'
+    // );
     const [displayCandidates, setDisplayCandidates] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
     const [highlightLatestLockedBox, setHighlightLatestLockedBox] = useState(false);
@@ -36,13 +36,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         setDisplayCandidates(!displayCandidates);
     };
 
-    const displayCandidatesImpact = () => {
-        setCandidatesDisplayMode('impact');
-    };
+    // const displayCandidatesImpact = () => {
+    //     setCandidatesDisplayMode('impact');
+    // };
 
-    const displayCandidatesNumber = () => {
-        setCandidatesDisplayMode('number');
-    };
+    // const displayCandidatesNumber = () => {
+    //     setCandidatesDisplayMode('number');
+    // };
 
     const highlightDiscardedCandidates = inferringMode === 'direct';
 
@@ -144,10 +144,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   highlightDiscardedCandidates &&
                                                   isCandidateDiscarded(candidate);
 
-                                              const candidateImpact = highlightDiscardedCandidates
-                                                  ? candidate.impact
-                                                  : candidate.impactWithoutDiscards;
-
                                               const isSelectedCandidate =
                                                   selectedBoxCandidate !== undefined &&
                                                   selectedBoxCandidate.boxId === box.id &&
@@ -238,10 +234,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                       }`}
                                                       onClick={candidateClickHandler}
                                                   >
-                                                      {displayCandidates &&
+                                                      {/* {displayCandidates &&
                                                           (candidatesDisplayMode === 'impact'
-                                                              ? candidateImpact
-                                                              : candidate.number)}
+                                                              ? candidate.impact
+                                                              : candidate.number)} */}
+                                                      {displayCandidates && candidate.number}
                                                   </div>
                                               );
                                           })}
@@ -288,7 +285,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             Display candidates
                         </p>
 
-                        <p>
+                        {/* <p>
                             <input
                                 type="radio"
                                 onClick={displayCandidatesNumber}
@@ -303,7 +300,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 checked={candidatesDisplayMode === 'impact'}
                             />{' '}
                             Show candidates impact
-                        </p>
+                        </p> */}
 
                         <p>
                             <input

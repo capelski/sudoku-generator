@@ -29,7 +29,6 @@ export interface BoxGroups {
 
 export interface Candidate {
     impact: number;
-    impactWithoutDiscards: number;
     isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: boolean;
     isChosenBecauseIsTheOnlyCandidateLeftForThisBox: boolean;
     isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: boolean;
