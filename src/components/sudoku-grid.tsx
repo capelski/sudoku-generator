@@ -23,7 +23,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [displayCandidates, setDisplayCandidates] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
     const [highlightLatestLockedBox, setHighlightLatestLockedBox] = useState(false);
-    const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
+    // const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [inferringMode, setInferringMode] = useState<InferringMode>('none');
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
@@ -54,9 +54,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         setHighlightLatestLockedBox(!highlightLatestLockedBox);
     };
 
-    const highlightMaximumImpactHandler = () => {
-        setHighlightMaximumImpact(!highlightMaximumImpact);
-    };
+    // const highlightMaximumImpactHandler = () => {
+    //     setHighlightMaximumImpact(!highlightMaximumImpact);
+    // };
 
     const inferringModeHandler = () => {
         setInferringMode(inferringMode === 'none' ? 'direct' : 'none');
@@ -148,10 +148,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   selectedBoxCandidate!.boxId !== box.id &&
                                                   selectedBoxCandidate!.number === candidate.number;
 
-                                              const isMaximumImpactCandidate =
-                                                  highlightMaximumImpact &&
-                                                  sudokuComputedData.maximumImpact ===
-                                                      candidate.impact;
+                                              //   const isMaximumImpactCandidate =
+                                              //       highlightMaximumImpact &&
+                                              //       sudokuComputedData.maximumImpact ===
+                                              //           candidate.impact;
 
                                               const candidateClickHandler = () => {
                                                   if (isSelectedCandidate) {
@@ -171,9 +171,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               ? ''
                                                               : ' hidden-candidate'
                                                       }${
-                                                          isMaximumImpactCandidate
-                                                              ? ' maximum-impact-candidate'
-                                                              : ''
+                                                          //   isMaximumImpactCandidate
+                                                          //       ? ' maximum-impact-candidate'
+                                                          //       : ''
+                                                          ''
                                                       }${
                                                           isSelectedCandidate
                                                               ? ' selected-candidate'
@@ -267,6 +268,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                     <div>
                         <h3>Display options</h3>
+
+                        <p>
+                            <input
+                                type="checkbox"
+                                onClick={highlightInvalidGroupsHandler}
+                                checked={highlightInvalidGroups}
+                            />{' '}
+                            Highlight invalid groups
+                        </p>
+
                         <p>
                             <input
                                 type="checkbox"
@@ -296,15 +307,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={highlightLatestLockedBoxHandler}
-                                checked={highlightLatestLockedBox}
-                            />{' '}
-                            Highlight latest locked box
-                        </p>
-
-                        <p>
-                            <input
-                                type="checkbox"
                                 onClick={inferringModeHandler}
                                 checked={inferringMode === 'direct'}
                             />{' '}
@@ -314,20 +316,20 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={highlightInvalidGroupsHandler}
-                                checked={highlightInvalidGroups}
+                                onClick={highlightLatestLockedBoxHandler}
+                                checked={highlightLatestLockedBox}
                             />{' '}
-                            Highlight invalid groups
+                            Highlight latest locked box
                         </p>
 
-                        <p>
+                        {/* <p>
                             <input
                                 type="checkbox"
                                 onClick={highlightMaximumImpactHandler}
                                 checked={highlightMaximumImpact}
                             />{' '}
                             Highlight maximum impact candidates
-                        </p>
+                        </p> */}
                     </div>
                     <div>
                         <h3>Actions</h3>
