@@ -174,6 +174,9 @@ export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
     );
 };
 
+export const isThereAnyBoxWithChosenCandidate = (boxes: Box[]) =>
+    boxes.some(doesBoxHaveAChosenCandidate);
+
 export const getAllBoxesWithOnlyOneCandidateAvailable = (boxes: Box[]) => {
     return boxes.filter(
         (box) =>

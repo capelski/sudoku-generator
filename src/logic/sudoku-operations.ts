@@ -23,7 +23,8 @@ import {
     getAllBoxesWithOnlyOneCandidateAvailable,
     getAllGroupsWithANumberAvailableInJustOneBox,
     getAllGroupsWithOwnedCandidates,
-    getAllRegionsThatCauseSubsetRestrictions
+    getAllRegionsThatCauseSubsetRestrictions,
+    isThereAnyBoxWithChosenCandidate
 } from './sudoku-rules';
 import { getRandomElement } from './utilities';
 
@@ -35,6 +36,7 @@ export const discardCandidatesByInferring = (
 ) => {
     updateAllGroups(groups);
 
+    // TODO This might not be necessary
     const boxesWithOnlyOneCandidateAvailable = getAllBoxesWithOnlyOneCandidateAvailable(boxes);
 
     const columnsWithANumberAvailableInJustOneBox = getAllGroupsWithANumberAvailableInJustOneBox(
@@ -68,21 +70,34 @@ export const discardCandidatesByInferring = (
 
     // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
-    // Going for it!
-    if (
-        (inferringMode === 'all' || (inferringMode === 'direct' && iteration === 1)) &&
-        (boxesWithOnlyOneCandidateAvailable.length > 0 ||
-            groupsWithANumberAvailableInJustOneBox.length > 0 ||
-            groupsWithOwnedCandidates.length > 0 ||
-            regionsWithColumnSubsetRestrictions.length > 0 ||
-            regionsWithRowSubsetRestrictions.length > 0)
-    ) {
-        boxesWithOnlyOneCandidateAvailable.forEach((box) =>
-            choseOnlyCandidateAvailableForBox(box, inferringMode)
-        );
+    const mustInfer =
+        inferringMode === 'all' ||
+        (inferringMode === 'direct' && !isThereAnyBoxWithChosenCandidate(boxes));
+
+    const isThereAnyDiscardToBeMade =
+        boxesWithOnlyOneCandidateAvailable.length > 0 ||
+        groupsWithANumberAvailableInJustOneBox.length > 0 ||
+        groupsWithOwnedCandidates.length > 0 ||
+        regionsWithColumnSubsetRestrictions.length > 0 ||
+        regionsWithRowSubsetRestrictions.length > 0;
+
+    // console.log('Iteration', iteration);
+    // console.log('mustInfer', mustInfer);
+    // console.log('boxesWithOnlyOneCandidateAvailable', boxesWithOnlyOneCandidateAvailable.length);
+    // console.log(
+    //     'groupsWithANumberAvailableInJustOneBox',
+    //     groupsWithANumberAvailableInJustOneBox.length
+    // );
+    // console.log('groupsWithOwnedCandidates', groupsWithOwnedCandidates.length);
+    // console.log('regionsWithColumnSubsetRestrictions', regionsWithColumnSubsetRestrictions.length);
+    // console.log('regionsWithRowSubsetRestrictions', regionsWithRowSubsetRestrictions.length);
+    // console.log('-----------------------');
+
+    if (mustInfer && isThereAnyDiscardToBeMade) {
+        boxesWithOnlyOneCandidateAvailable.forEach((box) => choseOnlyCandidateAvailableForBox(box));
 
         groupsWithANumberAvailableInJustOneBox.forEach((group) =>
-            choseOnlyBoxAvailableInGroupForNumber(group, inferringMode)
+            choseOnlyBoxAvailableInGroupForNumber(group)
         );
 
         groupsWithOwnedCandidates.forEach((group) =>
@@ -105,8 +120,6 @@ export const discardCandidatesByInferring = (
                 'row'
             );
         });
-
-        // console.log('Iteration', iteration);
 
         discardCandidatesByInferring(boxes, groups, inferringMode, iteration + 1);
     }
