@@ -36,9 +36,9 @@ $candidateSize: 25px;
                 background-color: #fbe0e0;
             }
 
-            &.maximum-impact-candidate {
-                background-color: gold;
-            }
+            // &.maximum-impact-candidate {
+            //     background-color: gold;
+            // }
 
             &.selected-candidate {
                 background-color: #566c73;
@@ -66,6 +66,10 @@ $candidateSize: 25px;
 
         &.selected-box {
             background-color: #566c73;
+        }
+
+        &.inferable-box {
+            background-color: #c993c9;
         }
 
         &.inside-invalid-column,

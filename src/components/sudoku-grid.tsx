@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { getSudokuComputedData } from '../logic/sudoku-operations';
-import { isCandidateDiscarded, arePeerBoxes } from '../logic/sudoku-rules';
-import { BoxCandidate, InferringMode, Sudoku } from '../types/sudoku';
+import {
+    arePeerBoxes,
+    doesBoxHaveAChosenCandidate,
+    isCandidateDiscarded
+} from '../logic/sudoku-rules';
+import { BoxCandidate, Sudoku } from '../types/sudoku';
 
 // type CandidateDisplayMode = 'number' | 'impact';
 
@@ -20,21 +24,22 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
     //     'number'
     // );
-    const [displayCandidates, setDisplayCandidates] = useState(false);
+    const [displayCandidates, setDisplayCandidates] = useState(true);
+    const [highlightInferableBoxes, setHighlightInferableBoxes] = useState(false);
+    const [highlightInferableCandidates, setHighlightInferableCandidates] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
     const [highlightLatestLockedBox, setHighlightLatestLockedBox] = useState(false);
     // const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
-    const [inferringMode, setInferringMode] = useState<InferringMode>('none');
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
     );
-    const sudokuComputedData = getSudokuComputedData(props.sudoku, inferringMode);
+    const sudokuComputedData = getSudokuComputedData(props.sudoku, 'direct');
     // TODO isSudokuReady is no longer valid because of inferringMode
     // const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
 
     const displayCandidatesHandler = () => {
         if (displayCandidates) {
-            setInferringMode('none');
+            setHighlightInferableCandidates(false);
         }
         setDisplayCandidates(!displayCandidates);
     };
@@ -47,7 +52,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     //     setCandidatesDisplayMode('number');
     // };
 
-    const highlightDiscardedCandidates = inferringMode === 'direct';
+    const highlightInferableBoxesHandler = () => {
+        setHighlightInferableBoxes(!highlightInferableBoxes);
+    };
+
+    const highlightInferableCandidatesHandler = () => {
+        setHighlightInferableCandidates(!highlightInferableCandidates);
+    };
 
     const highlightInvalidGroupsHandler = () => {
         setHighlightInvalidGroups(!highlightInvalidGroups);
@@ -60,10 +71,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const highlightMaximumImpactHandler = () => {
     //     setHighlightMaximumImpact(!highlightMaximumImpact);
     // };
-
-    const inferringModeHandler = () => {
-        setInferringMode(inferringMode === 'none' ? 'direct' : 'none');
-    };
 
     const lockSelectedCandidateHandler = () => {
         if (selectedBoxCandidate !== undefined) {
@@ -94,6 +101,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                             const isLatestLockedBox = latestLockedBox && latestLockedBox === box.id;
 
+                            const isInferableBox =
+                                highlightInferableBoxes && doesBoxHaveAChosenCandidate(box);
+
                             const boxClickHandler = () => {
                                 if (box.isLocked) {
                                     if (isSelectedBox) {
@@ -113,7 +123,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     onClick={boxClickHandler}
                                     className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
                                         isSelectedBox ? ' selected-box' : ''
-                                    }${
+                                    }${isInferableBox ? ' inferable-box' : ''}${
                                         highlightLatestLockedBox && isLatestLockedBox
                                             ? ' latest-locked-box'
                                             : ''
@@ -135,7 +145,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                         ? box.number
                                         : Object.values(box.candidates).map((candidate) => {
                                               const isDiscardedCandidate =
-                                                  highlightDiscardedCandidates &&
+                                                  highlightInferableCandidates &&
                                                   isCandidateDiscarded(candidate);
 
                                               const isSelectedCandidate =
@@ -145,7 +155,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                                               const isAffectedCandidate =
                                                   !box.isLocked &&
-                                                  (!highlightDiscardedCandidates ||
+                                                  (!highlightInferableCandidates ||
                                                       !isDiscardedCandidate) &&
                                                   isSelectedBoxPeer &&
                                                   selectedBoxCandidate!.boxId !== box.id &&
@@ -187,42 +197,42 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               ? ' affected-candidate'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isDiscardedBecauseOfLock
                                                               ? ' discarded-because-of-lock'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isChosenBecauseIsTheOnlyCandidateLeftForThisBox
                                                               ? ' chosen-because-is-only-candidate-left-for-this-box'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox
                                                               ? ' discarded-because-is-only-candidate-left-for-a-peer-box'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup
                                                               ? ' chosen-because-this-box-must-hold-this-number-for-some-group'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup
                                                               ? ' discarded-because-peer-box-must-hold-this-number-for-some-group'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup
                                                               ? ' discarded-because-this-box-must-hold-another-number-for-some-group'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup
                                                               ? ' discarded-because-of-owned-candidate-in-same-group'
                                                               : ''
                                                       }${
-                                                          highlightDiscardedCandidates &&
+                                                          highlightInferableCandidates &&
                                                           candidate.isDiscardedBecauseOfRegionSubset
                                                               ? ' discarded-because-of-region-subset'
                                                               : ''
@@ -275,6 +285,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
+                                onClick={displayCandidatesHandler}
+                                checked={displayCandidates}
+                            />{' '}
+                            Display candidates
+                        </p>
+
+                        <p>
+                            <input
+                                type="checkbox"
                                 onClick={highlightInvalidGroupsHandler}
                                 checked={highlightInvalidGroups}
                             />{' '}
@@ -284,10 +303,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={displayCandidatesHandler}
-                                checked={displayCandidates}
+                                onClick={highlightInferableBoxesHandler}
+                                checked={highlightInferableBoxes}
                             />{' '}
-                            Display candidates
+                            Highlight inferable boxes
                         </p>
 
                         {/* <p>
@@ -310,11 +329,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={inferringModeHandler}
-                                checked={inferringMode === 'direct'}
+                                onClick={highlightInferableCandidatesHandler}
+                                checked={highlightInferableCandidates}
                                 disabled={!displayCandidates}
                             />{' '}
-                            Highlight discarded/chosen candidates
+                            Highlight inferable candidates
                         </p>
 
                         <p>

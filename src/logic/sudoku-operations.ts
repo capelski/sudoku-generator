@@ -104,7 +104,7 @@ export const discardCandidatesByInferring = (
             );
         });
 
-        console.log('Iteration', iteration);
+        // console.log('Iteration', iteration);
 
         discardCandidatesByInferring(boxes, groups, inferringMode, iteration + 1);
     }
