@@ -77,10 +77,12 @@ export const discardCandidatesByInferring = (
             regionsWithColumnSubsetRestrictions.length > 0 ||
             regionsWithRowSubsetRestrictions.length > 0)
     ) {
-        boxesWithOnlyOneCandidateAvailable.forEach((box) => choseOnlyCandidateAvailableForBox(box));
+        boxesWithOnlyOneCandidateAvailable.forEach((box) =>
+            choseOnlyCandidateAvailableForBox(box, inferringMode)
+        );
 
         groupsWithANumberAvailableInJustOneBox.forEach((group) =>
-            choseOnlyBoxAvailableInGroupForNumber(group)
+            choseOnlyBoxAvailableInGroupForNumber(group, inferringMode)
         );
 
         groupsWithOwnedCandidates.forEach((group) =>
@@ -206,7 +208,7 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
 
 export const getSudokuComputedData = (
     sudoku: Sudoku,
-    inferringMode: InferringMode = 'all'
+    inferringMode: InferringMode
 ): SudokuComputedData => {
     const size = sudoku.regionSize * sudoku.regionSize;
     const boxes = [...Array(size)]
@@ -369,7 +371,8 @@ export const updateGroupOwnedCandidates = (group: Group) => {
     group.ownedCandidates = Object.values(ownedCandidatesDictionary).filter(
         (ownedCandidatesSet) =>
             ownedCandidatesSet.boxes.length === ownedCandidatesSet.numbers.length &&
-            ownedCandidatesSet.boxes.length !== group.boxes.filter((box) => !box.isLocked).length
+            ownedCandidatesSet.boxes.length !== group.boxes.filter((box) => !box.isLocked).length &&
+            ownedCandidatesSet.boxes.length > 1
     );
 };
 

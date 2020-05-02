@@ -1,10 +1,13 @@
-import { Box, Group, NumericDictionary, SudokuComputedData } from '../types/sudoku';
+import { Box, Group, InferringMode, NumericDictionary, SudokuComputedData } from '../types/sudoku';
 
 export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
 };
 
-export const choseOnlyBoxAvailableInGroupForNumber = (group: Group) => {
+export const choseOnlyBoxAvailableInGroupForNumber = (
+    group: Group,
+    inferringMode: InferringMode
+) => {
     const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
         .map((number) => parseInt(number))
         .filter((number) => {
@@ -18,29 +21,31 @@ export const choseOnlyBoxAvailableInGroupForNumber = (group: Group) => {
             if (candidate === targetBox.candidates[number]) {
                 candidate.isChosen = true;
                 candidate.chosenReason = 'This box must hold this number for a group';
-            } else if (!candidate.isDiscarded) {
+            } else if (!candidate.isDiscarded && inferringMode === 'all') {
                 candidate.isDiscarded = true;
                 candidate.discardedReason = 'This box must hold another number for some group';
                 registerDiscardCause(targetBox.causedDiscards, candidate.number, targetBox.id);
             }
         });
-        targetBox.peerBoxes
-            .filter(
-                (pb) =>
-                    !pb.isLocked &&
-                    !pb.candidates[number].isDiscarded &&
-                    !pb.candidates[number].isChosen
-            )
-            .forEach((peerBox) => {
-                const candidate = peerBox.candidates[number];
-                candidate.isDiscarded = true;
-                candidate.discardedReason = 'Peer box must hold this number for some group';
-                registerDiscardCause(targetBox.causedDiscards, number, peerBox.id);
-            });
+        if (inferringMode === 'all') {
+            targetBox.peerBoxes
+                .filter(
+                    (pb) =>
+                        !pb.isLocked &&
+                        !pb.candidates[number].isDiscarded &&
+                        !pb.candidates[number].isChosen
+                )
+                .forEach((peerBox) => {
+                    const candidate = peerBox.candidates[number];
+                    candidate.isDiscarded = true;
+                    candidate.discardedReason = 'Peer box must hold this number for some group';
+                    registerDiscardCause(targetBox.causedDiscards, number, peerBox.id);
+                });
+        }
     });
 };
 
-export const choseOnlyCandidateAvailableForBox = (box: Box) => {
+export const choseOnlyCandidateAvailableForBox = (box: Box, inferringMode: InferringMode) => {
     const onlyNumberAvailable = Object.keys(box.candidates)
         .map((number) => parseInt(number))
         .find(
@@ -54,15 +59,17 @@ export const choseOnlyCandidateAvailableForBox = (box: Box) => {
         box.candidates[onlyNumberAvailable].isChosen = true;
         box.candidates[onlyNumberAvailable].chosenReason = 'Only candidate left for this box';
 
-        box.peerBoxes
-            .filter((pb) => !pb.isLocked && !pb.candidates[onlyNumberAvailable].isDiscarded)
-            .forEach((pb) => {
-                const candidate = pb.candidates[onlyNumberAvailable];
-                candidate.isDiscarded = true;
-                candidate.discardedReason = 'Only candidate left for a peer box';
+        if (inferringMode === 'all') {
+            box.peerBoxes
+                .filter((pb) => !pb.isLocked && !pb.candidates[onlyNumberAvailable].isDiscarded)
+                .forEach((pb) => {
+                    const candidate = pb.candidates[onlyNumberAvailable];
+                    candidate.isDiscarded = true;
+                    candidate.discardedReason = 'Only candidate left for a peer box';
 
-                registerDiscardCause(box.causedDiscards, onlyNumberAvailable, pb.id);
-            });
+                    registerDiscardCause(box.causedDiscards, onlyNumberAvailable, pb.id);
+                });
+        }
     }
 };
 

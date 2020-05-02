@@ -56,7 +56,7 @@ const App = () => {
 
         for (;;) {
             const currentSudoku = nextSudokuList[nextSudokuIndex];
-            const sudokuComputedData = getSudokuComputedData(currentSudoku);
+            const sudokuComputedData = getSudokuComputedData(currentSudoku, 'all');
             const isValidSudoku = isSudokuValid(sudokuComputedData);
             const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
             const boxCandidate = getRandomMaximumImpactBox(sudokuComputedData);

@@ -217,6 +217,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               : ''
                                                       }`}
                                                       onClick={candidateClickHandler}
+                                                      data-discard-reason={
+                                                          candidate.discardedReason
+                                                      }
                                                   >
                                                       {/* {displayCandidates &&
                                                           (candidatesDisplayMode === 'impact'
