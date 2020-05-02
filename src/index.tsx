@@ -11,7 +11,7 @@ import {
 import { Sudoku } from './types/sudoku';
 
 import './style/main.scss';
-import { isSudokuReadyToBeSolved } from './logic/sudoku-rules';
+import { isSudokuReadyToBeSolved, isSudokuValid } from './logic/sudoku-rules';
 
 const initialSudokuList = [getEmptySudoku(3)];
 
@@ -57,25 +57,29 @@ const App = () => {
         for (;;) {
             const currentSudoku = nextSudokuList[nextSudokuIndex];
             const sudokuComputedData = getSudokuComputedData(currentSudoku);
+            const isValidSudoku = isSudokuValid(sudokuComputedData);
             const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
+            const boxCandidate = getRandomMaximumImpactBox(sudokuComputedData);
 
-            if (isSudokuReady) {
+            if (!isValidSudoku) {
+                // TODO Fix invalid generation
+                console.error('Jesus christ! How did I get here?');
+                nextSudokuList = [getEmptySudoku(sudokuList[sudokuIndex].regionSize)];
+                nextSudokuIndex = 0;
+            } else if (isSudokuReady) {
                 setSudokuList(nextSudokuList);
                 setSudokuIndex(nextSudokuIndex);
                 persistSudokuStatus(nextSudokuList, nextSudokuIndex);
                 break;
+            } else if (!boxCandidate) {
+                // TODO Fix invalid generation
+                console.error('Giving me a second, I was going the wrong way...');
+                nextSudokuList = [getEmptySudoku(sudokuList[sudokuIndex].regionSize)];
+                nextSudokuIndex = 0;
             } else {
-                const boxCandidate = getRandomMaximumImpactBox(sudokuComputedData);
-                if (boxCandidate) {
-                    nextSudokuList.push(
-                        lockBox(currentSudoku, boxCandidate.boxId, boxCandidate.number)
-                    );
-                    nextSudokuIndex++;
-                } else {
-                    console.error('Giving me a second, I made a mistake...');
-                    nextSudokuList = [getEmptySudoku(sudokuList[sudokuIndex].regionSize)];
-                    nextSudokuIndex = 0;
-                }
+                const nextSudoku = lockBox(currentSudoku, boxCandidate.boxId, boxCandidate.number);
+                nextSudokuList.push(nextSudoku);
+                nextSudokuIndex++;
             }
         }
     };

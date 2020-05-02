@@ -214,3 +214,11 @@ export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) 
     !sudokuComputedData.boxes.some(
         (box) => !box.isLocked && !Object.values(box.candidates).some(isCandidateChosen)
     );
+
+export const isSudokuValid = (sudokuComputedData: SudokuComputedData) => {
+    const groups = Object.values(sudokuComputedData.groups.columns)
+        .concat(Object.values(sudokuComputedData.groups.regions))
+        .concat(Object.values(sudokuComputedData.groups.rows));
+
+    return !groups.some((g) => !g.isValid);
+};
