@@ -1,5 +1,6 @@
 export interface Box {
     candidates: NumericDictionary<Candidate>;
+    causedDiscards: NumericDictionary<number[]>;
     column: number;
     groups: BoxGroups;
     id: number;

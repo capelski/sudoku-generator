@@ -17,7 +17,7 @@ import {
     choseOnlyCandidateAvailableForBox,
     discardCandidatesCausedByLocks,
     discardCandidatesFromGroupBecauseOfRegionRestriction,
-    discardOwnedCandidatesFromNonOwnerBoxes,
+    discardNonOwnedCandidatesFromOwningBoxes,
     doesGroupHaveABoxWithoutCandidates,
     doesGroupHaveTwoLockedBoxesWithSameNumber,
     getAllBoxesWithOnlyOneCandidateAvailable,
@@ -84,7 +84,7 @@ export const discardCandidatesByInferring = (
         );
 
         groupsWithOwnedCandidates.forEach((group) =>
-            discardOwnedCandidatesFromNonOwnerBoxes(group)
+            discardNonOwnedCandidatesFromOwningBoxes(group)
         );
 
         regionsWithColumnSubsetRestrictions.forEach((groupKey) => {
@@ -234,6 +234,7 @@ export const getSudokuComputedData = (
                                 }),
                                 {}
                             ),
+                        causedDiscards: {},
                         column: columnIndex,
                         id: boxId,
                         isLocked: lockedNumber != undefined,

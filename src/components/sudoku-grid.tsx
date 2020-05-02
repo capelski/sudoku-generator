@@ -21,6 +21,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     //     'number'
     // );
     const [displayCandidates, setDisplayCandidates] = useState(true);
+    const [highlightDiscardCause, setHighlightDiscardCause] = useState(false);
     const [highlightInferableBoxes, setHighlightInferableBoxes] = useState(false);
     const [highlightInferableCandidates, setHighlightInferableCandidates] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(true);
@@ -29,6 +30,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
     );
+
     const sudokuComputedData = getSudokuComputedData(props.sudoku, 'direct');
     // TODO isSudokuReady is no longer valid because of inferringMode
     // const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
@@ -36,6 +38,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const displayCandidatesHandler = () => {
         if (displayCandidates) {
             setHighlightInferableCandidates(false);
+            setHighlightDiscardCause(false);
         }
         setDisplayCandidates(!displayCandidates);
     };
@@ -47,6 +50,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const displayCandidatesNumber = () => {
     //     setCandidatesDisplayMode('number');
     // };
+
+    const highlightDiscardCauseHandler = () => {
+        setHighlightDiscardCause(!highlightDiscardCause);
+    };
 
     const highlightInferableBoxesHandler = () => {
         setHighlightInferableBoxes(!highlightInferableBoxes);
@@ -114,12 +121,22 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 }
                             };
 
+                            const isCausingDiscard =
+                                highlightDiscardCause &&
+                                selectedBoxCandidate &&
+                                box.causedDiscards[selectedBoxCandidate.number] &&
+                                box.causedDiscards[selectedBoxCandidate.number].indexOf(
+                                    selectedBoxCandidate.boxId
+                                ) > -1;
+
                             return (
                                 <div
                                     onClick={boxClickHandler}
                                     className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
                                         isSelectedBox ? ' selected-box' : ''
                                     }${isInferableBox ? ' inferable-box' : ''}${
+                                        isCausingDiscard ? ' discard-cause' : ''
+                                    }${
                                         highlightLatestLockedBox && isLatestLockedBox
                                             ? ' latest-locked-box'
                                             : ''
@@ -296,6 +313,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 disabled={!displayCandidates}
                             />{' '}
                             Highlight inferable candidates
+                        </p>
+
+                        <p>
+                            <input
+                                type="checkbox"
+                                onClick={highlightDiscardCauseHandler}
+                                checked={highlightDiscardCause}
+                                disabled={!displayCandidates}
+                            />{' '}
+                            Highlight candidates discard cause
                         </p>
 
                         <p>

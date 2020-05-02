@@ -66,6 +66,11 @@ $candidateSize: 25px;
             background-color: #c993c9;
         }
 
+        &.discard-cause {
+            background-color: orange;
+            outline: 4px solid orange;
+        }
+
         &.inside-invalid-column,
         &.inside-invalid-region,
         &.inside-invalid-row {
