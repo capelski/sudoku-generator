@@ -36,7 +36,7 @@ export const choseOnlyBoxAvailableInGroupForNumber = (group: Group) => {
 export const choseOnlyCandidateAvailableForBox = (box: Box) => {
     const onlyNumberAvailable = Object.keys(box.candidates)
         .map((number) => parseInt(number))
-        .find((number) => !box.isLocked && !box.candidates[number].isDiscarded)!;
+        .find((number) => !box.isLocked && !box.candidates[number].isDiscarded);
 
     if (onlyNumberAvailable) {
         box.candidates[onlyNumberAvailable].isChosen = true;
@@ -120,7 +120,7 @@ export const doesBoxHaveAllCandidatesDiscardedButOne = (box: Box) =>
     Object.values(box.candidates).filter((candidate) => !candidate.isDiscarded).length === 1;
 
 export const doesGroupHaveABoxWithoutCandidates = (group: Group) =>
-    group.boxes.find((box) => isBoxOutOfCandidates(box)) !== undefined;
+    group.boxes.some((box) => isBoxOutOfCandidates(box));
 
 export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
     const lockedBoxesNumbersOccurrences = group.boxes
@@ -129,7 +129,7 @@ export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
             return { ...reduced, [lockedBox.number!]: (reduced[lockedBox.number!] || 0) + 1 };
         }, {});
 
-    return Object.values(lockedBoxesNumbersOccurrences).find(
+    return Object.values(lockedBoxesNumbersOccurrences).some(
         (numberOccurrences) => numberOccurrences > 1
     );
 };
@@ -210,7 +210,7 @@ export const getAllRegionsThatCauseSubsetRestrictions = (
 };
 
 export const isBoxOutOfCandidates = (box: Box) =>
-    Object.values(box.candidates).find((candidate) => !candidate.isDiscarded) === undefined;
+    !Object.values(box.candidates).some((candidate) => !candidate.isDiscarded);
 
 export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) =>
     !sudokuComputedData.boxes.some(
