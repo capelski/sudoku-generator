@@ -167,9 +167,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               //           candidate.impact;
 
                                               const candidateClickHandler = () => {
-                                                  if (isSelectedCandidate) {
+                                                  if (displayCandidates && isSelectedCandidate) {
                                                       lockSelectedCandidateHandler();
-                                                  } else {
+                                                  } else if (displayCandidates) {
                                                       setSelectedBoxCandidate({
                                                           boxId: box.id,
                                                           number: candidate.number
