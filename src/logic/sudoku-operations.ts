@@ -15,6 +15,7 @@ import {
 import {
     choseOnlyBoxAvailableInGroupForNumber,
     choseOnlyCandidateAvailableForBox,
+    discardCandidatesCausedByLocks,
     discardCandidatesFromGroupBecauseOfRegionRestriction,
     discardOwnedCandidatesFromNonOwnerBoxes,
     doesGroupHaveABoxWithoutCandidates,
@@ -22,8 +23,7 @@ import {
     getAllBoxesWithOnlyOneCandidateAvailable,
     getAllGroupsWithANumberAvailableInJustOneBox,
     getAllGroupsWithOwnedCandidates,
-    getAllRegionsThatCauseSubsetRestrictions,
-    isCandidateDiscarded
+    getAllRegionsThatCauseSubsetRestrictions
 } from './sudoku-rules';
 import { getRandomElement } from './utilities';
 
@@ -110,16 +110,6 @@ export const discardCandidatesByInferring = (
     }
 };
 
-export const discardCandidatesByLocks = (lockedBoxes: Box[]) => {
-    lockedBoxes.forEach((lockedBox) => {
-        lockedBox.peerBoxes
-            .filter((peerBox) => !peerBox.isLocked)
-            .forEach((peerBox) => {
-                peerBox.candidates[lockedBox.number!].isDiscardedBecauseOfLock = true;
-            });
-    });
-};
-
 export const getBoxGroups = (sudokuGroups: SudokuGroups, box: Box): BoxGroups => {
     return {
         column: sudokuGroups.columns[box.column],
@@ -193,8 +183,7 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
         (box) =>
             !box.isLocked &&
             Object.values(box.candidates).find(
-                (candidate) =>
-                    !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
+                (candidate) => !candidate.isDiscarded && candidate.impact === sudoku.maximumImpact
             )
     );
 
@@ -202,8 +191,7 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
         const randomBox = getRandomElement(maximumImpactBoxes);
 
         const maximumImpactCandidates = Object.values(randomBox.candidates).filter(
-            (candidate) =>
-                !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
+            (candidate) => !candidate.isDiscarded && candidate.impact === sudoku.maximumImpact
         );
         const randomCandidate = getRandomElement(maximumImpactCandidates);
 
@@ -232,14 +220,10 @@ export const getSudokuComputedData = (
                             .map(
                                 (_z, candidateIndex): Candidate => ({
                                     chosenReason: '',
+                                    discardedReason: '',
                                     impact: -2,
                                     isChosen: false,
-                                    isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
-                                    isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
-                                    isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,
-                                    isDiscardedBecauseOfLock: false,
-                                    isDiscardedBecauseOfOwnedCandidateInSomeGroup: false,
-                                    isDiscardedBecauseOfRegionSubset: false,
+                                    isDiscarded: false,
                                     number: candidateIndex + 1
                                 })
                             )
@@ -274,7 +258,7 @@ export const getSudokuComputedData = (
         box.groups = getBoxGroups(groups, box);
     });
 
-    discardCandidatesByLocks(boxes.filter((box) => box.isLocked));
+    discardCandidatesCausedByLocks(boxes.filter((box) => box.isLocked));
     discardCandidatesByInferring(boxes, groups, inferringMode, 1);
 
     updateGroupsValidations(groups.columns);
@@ -327,11 +311,10 @@ export const updateAllGroups = (groups: SudokuGroups) => {
 
 export const updateCandidateImpact = (box: Box, candidateIndex: number) => {
     const candidate = box.candidates[candidateIndex];
-    candidate.impact = isCandidateDiscarded(candidate)
+    candidate.impact = candidate.isDiscarded
         ? -1
         : box.peerBoxes.filter(
-              (peerBox) =>
-                  !peerBox.isLocked && !isCandidateDiscarded(peerBox.candidates[candidateIndex])
+              (peerBox) => !peerBox.isLocked && !peerBox.candidates[candidateIndex].isDiscarded
           ).length;
 };
 
@@ -358,7 +341,7 @@ export const updateGroupAvailableBoxesPerNumber = (group: Group) => {
                 group.availableBoxesPerNumber[candidate.number] || [];
             if (
                 (box.isLocked && box.number === candidate.number) ||
-                (!box.isLocked && !isCandidateDiscarded(candidate))
+                (!box.isLocked && !candidate.isDiscarded)
             ) {
                 group.availableBoxesPerNumber[candidate.number].push(box);
             }

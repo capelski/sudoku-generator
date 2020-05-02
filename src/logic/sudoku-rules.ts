@@ -1,4 +1,4 @@
-import { Box, Candidate, Group, NumericDictionary, SudokuComputedData } from '../types/sudoku';
+import { Box, Group, NumericDictionary, SudokuComputedData } from '../types/sudoku';
 
 export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
@@ -18,16 +18,17 @@ export const choseOnlyBoxAvailableInGroupForNumber = (group: Group) => {
             if (candidate === targetBox.candidates[number]) {
                 candidate.isChosen = true;
                 candidate.chosenReason = 'This box must hold this number for a group';
-            } else if (!isCandidateDiscarded(candidate)) {
-                candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup = true;
+            } else if (!candidate.isDiscarded) {
+                candidate.isDiscarded = true;
+                candidate.discardedReason = 'This box must hold another number for some group';
             }
         });
         targetBox.peerBoxes
             .filter((pb) => !pb.isLocked) // TODO And is not chosen
             .forEach((peerBox) => {
-                peerBox.candidates[
-                    number
-                ].isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup = true;
+                const candidate = peerBox.candidates[number];
+                candidate.isDiscarded = true;
+                candidate.discardedReason = 'Peer box must hold this number for some group';
             });
     });
 };
@@ -35,18 +36,28 @@ export const choseOnlyBoxAvailableInGroupForNumber = (group: Group) => {
 export const choseOnlyCandidateAvailableForBox = (box: Box) => {
     const onlyNumberAvailable = Object.keys(box.candidates)
         .map((number) => parseInt(number))
-        .find((number) => !box.isLocked && !isCandidateDiscarded(box.candidates[number]))!;
+        .find((number) => !box.isLocked && !box.candidates[number].isDiscarded)!;
 
     if (onlyNumberAvailable) {
         box.candidates[onlyNumberAvailable].isChosen = true;
         box.candidates[onlyNumberAvailable].chosenReason = 'Only candidate left for this box';
-        box.peerBoxes.forEach(
-            (pb) =>
-                (pb.candidates[
-                    onlyNumberAvailable
-                ].isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox = true)
-        );
+        box.peerBoxes.forEach((pb) => {
+            const candidate = pb.candidates[onlyNumberAvailable];
+            candidate.isDiscarded = true;
+            candidate.discardedReason = 'Only candidate left for a peer box';
+        });
     }
+};
+
+export const discardCandidatesCausedByLocks = (lockedBoxes: Box[]) => {
+    lockedBoxes.forEach((lockedBox) => {
+        lockedBox.peerBoxes
+            .filter((peerBox) => !peerBox.isLocked)
+            .forEach((peerBox) => {
+                peerBox.candidates[lockedBox.number!].isDiscarded = true;
+                peerBox.candidates[lockedBox.number!].discardedReason = 'Locked peer box';
+            });
+    });
 };
 
 export const discardCandidatesFromGroupBecauseOfRegionRestriction = (
@@ -74,10 +85,12 @@ export const discardCandidatesFromGroupBecauseOfRegionRestriction = (
                     (box) =>
                         box.region !== regionNumber &&
                         !box.isLocked &&
-                        !isCandidateDiscarded(box.candidates[number])
+                        !box.candidates[number].isDiscarded
                 );
                 groupBoxesOutsideRegion.forEach((box) => {
-                    box.candidates[number].isDiscardedBecauseOfRegionSubset = true;
+                    const candidate = box.candidates[number];
+                    candidate.isDiscarded = true;
+                    candidate.discardedReason = 'Region subset';
                 });
             }
         });
@@ -90,10 +103,11 @@ export const discardOwnedCandidatesFromNonOwnerBoxes = (group: Group) => {
                 .filter(
                     (candidate) =>
                         ownedCandidatesSet.numbers.indexOf(candidate.number) === -1 &&
-                        !isCandidateDiscarded(candidate)
+                        !candidate.isDiscarded
                 )
                 .forEach((candidate) => {
-                    candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup = true;
+                    candidate.isDiscarded = true;
+                    candidate.discardedReason = 'Owned candidate in a group';
                 });
         });
     });
@@ -103,8 +117,7 @@ export const doesBoxHaveAChosenCandidate = (box: Box) =>
     Object.values(box.candidates).some((c) => c.isChosen);
 
 export const doesBoxHaveAllCandidatesDiscardedButOne = (box: Box) =>
-    Object.values(box.candidates).filter((candidate) => !isCandidateDiscarded(candidate)).length ===
-    1;
+    Object.values(box.candidates).filter((candidate) => !candidate.isDiscarded).length === 1;
 
 export const doesGroupHaveABoxWithoutCandidates = (group: Group) =>
     group.boxes.find((box) => isBoxOutOfCandidates(box)) !== undefined;
@@ -153,7 +166,7 @@ export const getAllGroupsWithOwnedCandidates = (groups: NumericDictionary<Group>
                 Object.values(ownedBox.candidates).some(
                     (candidate) =>
                         ownedCandidatesSet.numbers.indexOf(candidate.number) === -1 &&
-                        !isCandidateDiscarded(candidate)
+                        !candidate.isDiscarded
                 )
             );
         });
@@ -189,7 +202,7 @@ export const getAllRegionsThatCauseSubsetRestrictions = (
                         (box) =>
                             box.region !== regionNumber &&
                             !box.isLocked &&
-                            !isCandidateDiscarded(box.candidates[number])
+                            !box.candidates[number].isDiscarded
                     )
                 );
             });
@@ -197,16 +210,7 @@ export const getAllRegionsThatCauseSubsetRestrictions = (
 };
 
 export const isBoxOutOfCandidates = (box: Box) =>
-    Object.values(box.candidates).find((candidate) => !isCandidateDiscarded(candidate)) ===
-    undefined;
-
-export const isCandidateDiscarded = (candidate: Candidate) =>
-    candidate.isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup ||
-    candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup ||
-    candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox ||
-    candidate.isDiscardedBecauseOfLock ||
-    candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup ||
-    candidate.isDiscardedBecauseOfRegionSubset;
+    Object.values(box.candidates).find((candidate) => !candidate.isDiscarded) === undefined;
 
 export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) =>
     !sudokuComputedData.boxes.some(

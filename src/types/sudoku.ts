@@ -29,14 +29,10 @@ export interface BoxGroups {
 
 export interface Candidate {
     chosenReason: string;
+    discardedReason: string;
     impact: number;
     isChosen: boolean;
-    isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: boolean;
-    isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: boolean;
-    isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: boolean;
-    isDiscardedBecauseOfLock: boolean;
-    isDiscardedBecauseOfOwnedCandidateInSomeGroup: boolean;
-    isDiscardedBecauseOfRegionSubset: boolean;
+    isDiscarded: boolean;
     number: number;
 }
 

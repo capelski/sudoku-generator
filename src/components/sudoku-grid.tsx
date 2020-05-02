@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { getSudokuComputedData } from '../logic/sudoku-operations';
-import {
-    arePeerBoxes,
-    doesBoxHaveAChosenCandidate,
-    isCandidateDiscarded
-} from '../logic/sudoku-rules';
+import { arePeerBoxes, doesBoxHaveAChosenCandidate } from '../logic/sudoku-rules';
 import { BoxCandidate, Sudoku } from '../types/sudoku';
 
 // type CandidateDisplayMode = 'number' | 'impact';
@@ -144,10 +140,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     {box.isLocked
                                         ? box.number
                                         : Object.values(box.candidates).map((candidate) => {
-                                              const isDiscardedCandidate =
-                                                  highlightInferableCandidates &&
-                                                  isCandidateDiscarded(candidate);
-
                                               const isSelectedCandidate =
                                                   selectedBoxCandidate !== undefined &&
                                                   selectedBoxCandidate.boxId === box.id &&
@@ -156,7 +148,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               const isAffectedCandidate =
                                                   !box.isLocked &&
                                                   (!highlightInferableCandidates ||
-                                                      !isDiscardedCandidate) &&
+                                                      !candidate.isDiscarded) &&
                                                   isSelectedBoxPeer &&
                                                   selectedBoxCandidate!.boxId !== box.id &&
                                                   selectedBoxCandidate!.number === candidate.number;
@@ -198,38 +190,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               : ''
                                                       }${
                                                           highlightInferableCandidates &&
-                                                          candidate.isDiscardedBecauseOfLock
-                                                              ? ' discarded-because-of-lock'
+                                                          candidate.isDiscarded
+                                                              ? ' discarded-candidate'
                                                               : ''
                                                       }${
                                                           highlightInferableCandidates &&
                                                           candidate.isChosen
                                                               ? ' chosen-candidate'
-                                                              : ''
-                                                      }${
-                                                          highlightInferableCandidates &&
-                                                          candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox
-                                                              ? ' discarded-because-is-only-candidate-left-for-a-peer-box'
-                                                              : ''
-                                                      }${
-                                                          highlightInferableCandidates &&
-                                                          candidate.isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup
-                                                              ? ' discarded-because-peer-box-must-hold-this-number-for-some-group'
-                                                              : ''
-                                                      }${
-                                                          highlightInferableCandidates &&
-                                                          candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup
-                                                              ? ' discarded-because-this-box-must-hold-another-number-for-some-group'
-                                                              : ''
-                                                      }${
-                                                          highlightInferableCandidates &&
-                                                          candidate.isDiscardedBecauseOfOwnedCandidateInSomeGroup
-                                                              ? ' discarded-because-of-owned-candidate-in-same-group'
-                                                              : ''
-                                                      }${
-                                                          highlightInferableCandidates &&
-                                                          candidate.isDiscardedBecauseOfRegionSubset
-                                                              ? ' discarded-because-of-region-subset'
                                                               : ''
                                                       }`}
                                                       onClick={candidateClickHandler}

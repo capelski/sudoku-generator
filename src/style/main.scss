@@ -25,12 +25,7 @@ $candidateSize: 25px;
                 background-color: #bcf4bc;
             }
 
-            &.discarded-because-of-lock,
-            &.discarded-because-is-only-candidate-left-for-a-peer-box,
-            &.discarded-because-peer-box-must-hold-this-number-for-some-group,
-            &.discarded-because-this-box-must-hold-another-number-for-some-group,
-            &.discarded-because-of-owned-candidate-in-same-group,
-            &.discarded-because-of-region-subset {
+            &.discarded-candidate {
                 font-style: italic;
                 background-color: #fbe0e0;
             }
