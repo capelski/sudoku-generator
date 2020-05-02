@@ -231,9 +231,9 @@ export const getSudokuComputedData = (
                         candidates: [...Array(size)]
                             .map(
                                 (_z, candidateIndex): Candidate => ({
+                                    chosenReason: '',
                                     impact: -2,
-                                    isChosenBecauseIsTheOnlyCandidateLeftForThisBox: false,
-                                    isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: false,
+                                    isChosen: false,
                                     isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: false,
                                     isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: false,
                                     isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: false,

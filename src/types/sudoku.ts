@@ -28,9 +28,9 @@ export interface BoxGroups {
 }
 
 export interface Candidate {
+    chosenReason: string;
     impact: number;
-    isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup: boolean;
-    isChosenBecauseIsTheOnlyCandidateLeftForThisBox: boolean;
+    isChosen: boolean;
     isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup: boolean;
     isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup: boolean;
     isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox: boolean;

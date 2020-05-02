@@ -16,7 +16,8 @@ export const choseOnlyBoxAvailableInGroupForNumber = (group: Group) => {
         const targetBox = group.availableBoxesPerNumber[number][0];
         Object.values(targetBox.candidates).forEach((candidate) => {
             if (candidate === targetBox.candidates[number]) {
-                candidate.isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup = true;
+                candidate.isChosen = true;
+                candidate.chosenReason = 'This box must hold this number for a group';
             } else if (!isCandidateDiscarded(candidate)) {
                 candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup = true;
             }
@@ -37,7 +38,8 @@ export const choseOnlyCandidateAvailableForBox = (box: Box) => {
         .find((number) => !box.isLocked && !isCandidateDiscarded(box.candidates[number]))!;
 
     if (onlyNumberAvailable) {
-        box.candidates[onlyNumberAvailable].isChosenBecauseIsTheOnlyCandidateLeftForThisBox = true;
+        box.candidates[onlyNumberAvailable].isChosen = true;
+        box.candidates[onlyNumberAvailable].chosenReason = 'Only candidate left for this box';
         box.peerBoxes.forEach(
             (pb) =>
                 (pb.candidates[
@@ -98,7 +100,7 @@ export const discardOwnedCandidatesFromNonOwnerBoxes = (group: Group) => {
 };
 
 export const doesBoxHaveAChosenCandidate = (box: Box) =>
-    Object.values(box.candidates).some(isCandidateChosen);
+    Object.values(box.candidates).some((c) => c.isChosen);
 
 export const doesBoxHaveAllCandidatesDiscardedButOne = (box: Box) =>
     Object.values(box.candidates).filter((candidate) => !isCandidateDiscarded(candidate)).length ===
@@ -138,7 +140,7 @@ export const getAllGroupsWithANumberAvailableInJustOneBox = (groups: NumericDict
                 return (
                     boxesPerNumber.length === 1 &&
                     !firstBox.isLocked &&
-                    !isCandidateChosen(firstBox.candidates[number])
+                    !firstBox.candidates[number].isChosen
                 );
             });
     });
@@ -198,10 +200,6 @@ export const isBoxOutOfCandidates = (box: Box) =>
     Object.values(box.candidates).find((candidate) => !isCandidateDiscarded(candidate)) ===
     undefined;
 
-export const isCandidateChosen = (candidate: Candidate) =>
-    candidate.isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup ||
-    candidate.isChosenBecauseIsTheOnlyCandidateLeftForThisBox;
-
 export const isCandidateDiscarded = (candidate: Candidate) =>
     candidate.isDiscardedBecausePeerBoxMustHoldThisNumberForSomeGroup ||
     candidate.isDiscardedBecauseThisBoxMustHoldAnotherNumberForSomeGroup ||
@@ -212,7 +210,7 @@ export const isCandidateDiscarded = (candidate: Candidate) =>
 
 export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) =>
     !sudokuComputedData.boxes.some(
-        (box) => !box.isLocked && !Object.values(box.candidates).some(isCandidateChosen)
+        (box) => !box.isLocked && !Object.values(box.candidates).some((c) => c.isChosen)
     );
 
 export const isSudokuValid = (sudokuComputedData: SudokuComputedData) => {

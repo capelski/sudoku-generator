@@ -203,18 +203,13 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               : ''
                                                       }${
                                                           highlightInferableCandidates &&
-                                                          candidate.isChosenBecauseIsTheOnlyCandidateLeftForThisBox
-                                                              ? ' chosen-because-is-only-candidate-left-for-this-box'
+                                                          candidate.isChosen
+                                                              ? ' chosen-candidate'
                                                               : ''
                                                       }${
                                                           highlightInferableCandidates &&
                                                           candidate.isDiscardedBecauseIsTheOnlyCandidateLeftForAPeerBox
                                                               ? ' discarded-because-is-only-candidate-left-for-a-peer-box'
-                                                              : ''
-                                                      }${
-                                                          highlightInferableCandidates &&
-                                                          candidate.isChosenBecauseThisBoxMustHoldThisNumberForSomeGroup
-                                                              ? ' chosen-because-this-box-must-hold-this-number-for-some-group'
                                                               : ''
                                                       }${
                                                           highlightInferableCandidates &&
