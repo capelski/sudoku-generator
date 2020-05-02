@@ -33,6 +33,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
 
     const displayCandidatesHandler = () => {
+        if (displayCandidates) {
+            setInferringMode('none');
+        }
         setDisplayCandidates(!displayCandidates);
     };
 
@@ -309,6 +312,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 type="checkbox"
                                 onClick={inferringModeHandler}
                                 checked={inferringMode === 'direct'}
+                                disabled={!displayCandidates}
                             />{' '}
                             Highlight discarded/chosen candidates
                         </p>
