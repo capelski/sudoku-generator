@@ -21,12 +21,11 @@ interface GridProps {
     unlockBox: (boxId: number) => void;
 }
 
-// TODOs
-// Fix discard casues
+// TODO
 // Put a color square legend next to the ticks
 // Implement the missing rule
-// Restore highlight inferable boxes...
 // Allow setting the maxIterations some how
+// Restore highlight inferable boxes?
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(

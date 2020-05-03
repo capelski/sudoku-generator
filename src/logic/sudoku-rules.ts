@@ -30,13 +30,13 @@ export const choseOnlyBoxAvailableInGroupForNumber = (group: Group, iterationNum
                 candidate.isChosen = iterationNumber;
                 candidate.chosenReason = 'This box must hold this number for a group';
             } else if (!isDiscardedCandidate(candidate)) {
-                candidate.isDiscarded = iterationNumber;
+                candidate.isDiscarded = iterationNumber + 1;
                 candidate.discardedReason = 'This box must hold another number for some group';
                 registerDiscardCause(
                     targetBox.causedDiscards,
                     candidate.number,
                     targetBox.id,
-                    iterationNumber
+                    iterationNumber + 1
                 );
             }
         });
@@ -78,14 +78,14 @@ export const choseOnlyCandidateAvailableForBox = (box: Box, iterationNumber: num
             )
             .forEach((pb) => {
                 const candidate = pb.candidates[onlyNumberAvailable];
-                candidate.isDiscarded = iterationNumber;
+                candidate.isDiscarded = iterationNumber + 1;
                 candidate.discardedReason = 'Only candidate left for a peer box';
 
                 registerDiscardCause(
                     box.causedDiscards,
                     onlyNumberAvailable,
                     pb.id,
-                    iterationNumber
+                    iterationNumber + 1
                 );
             });
     }
