@@ -5,7 +5,6 @@ import {
     BoxGroups,
     Candidate,
     Group,
-    InferringMode,
     NumericDictionary,
     StringDictionary,
     Sudoku,
@@ -24,19 +23,17 @@ import {
     getAllGroupsWithANumberAvailableInJustOneBox,
     getAllGroupsWithOwnedCandidates,
     getAllRegionsThatCauseSubsetRestrictions,
-    isThereAnyBoxWithChosenCandidate
+    isDiscardedCandidate
 } from './sudoku-rules';
 import { getRandomElement } from './utilities';
 
 export const discardCandidatesByInferring = (
     boxes: Box[],
     groups: SudokuGroups,
-    inferringMode: InferringMode,
-    iteration: number
+    iterationNumber: number
 ) => {
     updateAllGroups(groups);
 
-    // TODO This might not be necessary
     const boxesWithOnlyOneCandidateAvailable = getAllBoxesWithOnlyOneCandidateAvailable(boxes);
 
     const columnsWithANumberAvailableInJustOneBox = getAllGroupsWithANumberAvailableInJustOneBox(
@@ -70,10 +67,6 @@ export const discardCandidatesByInferring = (
 
     // TODO If two boxes have only the same two numbers, remove those numbers from other peer boxes
 
-    const mustInfer =
-        inferringMode === 'all' ||
-        (inferringMode === 'direct' && !isThereAnyBoxWithChosenCandidate(boxes));
-
     const isThereAnyDiscardToBeMade =
         boxesWithOnlyOneCandidateAvailable.length > 0 ||
         groupsWithANumberAvailableInJustOneBox.length > 0 ||
@@ -82,7 +75,7 @@ export const discardCandidatesByInferring = (
         regionsWithRowSubsetRestrictions.length > 0;
 
     // console.log('Iteration', iteration);
-    // console.log('mustInfer', mustInfer);
+    // console.log('isThereAnyDiscardToBeMade', isThereAnyDiscardToBeMade);
     // console.log('boxesWithOnlyOneCandidateAvailable', boxesWithOnlyOneCandidateAvailable.length);
     // console.log(
     //     'groupsWithANumberAvailableInJustOneBox',
@@ -93,15 +86,17 @@ export const discardCandidatesByInferring = (
     // console.log('regionsWithRowSubsetRestrictions', regionsWithRowSubsetRestrictions.length);
     // console.log('-----------------------');
 
-    if (mustInfer && isThereAnyDiscardToBeMade) {
-        boxesWithOnlyOneCandidateAvailable.forEach((box) => choseOnlyCandidateAvailableForBox(box));
+    if (isThereAnyDiscardToBeMade) {
+        boxesWithOnlyOneCandidateAvailable.forEach((box) =>
+            choseOnlyCandidateAvailableForBox(box, iterationNumber)
+        );
 
         groupsWithANumberAvailableInJustOneBox.forEach((group) =>
-            choseOnlyBoxAvailableInGroupForNumber(group)
+            choseOnlyBoxAvailableInGroupForNumber(group, iterationNumber)
         );
 
         groupsWithOwnedCandidates.forEach((group) =>
-            discardNonOwnedCandidatesFromOwningBoxes(group)
+            discardNonOwnedCandidatesFromOwningBoxes(group, iterationNumber)
         );
 
         regionsWithColumnSubsetRestrictions.forEach((groupKey) => {
@@ -109,7 +104,8 @@ export const discardCandidatesByInferring = (
             discardCandidatesFromGroupBecauseOfRegionRestriction(
                 regionNumber,
                 groups.regions[regionNumber],
-                'column'
+                'column',
+                iterationNumber
             );
         });
         regionsWithRowSubsetRestrictions.forEach((groupKey) => {
@@ -117,11 +113,12 @@ export const discardCandidatesByInferring = (
             discardCandidatesFromGroupBecauseOfRegionRestriction(
                 regionNumber,
                 groups.regions[regionNumber],
-                'row'
+                'row',
+                iterationNumber
             );
         });
 
-        discardCandidatesByInferring(boxes, groups, inferringMode, iteration + 1);
+        discardCandidatesByInferring(boxes, groups, iterationNumber + 1);
     }
 };
 
@@ -198,7 +195,8 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
         (box) =>
             !box.isLocked &&
             Object.values(box.candidates).find(
-                (candidate) => !candidate.isDiscarded && candidate.impact === sudoku.maximumImpact
+                (candidate) =>
+                    !isDiscardedCandidate(candidate) && candidate.impact === sudoku.maximumImpact
             )
     );
 
@@ -206,7 +204,8 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
         const randomBox = getRandomElement(maximumImpactBoxes);
 
         const maximumImpactCandidates = Object.values(randomBox.candidates).filter(
-            (candidate) => !candidate.isDiscarded && candidate.impact === sudoku.maximumImpact
+            (candidate) =>
+                !isDiscardedCandidate(candidate) && candidate.impact === sudoku.maximumImpact
         );
         const randomCandidate = getRandomElement(maximumImpactCandidates);
 
@@ -219,10 +218,7 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
     return undefined;
 };
 
-export const getSudokuComputedData = (
-    sudoku: Sudoku,
-    inferringMode: InferringMode
-): SudokuComputedData => {
+export const getSudokuComputedData = (sudoku: Sudoku): SudokuComputedData => {
     const size = sudoku.regionSize * sudoku.regionSize;
     const boxes = [...Array(size)]
         .map((_x, rowIndex) =>
@@ -237,8 +233,8 @@ export const getSudokuComputedData = (
                                     chosenReason: '',
                                     discardedReason: '',
                                     impact: -2,
-                                    isChosen: false,
-                                    isDiscarded: false,
+                                    isChosen: -1,
+                                    isDiscarded: -1,
                                     number: candidateIndex + 1
                                 })
                             )
@@ -276,7 +272,7 @@ export const getSudokuComputedData = (
     });
 
     discardCandidatesCausedByLocks(boxes.filter((box) => box.isLocked));
-    discardCandidatesByInferring(boxes, groups, inferringMode, 1);
+    discardCandidatesByInferring(boxes, groups, 1);
 
     updateGroupsValidations(groups.columns);
     updateGroupsValidations(groups.regions);
@@ -328,10 +324,11 @@ export const updateAllGroups = (groups: SudokuGroups) => {
 
 export const updateCandidateImpact = (box: Box, candidateIndex: number) => {
     const candidate = box.candidates[candidateIndex];
-    candidate.impact = candidate.isDiscarded
+    candidate.impact = isDiscardedCandidate(candidate)
         ? -1
         : box.peerBoxes.filter(
-              (peerBox) => !peerBox.isLocked && !peerBox.candidates[candidateIndex].isDiscarded
+              (peerBox) =>
+                  !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[candidateIndex])
           ).length;
 };
 
@@ -358,7 +355,7 @@ export const updateGroupAvailableBoxesPerNumber = (group: Group) => {
                 group.availableBoxesPerNumber[candidate.number] || [];
             if (
                 (box.isLocked && box.number === candidate.number) ||
-                (!box.isLocked && !candidate.isDiscarded)
+                (!box.isLocked && !isDiscardedCandidate(candidate))
             ) {
                 group.availableBoxesPerNumber[candidate.number].push(box);
             }

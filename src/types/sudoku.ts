@@ -1,7 +1,7 @@
 export interface Box {
     candidates: NumericDictionary<Candidate>;
-    causedChoices: NumericDictionary<number[]>;
-    causedDiscards: NumericDictionary<number[]>;
+    causedChoices: NumericDictionary<NumericDictionary<number>>;
+    causedDiscards: NumericDictionary<NumericDictionary<number>>;
     column: number;
     groups: BoxGroups;
     id: number;
@@ -33,8 +33,8 @@ export interface Candidate {
     chosenReason: string;
     discardedReason: string;
     impact: number;
-    isChosen: boolean;
-    isDiscarded: boolean;
+    isChosen: number;
+    isDiscarded: number;
     number: number;
 }
 

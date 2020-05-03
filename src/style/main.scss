@@ -28,6 +28,10 @@ $candidateSize: 25px;
             &.discarded-candidate {
                 font-style: italic;
                 background-color: #fbe0e0;
+
+                &.discarded-immediately-next {
+                    background-color: lightcoral;
+                }
             }
 
             // &.maximum-impact-candidate {
@@ -60,10 +64,6 @@ $candidateSize: 25px;
 
         &.selected-box {
             background-color: #566c73;
-        }
-
-        &.inferable-box {
-            background-color: #c993c9;
         }
 
         &.discard-cause,
