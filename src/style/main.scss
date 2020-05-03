@@ -23,6 +23,10 @@ $candidateSize: 25px;
             &.chosen-candidate {
                 font-style: italic;
                 background-color: #bcf4bc;
+
+                &.chosen-immediately-next {
+                    background-color: #73be73;
+                }
             }
 
             &.discarded-candidate {
