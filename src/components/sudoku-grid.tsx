@@ -21,9 +21,6 @@ interface GridProps {
     unlockBox: (boxId: number) => void;
 }
 
-// TODO
-// Implement the missing rule
-
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
     //     'number'

@@ -61,7 +61,7 @@ const App = () => {
             const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
             const boxCandidate = getRandomMaximumImpactBox(sudokuComputedData);
 
-            if (!isValidSudoku) {
+            if (!isValidSudoku || (!isSudokuReady && !boxCandidate)) {
                 // TODO Fix invalid generation
                 console.error('Jesus christ! How did I get here?');
                 nextSudokuList = [getEmptySudoku(sudokuList[sudokuIndex].regionSize)];
@@ -71,13 +71,12 @@ const App = () => {
                 setSudokuIndex(nextSudokuIndex);
                 persistSudokuStatus(nextSudokuList, nextSudokuIndex);
                 break;
-            } else if (!boxCandidate) {
-                // TODO Fix invalid generation
-                console.error('Giving me a second, I was going the wrong way...');
-                nextSudokuList = [getEmptySudoku(sudokuList[sudokuIndex].regionSize)];
-                nextSudokuIndex = 0;
             } else {
-                const nextSudoku = lockBox(currentSudoku, boxCandidate.boxId, boxCandidate.number);
+                const nextSudoku = lockBox(
+                    currentSudoku,
+                    boxCandidate!.boxId,
+                    boxCandidate!.number
+                );
                 nextSudokuList.push(nextSudoku);
                 nextSudokuIndex++;
             }
