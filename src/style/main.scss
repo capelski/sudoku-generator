@@ -193,6 +193,10 @@ $candidateSize: 25px;
         border: 1px solid black;
         display: inline-block;
 
+        &.affected-candidates {
+            background-color: $affectedCandidate;
+        }
+
         &.candidate-restriction {
             background-color: $candidateRestriction;
         }

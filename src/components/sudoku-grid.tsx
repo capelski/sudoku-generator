@@ -24,13 +24,13 @@ interface GridProps {
 // TODO
 // Implement the missing rule
 // Set the reveal level to zero when necessary
-// Option to highlight affected numbers
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
     //     'number'
     // );
     const [displayCandidates, setDisplayCandidates] = useState(true);
+    const [highlightAffectedCandidates, setHighlightAffectedCandidates] = useState(true);
     const [highlightCandidateRestrictions, setHighlightCandidateRestrictions] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(false);
     const [highlightLatestLockedBox, setHighlightLatestLockedBox] = useState(false);
@@ -47,9 +47,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const displayCandidatesHandler = () => {
         if (displayCandidates) {
+            setHighlightAffectedCandidates(false);
+            setHighlightCandidateRestrictions(false);
             setRevealChosenCandidates(false);
             setRevealDiscardedCandidates(false);
-            setHighlightCandidateRestrictions(false);
         }
         setDisplayCandidates(!displayCandidates);
     };
@@ -61,6 +62,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const displayCandidatesNumber = () => {
     //     setCandidatesDisplayMode('number');
     // };
+
+    const highlightAffectedCandidatesHandler = () => {
+        setHighlightAffectedCandidates(!highlightAffectedCandidates);
+    };
 
     const highlightCandidateRestrictionsHandler = () => {
         setHighlightCandidateRestrictions(!highlightCandidateRestrictions);
@@ -195,6 +200,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   selectedBoxCandidate.number === candidate.number;
 
                                               const isAffectedCandidate =
+                                                  highlightAffectedCandidates &&
                                                   !box.isLocked &&
                                                   (!revealDiscardedCandidates ||
                                                       !isDiscardedCandidate(
@@ -319,6 +325,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 checked={displayCandidates}
                             />{' '}
                             Display candidates
+                        </p>
+                        <p>
+                            <input
+                                type="checkbox"
+                                onClick={highlightAffectedCandidatesHandler}
+                                checked={highlightAffectedCandidates}
+                            />{' '}
+                            Highlight affected numbers{' '}
+                            <span className="color-legend affected-candidates"></span>
                         </p>
                         <p>
                             <input
