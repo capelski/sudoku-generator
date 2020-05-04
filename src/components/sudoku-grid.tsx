@@ -22,8 +22,9 @@ interface GridProps {
 }
 
 // TODO
-// Put a color square legend next to the ticks
 // Implement the missing rule
+// Set the reveal level to zero when necessary
+// Option to highlight affected numbers
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
@@ -325,7 +326,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 onClick={highlightInvalidGroupsHandler}
                                 checked={highlightInvalidGroups}
                             />{' '}
-                            Highlight invalid groups
+                            Highlight invalid groups{' '}
+                            <span className="color-legend invalid-groups"></span>
                         </p>
                         <p>
                             <input
@@ -333,7 +335,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 onClick={highlightLatestLockedBoxHandler}
                                 checked={highlightLatestLockedBox}
                             />{' '}
-                            Highlight latest locked box
+                            Highlight latest locked box{' '}
+                            <span className="color-legend latest-locked-box"></span>
                         </p>
                         <p>
                             <input
@@ -342,7 +345,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 checked={highlightCandidateRestrictions}
                                 disabled={!displayCandidates}
                             />{' '}
-                            Highlight candidate restrictions
+                            Highlight candidate restrictions{' '}
+                            <span className="color-legend candidate-restriction"></span>
                         </p>
                         {/* <p>
                             <input
@@ -375,7 +379,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 checked={revealDiscardedCandidates}
                                 disabled={!displayCandidates}
                             />{' '}
-                            Reveal discardable candidates
+                            Reveal discardable candidates{' '}
+                            <span className="color-legend discarded-candidates"></span>
                         </p>
                         <p>
                             <input
@@ -384,7 +389,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 checked={revealChosenCandidates}
                                 disabled={!displayCandidates}
                             />{' '}
-                            Reveal choosable candidates
+                            Reveal choosable candidates{' '}
+                            <span className="color-legend chosen-candidates"></span>
                         </p>
                         <p>
                             Reveal level:{' ' + revealLevel + ' '}

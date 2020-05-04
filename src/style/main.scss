@@ -1,3 +1,13 @@
+$candidateRestriction: #ffef99;
+$immediatelyChosenCandidates: #73be73;
+$chosenCandidates: mix(white, $immediatelyChosenCandidates, 45%);
+$immediatelyDiscardedCandidates: lightcoral;
+$discardedCandidates: mix(white, $immediatelyDiscardedCandidates, 55%);
+$invalidGroups: #d8b2d8;
+$latestLockedBox: #ffc04c;
+$selectionColor: #2e84d5;
+$affectedCandidate: mix(white, $selectionColor, 70%);
+
 .screen-splitter {
     display: flex;
 }
@@ -22,19 +32,19 @@ $candidateSize: 25px;
 
             &.chosen-candidate {
                 font-style: italic;
-                background-color: #bcf4bc;
+                background-color: $chosenCandidates;
 
                 &.chosen-immediately-next {
-                    background-color: #73be73;
+                    background-color: $immediatelyChosenCandidates;
                 }
             }
 
             &.discarded-candidate {
                 font-style: italic;
-                background-color: #fbe0e0;
+                background-color: $discardedCandidates;
 
                 &.discarded-immediately-next {
-                    background-color: lightcoral;
+                    background-color: $immediatelyDiscardedCandidates;
                 }
             }
 
@@ -43,11 +53,11 @@ $candidateSize: 25px;
             // }
 
             &.selected-candidate {
-                background-color: #566c73;
+                background-color: $selectionColor;
             }
 
             &.affected-candidate {
-                background-color: lightblue;
+                background-color: $affectedCandidate;
             }
 
             &.hidden-candidate {
@@ -62,24 +72,24 @@ $candidateSize: 25px;
             font-size: 25px;
 
             &.latest-locked-box {
-                background-color: lightskyblue;
+                background-color: $latestLockedBox;
             }
         }
 
         &.selected-box {
-            background-color: #566c73;
+            background-color: $selectionColor;
         }
 
         &.discard-cause,
         &.choice-cause {
-            background-color: orange;
-            outline: 4px solid orange;
+            background-color: $candidateRestriction;
+            outline: 4px solid $candidateRestriction;
         }
 
         &.inside-invalid-column,
         &.inside-invalid-region,
         &.inside-invalid-row {
-            background-color: #ffe4b2;
+            background-color: $invalidGroups;
 
             .sudoku-candidate
                 :not(.discarded-because-of-lock)
@@ -88,7 +98,7 @@ $candidateSize: 25px;
                 :not(.discarded-because-this-box-must-hold-another-number-for-some-group)
                 :not(.discarded-because-of-owned-candidate-in-same-group)
                 :not(.discarded-because-of-region-subset) {
-                background-color: #ffe4b2;
+                background-color: $invalidGroups;
             }
         }
     }
@@ -176,4 +186,31 @@ $candidateSize: 25px;
 
 .options {
     padding-left: 16px;
+
+    .color-legend {
+        height: 10px;
+        width: 10px;
+        border: 1px solid black;
+        display: inline-block;
+
+        &.candidate-restriction {
+            background-color: $candidateRestriction;
+        }
+
+        &.chosen-candidates {
+            background-color: $chosenCandidates;
+        }
+
+        &.discarded-candidates {
+            background-color: $discardedCandidates;
+        }
+
+        &.invalid-groups {
+            background-color: $invalidGroups;
+        }
+
+        &.latest-locked-box {
+            background-color: $latestLockedBox;
+        }
+    }
 }
