@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getSudokuComputedData } from '../logic/sudoku-operations';
 import {
     arePeerBoxes,
@@ -23,7 +23,6 @@ interface GridProps {
 
 // TODO
 // Implement the missing rule
-// Set the reveal level to zero when necessary
 
 export const SudokuGrid: React.FC<GridProps> = (props) => {
     // const [candidatesDisplayMode, setCandidatesDisplayMode] = useState<CandidateDisplayMode>(
@@ -42,6 +41,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         undefined
     );
 
+    useEffect(() => {
+        setRevelLevel(0);
+    }, [props.sudoku]);
+
     const sudokuComputedData = getSudokuComputedData(props.sudoku);
     const isSudokuReady = isSudokuReadyToBeSolved(sudokuComputedData);
 
@@ -51,6 +54,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             setHighlightCandidateRestrictions(false);
             setRevealChosenCandidates(false);
             setRevealDiscardedCandidates(false);
+            setRevelLevel(0);
         }
         setDisplayCandidates(!displayCandidates);
     };
@@ -93,10 +97,16 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     };
 
     const revealChosenCandidatesHandler = () => {
+        if (revealChosenCandidates && !revealDiscardedCandidates) {
+            setRevelLevel(0);
+        }
         setRevealChosenCandidates(!revealChosenCandidates);
     };
 
     const revealDiscardedCandidatesHandler = () => {
+        if (!revealChosenCandidates && revealDiscardedCandidates) {
+            setRevelLevel(0);
+        }
         setRevealDiscardedCandidates(!revealDiscardedCandidates);
     };
 
