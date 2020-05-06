@@ -315,25 +315,54 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         9x9
                     </p>
                     <p>
-                        <button type="button" onClick={props.generateSolvableSudoku}>
-                            Generate sudoku
-                        </button>
+                        <input
+                            type="checkbox"
+                            onClick={displayCandidatesHandler}
+                            checked={displayCandidates}
+                        />{' '}
+                        Display candidates
                     </p>
                     <p>
                         Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
                     </p>
                     <div>{props.locksNumber} filled boxes</div>
+                    <div>
+                        <h3>Actions</h3>
+                        <p>
+                            <button type="button" onClick={props.generateSolvableSudoku}>
+                                Generate sudoku
+                            </button>
+                        </p>
+                        <p>
+                            <button type="button" onClick={props.previousSudoku}>
+                                Undo
+                            </button>
+                        </p>
+                        <p>
+                            <button type="button" onClick={props.nextSudoku}>
+                                Redo
+                            </button>
+                        </p>
+                        <p>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedBoxCandidate(undefined)}
+                            >
+                                Clear selection
+                            </button>
+                        </p>
+                        <p>
+                            <button
+                                type="button"
+                                onClick={() => props.resetSudoku(props.sudoku.regionSize)}
+                            >
+                                Clear sudoku
+                            </button>
+                        </p>
+                    </div>
 
                     <div>
-                        <h3>Display options</h3>
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={displayCandidatesHandler}
-                                checked={displayCandidates}
-                            />{' '}
-                            Display candidates
-                        </p>
+                        <h3>Highlight options</h3>
                         <p>
                             <input
                                 type="checkbox"
@@ -436,35 +465,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 }
                             >
                                 -
-                            </button>
-                        </p>
-                    </div>
-                    <div>
-                        <h3>Actions</h3>
-                        <p>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedBoxCandidate(undefined)}
-                            >
-                                Clear selection
-                            </button>
-                        </p>
-                        <p>
-                            <button type="button" onClick={props.previousSudoku}>
-                                Undo
-                            </button>
-                        </p>
-                        <p>
-                            <button type="button" onClick={props.nextSudoku}>
-                                Redo
-                            </button>
-                        </p>
-                        <p>
-                            <button
-                                type="button"
-                                onClick={() => props.resetSudoku(props.sudoku.regionSize)}
-                            >
-                                Clear sudoku
                             </button>
                         </p>
                     </div>
