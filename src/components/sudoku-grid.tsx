@@ -28,18 +28,18 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [displayCandidates, setDisplayCandidates] = useState(true);
     const [highlightAffectedCandidates, setHighlightAffectedCandidates] = useState(true);
     const [highlightCandidateRestrictions, setHighlightCandidateRestrictions] = useState(false);
+    const [highlightInferredNumbers, setHighlightInferredNumbers] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(false);
+    const [highlightInvalidNumbers, setHighlightInvalidNumbers] = useState(false);
     const [highlightLatestFilledBox, setHighlightFilledBox] = useState(false);
     // const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
-    const [revealChosenCandidates, setRevealChosenCandidates] = useState(false);
-    const [revealDiscardedCandidates, setRevealDiscardedCandidates] = useState(false);
-    const [revealLevel, setRevelLevel] = useState(0);
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
     );
+    const [solutionLevel, setSolutionLevel] = useState(0);
 
     useEffect(() => {
-        setRevelLevel(0);
+        setSolutionLevel(0);
     }, [props.sudoku]);
 
     const sudokuComputedData = getSudokuComputedData(props.sudoku);
@@ -49,9 +49,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         if (displayCandidates) {
             setHighlightAffectedCandidates(false);
             setHighlightCandidateRestrictions(false);
-            setRevealChosenCandidates(false);
-            setRevealDiscardedCandidates(false);
-            setRevelLevel(0);
+            setHighlightInferredNumbers(false);
+            setHighlightInvalidNumbers(false);
+            setSolutionLevel(0);
         }
         setDisplayCandidates(!displayCandidates);
     };
@@ -70,6 +70,14 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     const highlightCandidateRestrictionsHandler = () => {
         setHighlightCandidateRestrictions(!highlightCandidateRestrictions);
+    };
+
+    const highlightInferredNumbersHandler = () => {
+        setHighlightInferredNumbers(!highlightInferredNumbers);
+    };
+
+    const highlightInvalidNumbersHandler = () => {
+        setHighlightInvalidNumbers(!highlightInvalidNumbers);
     };
 
     const highlightInvalidGroupsHandler = () => {
@@ -93,20 +101,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         }
     };
 
-    const revealChosenCandidatesHandler = () => {
-        if (revealChosenCandidates && !revealDiscardedCandidates) {
-            setRevelLevel(0);
-        }
-        setRevealChosenCandidates(!revealChosenCandidates);
-    };
-
-    const revealDiscardedCandidatesHandler = () => {
-        if (!revealChosenCandidates && revealDiscardedCandidates) {
-            setRevelLevel(0);
-        }
-        setRevealDiscardedCandidates(!revealDiscardedCandidates);
-    };
-
     return (
         <React.Fragment>
             <div className="screen-splitter">
@@ -127,17 +121,6 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
                             const isLatestFilledBox =
                                 latestFilledBoxId && latestFilledBoxId === box.id;
-
-                            // const isBoxNextInferable =
-                            //     highlightInferableBoxes &&
-                            //     doesBoxHaveAChosenCandidate(box, revealLevel);
-
-                            // const doesBoxHaveACandidateToBeDiscardedNext =
-                            //     highlightInferableBoxes &&
-                            //     revealLevel > 0 &&
-                            //     Object.values(box.candidates).some(
-                            //         (c) => c.isDiscarded === revealLevel
-                            //     );
 
                             const boxClickHandler = () => {
                                 if (box.isLocked) {
@@ -162,7 +145,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 ] !== undefined &&
                                 box.causedDiscards[selectedBoxCandidate.number][
                                     selectedBoxCandidate.boxId
-                                ] <= revealLevel;
+                                ] <= solutionLevel;
 
                             const isCausingChoice =
                                 highlightCandidateRestrictions &&
@@ -173,7 +156,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 ] !== undefined &&
                                 box.causedChoices[selectedBoxCandidate.number][
                                     selectedBoxCandidate.boxId
-                                ] <= revealLevel;
+                                ] <= solutionLevel;
+
                             return (
                                 <div
                                     onClick={boxClickHandler}
@@ -210,10 +194,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               const isAffectedCandidate =
                                                   highlightAffectedCandidates &&
                                                   !box.isLocked &&
-                                                  (!revealDiscardedCandidates ||
+                                                  (!highlightInvalidNumbers ||
                                                       !isDiscardedCandidate(
                                                           candidate,
-                                                          revealLevel
+                                                          solutionLevel
                                                       )) &&
                                                   isSelectedBoxPeer &&
                                                   selectedBoxCandidate!.boxId !== box.id &&
@@ -255,27 +239,30 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                               ? ' affected-candidate'
                                                               : ''
                                                       }${
-                                                          revealDiscardedCandidates &&
+                                                          highlightInvalidNumbers &&
                                                           isDiscardedCandidate(
                                                               candidate,
-                                                              revealLevel
+                                                              solutionLevel
                                                           )
                                                               ? ' discarded-candidate'
                                                               : ''
                                                       }${
-                                                          revealDiscardedCandidates &&
-                                                          candidate.isDiscarded === revealLevel &&
-                                                          revealLevel > 0
+                                                          highlightInvalidNumbers &&
+                                                          candidate.isDiscarded === solutionLevel &&
+                                                          solutionLevel > 0
                                                               ? ' discarded-immediately-next'
                                                               : ''
                                                       }${
-                                                          revealChosenCandidates &&
-                                                          isChosenCandidate(candidate, revealLevel)
+                                                          highlightInferredNumbers &&
+                                                          isChosenCandidate(
+                                                              candidate,
+                                                              solutionLevel
+                                                          )
                                                               ? ' chosen-candidate'
                                                               : ''
                                                       }${
-                                                          revealChosenCandidates &&
-                                                          candidate.isChosen === revealLevel
+                                                          highlightInferredNumbers &&
+                                                          candidate.isChosen === solutionLevel
                                                               ? ' chosen-immediately-next'
                                                               : ''
                                                       }`}
@@ -369,17 +356,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 onClick={highlightAffectedCandidatesHandler}
                                 checked={highlightAffectedCandidates}
                             />{' '}
-                            Highlight affected numbers{' '}
+                            Candidates affected by selection{' '}
                             <span className="color-legend affected-candidates"></span>
-                        </p>
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={highlightInvalidGroupsHandler}
-                                checked={highlightInvalidGroups}
-                            />{' '}
-                            Highlight invalid groups{' '}
-                            <span className="color-legend invalid-groups"></span>
                         </p>
                         <p>
                             <input
@@ -387,18 +365,17 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                 onClick={highlightLatestFilledBoxHandler}
                                 checked={highlightLatestFilledBox}
                             />{' '}
-                            Highlight latest filled box{' '}
+                            Latest filled box{' '}
                             <span className="color-legend latest-filled-box"></span>
                         </p>
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={highlightCandidateRestrictionsHandler}
-                                checked={highlightCandidateRestrictions}
-                                disabled={!displayCandidates}
+                                onClick={highlightInvalidGroupsHandler}
+                                checked={highlightInvalidGroups}
                             />{' '}
-                            Highlight candidate restrictions{' '}
-                            <span className="color-legend candidate-restriction"></span>
+                            Invalid rows/columns/regions{' '}
+                            <span className="color-legend invalid-groups"></span>
                         </p>
                         {/* <p>
                             <input
@@ -427,41 +404,55 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={revealDiscardedCandidatesHandler}
-                                checked={revealDiscardedCandidates}
+                                onClick={highlightInvalidNumbersHandler}
+                                checked={highlightInvalidNumbers}
                                 disabled={!displayCandidates}
                             />{' '}
-                            Reveal discardable candidates{' '}
+                            Invalid numbers (at solution level){' '}
                             <span className="color-legend discarded-candidates"></span>
                         </p>
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={revealChosenCandidatesHandler}
-                                checked={revealChosenCandidates}
+                                onClick={highlightInferredNumbersHandler}
+                                checked={highlightInferredNumbers}
                                 disabled={!displayCandidates}
                             />{' '}
-                            Reveal choosable candidates{' '}
+                            Inferred numbers (at solution level){' '}
                             <span className="color-legend chosen-candidates"></span>
                         </p>
                         <p>
-                            Reveal level:{' ' + revealLevel + ' '}
+                            <input
+                                type="checkbox"
+                                onClick={highlightCandidateRestrictionsHandler}
+                                checked={highlightCandidateRestrictions}
+                                disabled={!displayCandidates}
+                            />{' '}
+                            Invalid/inferred numbers reason (at solution level){' '}
+                            <span className="color-legend candidate-restriction"></span>
+                        </p>
+                        <p>
+                            Solution level:{' ' + solutionLevel + ' '}
                             <button
                                 type="button"
-                                onClick={() => setRevelLevel(revealLevel + 1)}
+                                onClick={() => setSolutionLevel(solutionLevel + 1)}
                                 disabled={
                                     !displayCandidates ||
-                                    !(revealChosenCandidates || revealDiscardedCandidates)
+                                    !(
+                                        highlightInferredNumbers ||
+                                        highlightInvalidNumbers ||
+                                        highlightCandidateRestrictions
+                                    )
                                 }
                             >
                                 +
                             </button>{' '}
                             <button
                                 type="button"
-                                onClick={() => setRevelLevel(Math.max(revealLevel - 1, 0))}
+                                onClick={() => setSolutionLevel(Math.max(solutionLevel - 1, 0))}
                                 disabled={
                                     !displayCandidates ||
-                                    !(revealChosenCandidates || revealDiscardedCandidates)
+                                    !(highlightInferredNumbers || highlightInvalidNumbers)
                                 }
                             >
                                 -
