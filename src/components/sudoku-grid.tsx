@@ -29,7 +29,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [highlightAffectedCandidates, setHighlightAffectedCandidates] = useState(true);
     const [highlightCandidateRestrictions, setHighlightCandidateRestrictions] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(false);
-    const [highlightLatestLockedBox, setHighlightLatestLockedBox] = useState(false);
+    const [highlightLatestFilledBox, setHighlightFilledBox] = useState(false);
     // const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [revealChosenCandidates, setRevealChosenCandidates] = useState(false);
     const [revealDiscardedCandidates, setRevealDiscardedCandidates] = useState(false);
@@ -76,15 +76,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         setHighlightInvalidGroups(!highlightInvalidGroups);
     };
 
-    const highlightLatestLockedBoxHandler = () => {
-        setHighlightLatestLockedBox(!highlightLatestLockedBox);
+    const highlightLatestFilledBoxHandler = () => {
+        setHighlightFilledBox(!highlightLatestFilledBox);
     };
 
     // const highlightMaximumImpactHandler = () => {
     //     setHighlightMaximumImpact(!highlightMaximumImpact);
     // };
 
-    const latestLockedBox = props.sudoku.locksHistory[props.sudoku.locksHistory.length - 1];
+    const latestFilledBoxId = props.sudoku.locksHistory[props.sudoku.locksHistory.length - 1];
 
     const lockSelectedCandidateHandler = () => {
         if (selectedBoxCandidate !== undefined) {
@@ -125,7 +125,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     box
                                 );
 
-                            const isLatestLockedBox = latestLockedBox && latestLockedBox === box.id;
+                            const isLatestFilledBox =
+                                latestFilledBoxId && latestFilledBoxId === box.id;
 
                             // const isBoxNextInferable =
                             //     highlightInferableBoxes &&
@@ -181,8 +182,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                     }${isCausingDiscard ? ' discard-cause' : ''}${
                                         isCausingChoice ? ' choice-cause' : ''
                                     }${
-                                        highlightLatestLockedBox && isLatestLockedBox
-                                            ? ' latest-locked-box'
+                                        highlightLatestFilledBox && isLatestFilledBox
+                                            ? ' latest-filled-box'
                                             : ''
                                     }${
                                         highlightInvalidGroups && !box.groups.column.isValid
@@ -321,7 +322,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <p>
                         Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
                     </p>
-                    <div>{props.locksNumber} locked boxes</div>
+                    <div>{props.locksNumber} filled boxes</div>
 
                     <div>
                         <h3>Display options</h3>
@@ -354,11 +355,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         <p>
                             <input
                                 type="checkbox"
-                                onClick={highlightLatestLockedBoxHandler}
-                                checked={highlightLatestLockedBox}
+                                onClick={highlightLatestFilledBoxHandler}
+                                checked={highlightLatestFilledBox}
                             />{' '}
-                            Highlight latest locked box{' '}
-                            <span className="color-legend latest-locked-box"></span>
+                            Highlight latest filled box{' '}
+                            <span className="color-legend latest-filled-box"></span>
                         </p>
                         <p>
                             <input

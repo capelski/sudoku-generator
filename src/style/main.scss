@@ -4,7 +4,7 @@ $chosenCandidates: mix(white, $immediatelyChosenCandidates, 45%);
 $immediatelyDiscardedCandidates: lightcoral;
 $discardedCandidates: mix(white, $immediatelyDiscardedCandidates, 55%);
 $invalidGroups: #d8b2d8;
-$latestLockedBox: #ffc04c;
+$latestFilledBox: #ffc04c;
 $selectionColor: #2e84d5;
 $affectedCandidate: mix(white, $selectionColor, 70%);
 
@@ -71,8 +71,8 @@ $candidateSize: 25px;
             justify-content: center;
             font-size: 25px;
 
-            &.latest-locked-box {
-                background-color: $latestLockedBox;
+            &.latest-filled-box {
+                background-color: $latestFilledBox;
             }
         }
 
@@ -213,8 +213,8 @@ $candidateSize: 25px;
             background-color: $invalidGroups;
         }
 
-        &.latest-locked-box {
-            background-color: $latestLockedBox;
+        &.latest-filled-box {
+            background-color: $latestFilledBox;
         }
     }
 }
