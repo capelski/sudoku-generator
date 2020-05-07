@@ -103,281 +103,260 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
 
     return (
         <React.Fragment>
-            <div className="screen-splitter">
-                <div>
-                    <div className={`sudoku-grid size-${sudokuComputedData.size}`}>
-                        {sudokuComputedData.boxes.map((box) => {
-                            const isSelectedBox =
-                                selectedBoxCandidate !== undefined &&
-                                selectedBoxCandidate.boxId === box.id &&
-                                selectedBoxCandidate.number === -1;
+            <div className="max-square">
+                <div className={`sudoku-grid size-${sudokuComputedData.size}`}>
+                    {sudokuComputedData.boxes.map((box) => {
+                        const isSelectedBox =
+                            selectedBoxCandidate !== undefined &&
+                            selectedBoxCandidate.boxId === box.id &&
+                            selectedBoxCandidate.number === -1;
 
-                            const isSelectedBoxPeer =
-                                selectedBoxCandidate !== undefined &&
-                                arePeerBoxes(
-                                    sudokuComputedData.boxes[selectedBoxCandidate.boxId],
-                                    box
-                                );
+                        const isSelectedBoxPeer =
+                            selectedBoxCandidate !== undefined &&
+                            arePeerBoxes(sudokuComputedData.boxes[selectedBoxCandidate.boxId], box);
 
-                            const isLatestFilledBox =
-                                latestFilledBoxId && latestFilledBoxId === box.id;
+                        const isLatestFilledBox = latestFilledBoxId && latestFilledBoxId === box.id;
 
-                            const boxClickHandler = () => {
-                                if (box.isLocked) {
-                                    if (isSelectedBox) {
-                                        props.unlockBox(box.id);
-                                        setSelectedBoxCandidate(undefined);
-                                    } else {
-                                        setSelectedBoxCandidate({
-                                            boxId: box.id,
-                                            number: -1
-                                        });
-                                    }
+                        const boxClickHandler = () => {
+                            if (box.isLocked) {
+                                if (isSelectedBox) {
+                                    props.unlockBox(box.id);
+                                    setSelectedBoxCandidate(undefined);
+                                } else {
+                                    setSelectedBoxCandidate({
+                                        boxId: box.id,
+                                        number: -1
+                                    });
                                 }
-                            };
+                            }
+                        };
 
-                            const isCausingDiscard =
-                                highlightCandidateRestrictions &&
-                                selectedBoxCandidate &&
-                                box.causedDiscards[selectedBoxCandidate.number] &&
-                                box.causedDiscards[selectedBoxCandidate.number][
-                                    selectedBoxCandidate.boxId
-                                ] !== undefined &&
-                                box.causedDiscards[selectedBoxCandidate.number][
-                                    selectedBoxCandidate.boxId
-                                ] <= solutionLevel;
+                        const isCausingDiscard =
+                            highlightCandidateRestrictions &&
+                            selectedBoxCandidate &&
+                            box.causedDiscards[selectedBoxCandidate.number] &&
+                            box.causedDiscards[selectedBoxCandidate.number][
+                                selectedBoxCandidate.boxId
+                            ] !== undefined &&
+                            box.causedDiscards[selectedBoxCandidate.number][
+                                selectedBoxCandidate.boxId
+                            ] <= solutionLevel;
 
-                            const isCausingChoice =
-                                highlightCandidateRestrictions &&
-                                selectedBoxCandidate &&
-                                box.causedChoices[selectedBoxCandidate.number] &&
-                                box.causedChoices[selectedBoxCandidate.number][
-                                    selectedBoxCandidate.boxId
-                                ] !== undefined &&
-                                box.causedChoices[selectedBoxCandidate.number][
-                                    selectedBoxCandidate.boxId
-                                ] <= solutionLevel;
+                        const isCausingChoice =
+                            highlightCandidateRestrictions &&
+                            selectedBoxCandidate &&
+                            box.causedChoices[selectedBoxCandidate.number] &&
+                            box.causedChoices[selectedBoxCandidate.number][
+                                selectedBoxCandidate.boxId
+                            ] !== undefined &&
+                            box.causedChoices[selectedBoxCandidate.number][
+                                selectedBoxCandidate.boxId
+                            ] <= solutionLevel;
 
-                            return (
-                                <div
-                                    onClick={boxClickHandler}
-                                    className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
-                                        isSelectedBox ? ' selected-box' : ''
-                                    }${isCausingDiscard ? ' discard-cause' : ''}${
-                                        isCausingChoice ? ' choice-cause' : ''
-                                    }${
-                                        highlightLatestFilledBox && isLatestFilledBox
-                                            ? ' latest-filled-box'
-                                            : ''
-                                    }${
-                                        highlightInvalidGroups && !box.groups.column.isValid
-                                            ? ' inside-invalid-column'
-                                            : ''
-                                    }${
-                                        highlightInvalidGroups && !box.groups.region.isValid
-                                            ? ' inside-invalid-region'
-                                            : ''
-                                    }${
-                                        highlightInvalidGroups && !box.groups.row.isValid
-                                            ? ' inside-invalid-row'
-                                            : ''
-                                    }`}
-                                >
-                                    {box.isLocked
-                                        ? box.number
-                                        : Object.values(box.candidates).map((candidate) => {
-                                              const isSelectedCandidate =
-                                                  selectedBoxCandidate !== undefined &&
-                                                  selectedBoxCandidate.boxId === box.id &&
-                                                  selectedBoxCandidate.number === candidate.number;
+                        return (
+                            <div
+                                onClick={boxClickHandler}
+                                className={`sudoku-box${box.isLocked ? ' locked-box' : ''}${
+                                    isSelectedBox ? ' selected-box' : ''
+                                }${isCausingDiscard ? ' discard-cause' : ''}${
+                                    isCausingChoice ? ' choice-cause' : ''
+                                }${
+                                    highlightLatestFilledBox && isLatestFilledBox
+                                        ? ' latest-filled-box'
+                                        : ''
+                                }${
+                                    highlightInvalidGroups && !box.groups.column.isValid
+                                        ? ' inside-invalid-column'
+                                        : ''
+                                }${
+                                    highlightInvalidGroups && !box.groups.region.isValid
+                                        ? ' inside-invalid-region'
+                                        : ''
+                                }${
+                                    highlightInvalidGroups && !box.groups.row.isValid
+                                        ? ' inside-invalid-row'
+                                        : ''
+                                }`}
+                            >
+                                {box.isLocked
+                                    ? box.number
+                                    : Object.values(box.candidates).map((candidate) => {
+                                          const isSelectedCandidate =
+                                              selectedBoxCandidate !== undefined &&
+                                              selectedBoxCandidate.boxId === box.id &&
+                                              selectedBoxCandidate.number === candidate.number;
 
-                                              const isAffectedCandidate =
-                                                  highlightAffectedCandidates &&
-                                                  !box.isLocked &&
-                                                  (!highlightInvalidNumbers ||
-                                                      !isDiscardedCandidate(
-                                                          candidate,
-                                                          solutionLevel
-                                                      )) &&
-                                                  isSelectedBoxPeer &&
-                                                  selectedBoxCandidate!.boxId !== box.id &&
-                                                  selectedBoxCandidate!.number === candidate.number;
+                                          const isAffectedCandidate =
+                                              highlightAffectedCandidates &&
+                                              !box.isLocked &&
+                                              (!highlightInvalidNumbers ||
+                                                  !isDiscardedCandidate(
+                                                      candidate,
+                                                      solutionLevel
+                                                  )) &&
+                                              isSelectedBoxPeer &&
+                                              selectedBoxCandidate!.boxId !== box.id &&
+                                              selectedBoxCandidate!.number === candidate.number;
 
-                                              //   const isMaximumImpactCandidate =
-                                              //       highlightMaximumImpact &&
-                                              //       sudokuComputedData.maximumImpact ===
-                                              //           candidate.impact;
+                                          //   const isMaximumImpactCandidate =
+                                          //       highlightMaximumImpact &&
+                                          //       sudokuComputedData.maximumImpact ===
+                                          //           candidate.impact;
 
-                                              const candidateClickHandler = () => {
-                                                  if (displayCandidates && isSelectedCandidate) {
-                                                      lockSelectedCandidateHandler();
-                                                  } else if (displayCandidates) {
-                                                      setSelectedBoxCandidate({
-                                                          boxId: box.id,
-                                                          number: candidate.number
-                                                      });
-                                                  }
-                                              };
+                                          const candidateClickHandler = () => {
+                                              if (displayCandidates && isSelectedCandidate) {
+                                                  lockSelectedCandidateHandler();
+                                              } else if (displayCandidates) {
+                                                  setSelectedBoxCandidate({
+                                                      boxId: box.id,
+                                                      number: candidate.number
+                                                  });
+                                              }
+                                          };
 
-                                              return (
-                                                  <div
-                                                      className={`sudoku-candidate${
-                                                          displayCandidates
-                                                              ? ''
-                                                              : ' hidden-candidate'
-                                                      }${
-                                                          //   isMaximumImpactCandidate
-                                                          //       ? ' maximum-impact-candidate'
-                                                          //       : ''
-                                                          ''
-                                                      }${
-                                                          isSelectedCandidate
-                                                              ? ' selected-candidate'
-                                                              : ''
-                                                      }${
-                                                          isAffectedCandidate
-                                                              ? ' affected-candidate'
-                                                              : ''
-                                                      }${
-                                                          highlightInvalidNumbers &&
-                                                          isDiscardedCandidate(
-                                                              candidate,
-                                                              solutionLevel
-                                                          )
-                                                              ? ' discarded-candidate'
-                                                              : ''
-                                                      }${
-                                                          highlightInvalidNumbers &&
-                                                          candidate.isDiscarded === solutionLevel &&
-                                                          solutionLevel > 0
-                                                              ? ' discarded-immediately-next'
-                                                              : ''
-                                                      }${
-                                                          highlightInferredNumbers &&
-                                                          isChosenCandidate(
-                                                              candidate,
-                                                              solutionLevel
-                                                          )
-                                                              ? ' chosen-candidate'
-                                                              : ''
-                                                      }${
-                                                          highlightInferredNumbers &&
-                                                          candidate.isChosen === solutionLevel
-                                                              ? ' chosen-immediately-next'
-                                                              : ''
-                                                      }`}
-                                                      onClick={candidateClickHandler}
-                                                      data-discard-reason={
-                                                          candidate.discardedReason
-                                                      }
-                                                  >
-                                                      {/* {displayCandidates &&
+                                          return (
+                                              <div
+                                                  className={`sudoku-candidate${
+                                                      displayCandidates ? '' : ' hidden-candidate'
+                                                  }${
+                                                      //   isMaximumImpactCandidate
+                                                      //       ? ' maximum-impact-candidate'
+                                                      //       : ''
+                                                      ''
+                                                  }${
+                                                      isSelectedCandidate
+                                                          ? ' selected-candidate'
+                                                          : ''
+                                                  }${
+                                                      isAffectedCandidate
+                                                          ? ' affected-candidate'
+                                                          : ''
+                                                  }${
+                                                      highlightInvalidNumbers &&
+                                                      isDiscardedCandidate(candidate, solutionLevel)
+                                                          ? ' discarded-candidate'
+                                                          : ''
+                                                  }${
+                                                      highlightInvalidNumbers &&
+                                                      candidate.isDiscarded === solutionLevel &&
+                                                      solutionLevel > 0
+                                                          ? ' discarded-immediately-next'
+                                                          : ''
+                                                  }${
+                                                      highlightInferredNumbers &&
+                                                      isChosenCandidate(candidate, solutionLevel)
+                                                          ? ' chosen-candidate'
+                                                          : ''
+                                                  }${
+                                                      highlightInferredNumbers &&
+                                                      candidate.isChosen === solutionLevel
+                                                          ? ' chosen-immediately-next'
+                                                          : ''
+                                                  }`}
+                                                  onClick={candidateClickHandler}
+                                                  data-discard-reason={candidate.discardedReason}
+                                              >
+                                                  {/* {displayCandidates &&
                                                           (candidatesDisplayMode === 'impact'
                                                               ? candidate.impact
                                                               : candidate.number)} */}
-                                                      {displayCandidates && candidate.number}
-                                                  </div>
-                                              );
-                                          })}
-                                </div>
-                            );
-                        })}
-                    </div>
+                                                  {displayCandidates && candidate.number}
+                                              </div>
+                                          );
+                                      })}
+                            </div>
+                        );
+                    })}
                 </div>
-                <div className="options">
+            </div>
+            <div className="options">
+                <p>
+                    <input
+                        type="radio"
+                        onClick={() => props.resetSudoku(2)}
+                        checked={sudokuComputedData.size === 4}
+                    />{' '}
+                    4x4
+                </p>
+                <p>
+                    <input
+                        type="radio"
+                        onClick={() => props.resetSudoku(3)}
+                        checked={sudokuComputedData.size === 9}
+                    />{' '}
+                    9x9
+                </p>
+                <p>
+                    <input
+                        type="checkbox"
+                        onClick={displayCandidatesHandler}
+                        checked={displayCandidates}
+                    />{' '}
+                    Display candidates
+                </p>
+                <p>
+                    Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
+                </p>
+                <div>{props.locksNumber} filled boxes</div>
+                <div>
+                    <h3>Actions</h3>
                     <p>
-                        <input
-                            type="radio"
-                            onClick={() => props.resetSudoku(2)}
-                            checked={sudokuComputedData.size === 4}
-                        />{' '}
-                        4x4
+                        <button type="button" onClick={props.generateSolvableSudoku}>
+                            Generate sudoku
+                        </button>
                     </p>
                     <p>
+                        <button type="button" onClick={props.previousSudoku}>
+                            Undo
+                        </button>{' '}
+                        <button type="button" onClick={props.nextSudoku}>
+                            Redo
+                        </button>
+                    </p>
+                    <p>
+                        <button type="button" onClick={() => setSelectedBoxCandidate(undefined)}>
+                            Clear selection
+                        </button>
+                    </p>
+                    <p>
+                        <button
+                            type="button"
+                            onClick={() => props.resetSudoku(props.sudoku.regionSize)}
+                        >
+                            Clear sudoku
+                        </button>
+                    </p>
+                </div>
+
+                <div>
+                    <h3>Highlight options</h3>
+                    <p>
                         <input
-                            type="radio"
-                            onClick={() => props.resetSudoku(3)}
-                            checked={sudokuComputedData.size === 9}
+                            type="checkbox"
+                            onClick={highlightAffectedCandidatesHandler}
+                            checked={highlightAffectedCandidates}
                         />{' '}
-                        9x9
+                        Candidates affected by selection{' '}
+                        <span className="color-legend affected-candidates"></span>
                     </p>
                     <p>
                         <input
                             type="checkbox"
-                            onClick={displayCandidatesHandler}
-                            checked={displayCandidates}
+                            onClick={highlightLatestFilledBoxHandler}
+                            checked={highlightLatestFilledBox}
                         />{' '}
-                        Display candidates
+                        Latest filled box <span className="color-legend latest-filled-box"></span>
                     </p>
                     <p>
-                        Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
+                        <input
+                            type="checkbox"
+                            onClick={highlightInvalidGroupsHandler}
+                            checked={highlightInvalidGroups}
+                        />{' '}
+                        Invalid rows/columns/regions{' '}
+                        <span className="color-legend invalid-groups"></span>
                     </p>
-                    <div>{props.locksNumber} filled boxes</div>
-                    <div>
-                        <h3>Actions</h3>
-                        <p>
-                            <button type="button" onClick={props.generateSolvableSudoku}>
-                                Generate sudoku
-                            </button>
-                        </p>
-                        <p>
-                            <button type="button" onClick={props.previousSudoku}>
-                                Undo
-                            </button>
-                        </p>
-                        <p>
-                            <button type="button" onClick={props.nextSudoku}>
-                                Redo
-                            </button>
-                        </p>
-                        <p>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedBoxCandidate(undefined)}
-                            >
-                                Clear selection
-                            </button>
-                        </p>
-                        <p>
-                            <button
-                                type="button"
-                                onClick={() => props.resetSudoku(props.sudoku.regionSize)}
-                            >
-                                Clear sudoku
-                            </button>
-                        </p>
-                    </div>
-
-                    <div>
-                        <h3>Highlight options</h3>
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={highlightAffectedCandidatesHandler}
-                                checked={highlightAffectedCandidates}
-                            />{' '}
-                            Candidates affected by selection{' '}
-                            <span className="color-legend affected-candidates"></span>
-                        </p>
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={highlightLatestFilledBoxHandler}
-                                checked={highlightLatestFilledBox}
-                            />{' '}
-                            Latest filled box{' '}
-                            <span className="color-legend latest-filled-box"></span>
-                        </p>
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={highlightInvalidGroupsHandler}
-                                checked={highlightInvalidGroups}
-                            />{' '}
-                            Invalid rows/columns/regions{' '}
-                            <span className="color-legend invalid-groups"></span>
-                        </p>
-                        {/* <p>
+                    {/* <p>
                             <input
                                 type="checkbox"
                                 onClick={highlightMaximumImpactHandler}
@@ -385,7 +364,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             />{' '}
                             Highlight maximum impact candidates
                         </p> */}
-                        {/* <p>
+                    {/* <p>
                             <input
                                 type="radio"
                                 onClick={displayCandidatesNumber}
@@ -401,64 +380,63 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             />{' '}
                             Show candidates impact
                         </p> */}
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={highlightInvalidNumbersHandler}
-                                checked={highlightInvalidNumbers}
-                                disabled={!displayCandidates}
-                            />{' '}
-                            Invalid numbers (at solution level){' '}
-                            <span className="color-legend discarded-candidates"></span>
-                        </p>
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={highlightInferredNumbersHandler}
-                                checked={highlightInferredNumbers}
-                                disabled={!displayCandidates}
-                            />{' '}
-                            Inferred numbers (at solution level){' '}
-                            <span className="color-legend chosen-candidates"></span>
-                        </p>
-                        <p>
-                            <input
-                                type="checkbox"
-                                onClick={highlightCandidateRestrictionsHandler}
-                                checked={highlightCandidateRestrictions}
-                                disabled={!displayCandidates}
-                            />{' '}
-                            Invalid/inferred numbers reason (at solution level){' '}
-                            <span className="color-legend candidate-restriction"></span>
-                        </p>
-                        <p>
-                            Solution level:{' ' + solutionLevel + ' '}
-                            <button
-                                type="button"
-                                onClick={() => setSolutionLevel(solutionLevel + 1)}
-                                disabled={
-                                    !displayCandidates ||
-                                    !(
-                                        highlightInferredNumbers ||
-                                        highlightInvalidNumbers ||
-                                        highlightCandidateRestrictions
-                                    )
-                                }
-                            >
-                                +
-                            </button>{' '}
-                            <button
-                                type="button"
-                                onClick={() => setSolutionLevel(Math.max(solutionLevel - 1, 0))}
-                                disabled={
-                                    !displayCandidates ||
-                                    !(highlightInferredNumbers || highlightInvalidNumbers)
-                                }
-                            >
-                                -
-                            </button>
-                        </p>
-                    </div>
+                    <p>
+                        <input
+                            type="checkbox"
+                            onClick={highlightInvalidNumbersHandler}
+                            checked={highlightInvalidNumbers}
+                            disabled={!displayCandidates}
+                        />{' '}
+                        Invalid numbers (at solution level){' '}
+                        <span className="color-legend discarded-candidates"></span>
+                    </p>
+                    <p>
+                        <input
+                            type="checkbox"
+                            onClick={highlightInferredNumbersHandler}
+                            checked={highlightInferredNumbers}
+                            disabled={!displayCandidates}
+                        />{' '}
+                        Inferred numbers (at solution level){' '}
+                        <span className="color-legend chosen-candidates"></span>
+                    </p>
+                    <p>
+                        <input
+                            type="checkbox"
+                            onClick={highlightCandidateRestrictionsHandler}
+                            checked={highlightCandidateRestrictions}
+                            disabled={!displayCandidates}
+                        />{' '}
+                        Invalid/inferred numbers reason (at solution level){' '}
+                        <span className="color-legend candidate-restriction"></span>
+                    </p>
+                    <p>
+                        Solution level:{' ' + solutionLevel + ' '}
+                        <button
+                            type="button"
+                            onClick={() => setSolutionLevel(solutionLevel + 1)}
+                            disabled={
+                                !displayCandidates ||
+                                !(
+                                    highlightInferredNumbers ||
+                                    highlightInvalidNumbers ||
+                                    highlightCandidateRestrictions
+                                )
+                            }
+                        >
+                            +
+                        </button>{' '}
+                        <button
+                            type="button"
+                            onClick={() => setSolutionLevel(Math.max(solutionLevel - 1, 0))}
+                            disabled={
+                                !displayCandidates ||
+                                !(highlightInferredNumbers || highlightInvalidNumbers)
+                            }
+                        >
+                            -
+                        </button>
+                    </p>
                 </div>
             </div>
         </React.Fragment>

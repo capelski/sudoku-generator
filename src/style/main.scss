@@ -8,14 +8,28 @@ $latestFilledBox: #ffc04c;
 $selectionColor: #2e84d5;
 $affectedCandidate: mix(white, $selectionColor, 70%);
 
-.screen-splitter {
-    display: flex;
+body {
+    margin: 0;
 }
 
-$candidateSize: 25px;
+.max-square {
+    width: 100vw;
+    height: 100vw;
+    padding: 8px;
+    box-sizing: border-box;
+    display: inline-block;
+}
+
+@media (orientation: landscape) {
+    .max-square {
+        width: 100vh;
+        height: 100vh;
+    }
+}
 
 .sudoku-grid {
     display: grid;
+    height: 100%;
 
     .sudoku-box {
         border-left: 1px solid black;
@@ -23,8 +37,6 @@ $candidateSize: 25px;
         display: grid;
 
         .sudoku-candidate {
-            width: $candidateSize;
-            height: $candidateSize;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -104,14 +116,12 @@ $candidateSize: 25px;
     }
 
     &.size-4 {
-        grid-template-columns: repeat(4, $candidateSize * 2);
+        grid-template-columns: repeat(4, 25%);
+        grid-template-rows: repeat(4, 25%);
 
         .sudoku-box {
-            grid-template-columns: repeat(2, $candidateSize);
-
-            &.locked-box {
-                height: $candidateSize * 2;
-            }
+            grid-template-columns: repeat(2, 50%);
+            grid-template-rows: repeat(2, 50%);
 
             &:nth-last-child(-n + 4) {
                 border-bottom: 1px solid black;
@@ -142,14 +152,12 @@ $candidateSize: 25px;
     }
 
     &.size-9 {
-        grid-template-columns: repeat(9, $candidateSize * 3);
+        grid-template-columns: repeat(9, 11.11%);
+        grid-template-rows: repeat(9, 11.11%);
 
         .sudoku-box {
-            grid-template-columns: repeat(3, $candidateSize);
-
-            &.locked-box {
-                height: $candidateSize * 3;
-            }
+            grid-template-columns: repeat(3, 33%);
+            grid-template-rows: repeat(3, 33%);
 
             &:nth-last-child(-n + 9) {
                 border-bottom: 1px solid black;
@@ -185,7 +193,8 @@ $candidateSize: 25px;
 }
 
 .options {
-    padding-left: 16px;
+    padding-left: 8px;
+    display: inline-table;
 
     .color-legend {
         height: 10px;
