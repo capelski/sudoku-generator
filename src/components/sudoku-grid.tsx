@@ -36,10 +36,10 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
     );
-    const [solutionLevel, setSolutionLevel] = useState(0);
+    const [solutionLevel, setSolutionLevel] = useState(1);
 
     useEffect(() => {
-        setSolutionLevel(0);
+        setSolutionLevel(1);
     }, [props.sudoku]);
 
     const sudokuComputedData = getSudokuComputedData(props.sudoku);
@@ -51,7 +51,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             setHighlightCandidateRestrictions(false);
             setHighlightInferredNumbers(false);
             setHighlightInvalidNumbers(false);
-            setSolutionLevel(0);
+            setSolutionLevel(1);
         }
         setDisplayCandidates(!displayCandidates);
     };
@@ -239,7 +239,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                   }${
                                                       highlightInvalidNumbers &&
                                                       candidate.isDiscarded === solutionLevel &&
-                                                      solutionLevel > 0
+                                                      solutionLevel > 1
                                                           ? ' discarded-immediately-next'
                                                           : ''
                                                   }${
@@ -249,7 +249,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           : ''
                                                   }${
                                                       highlightInferredNumbers &&
-                                                      candidate.isInferred === solutionLevel
+                                                      candidate.isInferred === solutionLevel &&
+                                                      solutionLevel > 1
                                                           ? ' inferred-immediately-next'
                                                           : ''
                                                   }`}
@@ -289,9 +290,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <input
                         type="checkbox"
                         onClick={displayCandidatesHandler}
-                        checked={displayCandidates}
+                        checked={!displayCandidates}
                     />{' '}
-                    Display candidates
+                    Hide candidates
                 </p>
                 <p>
                     Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
@@ -411,27 +412,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     </p>
                     <p>
                         Solution level:{' ' + solutionLevel + ' '}
-                        <button
-                            type="button"
-                            onClick={() => setSolutionLevel(solutionLevel + 1)}
-                            disabled={
-                                !displayCandidates ||
-                                !(
-                                    highlightInferredNumbers ||
-                                    highlightInvalidNumbers ||
-                                    highlightCandidateRestrictions
-                                )
-                            }
-                        >
+                        <button type="button" onClick={() => setSolutionLevel(solutionLevel + 1)}>
                             +
                         </button>{' '}
                         <button
                             type="button"
-                            onClick={() => setSolutionLevel(Math.max(solutionLevel - 1, 0))}
-                            disabled={
-                                !displayCandidates ||
-                                !(highlightInferredNumbers || highlightInvalidNumbers)
-                            }
+                            onClick={() => setSolutionLevel(Math.max(solutionLevel - 1, 1))}
                         >
                             -
                         </button>

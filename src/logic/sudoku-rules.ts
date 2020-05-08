@@ -10,9 +10,9 @@ export const discardCandidatesCausedByLocks = (lockedBoxes: Box[]) => {
         lockedBox.peerBoxes
             .filter((peerBox) => !peerBox.isLocked)
             .forEach((peerBox) => {
-                peerBox.candidates[lockedBox.number!].isDiscarded = 0;
+                peerBox.candidates[lockedBox.number!].isDiscarded = 1;
                 peerBox.candidates[lockedBox.number!].discardReason = 'Locked peer box';
-                registerDiscardCause(lockedBox.causedDiscards, lockedBox.number!, peerBox.id, 0);
+                registerDiscardCause(lockedBox.causedDiscards, lockedBox.number!, peerBox.id, 1);
             });
     });
 };
@@ -278,7 +278,7 @@ export const isCandidateInferred = (candidate: Candidate, maxIterations?: number
     (maxIterations === undefined || candidate.isInferred <= maxIterations);
 
 export const isCandidateDiscarded = (candidate: Candidate, maxIterations?: number) =>
-    candidate.isDiscarded > -1 &&
+    candidate.isDiscarded > 0 &&
     (maxIterations === undefined || candidate.isDiscarded <= maxIterations);
 
 export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) =>
