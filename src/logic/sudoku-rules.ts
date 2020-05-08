@@ -4,101 +4,14 @@ export const arePeerBoxes = (a: Box, b: Box) => {
     return a.column === b.column || a.region === b.region || a.row === b.row;
 };
 
-export const choseOnlyBoxAvailableInGroupForNumber = (group: Group, iterationNumber: number) => {
-    const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
-        .map((number) => parseInt(number))
-        .filter((number) => {
-            const boxesPerNumber = group.availableBoxesPerNumber[number];
-            return (
-                boxesPerNumber.length === 1 &&
-                !boxesPerNumber[0].isLocked &&
-                !isChosenCandidate(boxesPerNumber[0].candidates[number])
-            );
-        });
-
-    numbersWithOnlyOneBoxLeft.forEach((number) => {
-        const targetBox = group.availableBoxesPerNumber[number][0];
-
-        group.boxes
-            .filter((box) => box !== targetBox)
-            .forEach((box) => {
-                registerChoiceCause(box.causedChoices, number, targetBox.id, iterationNumber);
-            });
-
-        Object.values(targetBox.candidates).forEach((candidate) => {
-            if (candidate === targetBox.candidates[number]) {
-                candidate.isChosen = iterationNumber;
-                candidate.chosenReason = 'This box must hold this number for a group';
-            } else if (!isDiscardedCandidate(candidate)) {
-                candidate.isDiscarded = iterationNumber + 1;
-                candidate.discardedReason = 'This box must hold another number for some group';
-                registerDiscardCause(
-                    targetBox.causedDiscards,
-                    candidate.number,
-                    targetBox.id,
-                    iterationNumber + 1
-                );
-            }
-        });
-
-        targetBox.peerBoxes
-            .filter(
-                (pb) =>
-                    !pb.isLocked &&
-                    !isDiscardedCandidate(pb.candidates[number]) &&
-                    !isChosenCandidate(pb.candidates[number])
-            )
-            .forEach((peerBox) => {
-                const candidate = peerBox.candidates[number];
-                candidate.isDiscarded = iterationNumber;
-                candidate.discardedReason = 'Peer box must hold this number for some group';
-                registerDiscardCause(targetBox.causedDiscards, number, peerBox.id, iterationNumber);
-            });
-    });
-};
-
-export const choseOnlyCandidateAvailableForBox = (box: Box, iterationNumber: number) => {
-    const onlyNumberAvailable = Object.keys(box.candidates)
-        .map((number) => parseInt(number))
-        .find(
-            (number) =>
-                !box.isLocked &&
-                !isDiscardedCandidate(box.candidates[number]) &&
-                !isChosenCandidate(box.candidates[number])
-        );
-
-    if (onlyNumberAvailable) {
-        box.candidates[onlyNumberAvailable].isChosen = iterationNumber;
-        box.candidates[onlyNumberAvailable].chosenReason = 'Only candidate left for this box';
-        registerChoiceCause(box.causedChoices, onlyNumberAvailable, box.id, iterationNumber);
-
-        box.peerBoxes
-            .filter(
-                (pb) => !pb.isLocked && !isDiscardedCandidate(pb.candidates[onlyNumberAvailable])
-            )
-            .forEach((pb) => {
-                const candidate = pb.candidates[onlyNumberAvailable];
-                candidate.isDiscarded = iterationNumber + 1;
-                candidate.discardedReason = 'Only candidate left for a peer box';
-
-                registerDiscardCause(
-                    box.causedDiscards,
-                    onlyNumberAvailable,
-                    pb.id,
-                    iterationNumber + 1
-                );
-            });
-    }
-};
-
 export const discardCandidatesCausedByLocks = (lockedBoxes: Box[]) => {
-    // At this point, there are still no candidates chosen or discarded
+    // At this point, there are no inferred nor discarded candidates
     lockedBoxes.forEach((lockedBox) => {
         lockedBox.peerBoxes
             .filter((peerBox) => !peerBox.isLocked)
             .forEach((peerBox) => {
                 peerBox.candidates[lockedBox.number!].isDiscarded = 0;
-                peerBox.candidates[lockedBox.number!].discardedReason = 'Locked peer box';
+                peerBox.candidates[lockedBox.number!].discardReason = 'Locked peer box';
                 registerDiscardCause(lockedBox.causedDiscards, lockedBox.number!, peerBox.id, 0);
             });
     });
@@ -130,12 +43,12 @@ export const discardCandidatesFromGroupBecauseOfRegionRestriction = (
                     (box) =>
                         box.region !== regionNumber &&
                         !box.isLocked &&
-                        !isDiscardedCandidate(box.candidates[number])
+                        !isCandidateDiscarded(box.candidates[number])
                 );
                 groupBoxesOutsideRegion.forEach((box) => {
                     const candidate = box.candidates[number];
                     candidate.isDiscarded = iterationNumber;
-                    candidate.discardedReason = 'Region subset';
+                    candidate.discardReason = 'Region subset';
 
                     numberBoxes.forEach((b) => {
                         registerDiscardCause(b.causedDiscards, number, box.id, iterationNumber);
@@ -152,11 +65,11 @@ export const discardNonOwnedCandidatesFromOwningBoxes = (group: Group, iteration
                 .filter(
                     (candidate) =>
                         ownedCandidatesSet.numbers.indexOf(candidate.number) === -1 &&
-                        !isDiscardedCandidate(candidate)
+                        !isCandidateDiscarded(candidate)
                 )
                 .forEach((candidate) => {
                     candidate.isDiscarded = iterationNumber;
-                    candidate.discardedReason = 'Owned candidate in a group';
+                    candidate.discardReason = 'Owned candidate in a group';
 
                     ownedCandidatesSet.boxes.forEach((b) => {
                         registerDiscardCause(
@@ -171,12 +84,14 @@ export const discardNonOwnedCandidatesFromOwningBoxes = (group: Group, iteration
     });
 };
 
-export const doesBoxHaveAChosenCandidate = (box: Box, maxIterations?: number) =>
-    Object.values(box.candidates).some((candidate) => isChosenCandidate(candidate, maxIterations));
-
 export const doesBoxHaveAllCandidatesDiscardedButOne = (box: Box) =>
-    Object.values(box.candidates).filter((candidate) => !isDiscardedCandidate(candidate)).length ===
+    Object.values(box.candidates).filter((candidate) => !isCandidateDiscarded(candidate)).length ===
     1;
+
+export const doesBoxHaveAnInferredCandidate = (box: Box, maxIterations?: number) =>
+    Object.values(box.candidates).some((candidate) =>
+        isCandidateInferred(candidate, maxIterations)
+    );
 
 export const doesGroupHaveABoxWithoutCandidates = (group: Group) =>
     group.boxes.some((box) => isBoxOutOfCandidates(box));
@@ -197,7 +112,7 @@ export const getAllBoxesWithOnlyOneCandidateAvailable = (boxes: Box[]) => {
     return boxes.filter(
         (box) =>
             !box.isLocked &&
-            !doesBoxHaveAChosenCandidate(box) &&
+            !doesBoxHaveAnInferredCandidate(box) &&
             doesBoxHaveAllCandidatesDiscardedButOne(box)
     );
 };
@@ -212,7 +127,7 @@ export const getAllGroupsWithANumberAvailableInJustOneBox = (groups: NumericDict
                 return (
                     boxesPerNumber.length === 1 &&
                     !firstBox.isLocked &&
-                    !isChosenCandidate(firstBox.candidates[number])
+                    !isCandidateInferred(firstBox.candidates[number])
                 );
             });
     });
@@ -225,7 +140,7 @@ export const getAllGroupsWithOwnedCandidates = (groups: NumericDictionary<Group>
                 Object.values(ownedBox.candidates).some(
                     (candidate) =>
                         ownedCandidatesSet.numbers.indexOf(candidate.number) === -1 &&
-                        !isDiscardedCandidate(candidate)
+                        !isCandidateDiscarded(candidate)
                 )
             );
         });
@@ -261,20 +176,108 @@ export const getAllRegionsThatCauseSubsetRestrictions = (
                         (box) =>
                             box.region !== regionNumber &&
                             !box.isLocked &&
-                            !isDiscardedCandidate(box.candidates[number])
+                            !isCandidateDiscarded(box.candidates[number])
                     )
                 );
             });
     });
 };
 
+export const inferOnlyBoxAvailableInGroupForNumber = (group: Group, iterationNumber: number) => {
+    const numbersWithOnlyOneBoxLeft = Object.keys(group.availableBoxesPerNumber)
+        .map((number) => parseInt(number))
+        .filter((number) => {
+            const boxesPerNumber = group.availableBoxesPerNumber[number];
+            return (
+                boxesPerNumber.length === 1 &&
+                !boxesPerNumber[0].isLocked &&
+                !isCandidateInferred(boxesPerNumber[0].candidates[number])
+            );
+        });
+
+    numbersWithOnlyOneBoxLeft.forEach((number) => {
+        const targetBox = group.availableBoxesPerNumber[number][0];
+
+        group.boxes
+            .filter((box) => box !== targetBox)
+            .forEach((box) => {
+                registerChoiceCause(box.causedChoices, number, targetBox.id, iterationNumber);
+            });
+
+        Object.values(targetBox.candidates).forEach((candidate) => {
+            if (candidate === targetBox.candidates[number]) {
+                candidate.isInferred = iterationNumber;
+                candidate.inferReason = 'This box must hold this number for a group';
+            } else if (!isCandidateDiscarded(candidate)) {
+                candidate.isDiscarded = iterationNumber + 1;
+                candidate.discardReason = 'This box must hold another number for some group';
+                registerDiscardCause(
+                    targetBox.causedDiscards,
+                    candidate.number,
+                    targetBox.id,
+                    iterationNumber + 1
+                );
+            }
+        });
+
+        targetBox.peerBoxes
+            .filter(
+                (pb) =>
+                    !pb.isLocked &&
+                    !isCandidateDiscarded(pb.candidates[number]) &&
+                    !isCandidateInferred(pb.candidates[number])
+            )
+            .forEach((peerBox) => {
+                const candidate = peerBox.candidates[number];
+                candidate.isDiscarded = iterationNumber;
+                candidate.discardReason = 'Peer box must hold this number for some group';
+                registerDiscardCause(targetBox.causedDiscards, number, peerBox.id, iterationNumber);
+            });
+    });
+};
+
+export const inferOnlyCandidateAvailableForBox = (box: Box, iterationNumber: number) => {
+    const onlyNumberAvailable = Object.keys(box.candidates)
+        .map((number) => parseInt(number))
+        .find(
+            (number) =>
+                !box.isLocked &&
+                !isCandidateDiscarded(box.candidates[number]) &&
+                !isCandidateInferred(box.candidates[number])
+        );
+
+    if (onlyNumberAvailable) {
+        box.candidates[onlyNumberAvailable].isInferred = iterationNumber;
+        box.candidates[onlyNumberAvailable].inferReason = 'Only candidate left for this box';
+        registerChoiceCause(box.causedChoices, onlyNumberAvailable, box.id, iterationNumber);
+
+        box.peerBoxes
+            .filter(
+                (pb) => !pb.isLocked && !isCandidateDiscarded(pb.candidates[onlyNumberAvailable])
+            )
+            .forEach((pb) => {
+                const candidate = pb.candidates[onlyNumberAvailable];
+                candidate.isDiscarded = iterationNumber + 1;
+                candidate.discardReason = 'Only candidate left for a peer box';
+
+                registerDiscardCause(
+                    box.causedDiscards,
+                    onlyNumberAvailable,
+                    pb.id,
+                    iterationNumber + 1
+                );
+            });
+    }
+};
+
 export const isBoxOutOfCandidates = (box: Box) =>
-    !Object.values(box.candidates).some((candidate) => !isDiscardedCandidate(candidate));
+    !Object.values(box.candidates).some((candidate) => !isCandidateDiscarded(candidate));
 
-export const isChosenCandidate = (candidate: Candidate, maxIterations?: number) =>
-    candidate.isChosen > 0 && (maxIterations === undefined || candidate.isChosen <= maxIterations);
+export const isCandidateInferred = (candidate: Candidate, maxIterations?: number) =>
+    candidate.isInferred > 0 &&
+    (maxIterations === undefined || candidate.isInferred <= maxIterations);
 
-export const isDiscardedCandidate = (candidate: Candidate, maxIterations?: number) =>
+export const isCandidateDiscarded = (candidate: Candidate, maxIterations?: number) =>
     candidate.isDiscarded > -1 &&
     (maxIterations === undefined || candidate.isDiscarded <= maxIterations);
 
@@ -282,7 +285,7 @@ export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) 
     !sudokuComputedData.boxes.some(
         (box) =>
             !box.isLocked &&
-            !Object.values(box.candidates).some((candidate) => isChosenCandidate(candidate))
+            !Object.values(box.candidates).some((candidate) => isCandidateInferred(candidate))
     );
 
 export const isSudokuValid = (sudokuComputedData: SudokuComputedData) => {
@@ -295,14 +298,14 @@ export const isSudokuValid = (sudokuComputedData: SudokuComputedData) => {
 
 export const registerChoiceCause = (
     causedChoices: NumericDictionary<NumericDictionary<number>>,
-    chosenNumber: number,
+    inferredNumber: number,
     boxId: number,
     iterationNumber: number
 ) => {
-    if (causedChoices[chosenNumber] === undefined) {
-        causedChoices[chosenNumber] = {};
+    if (causedChoices[inferredNumber] === undefined) {
+        causedChoices[inferredNumber] = {};
     }
-    causedChoices[chosenNumber][boxId] = iterationNumber;
+    causedChoices[inferredNumber][boxId] = iterationNumber;
 };
 
 export const registerDiscardCause = (

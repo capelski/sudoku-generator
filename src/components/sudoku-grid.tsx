@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getSudokuComputedData } from '../logic/sudoku-operations';
 import {
     arePeerBoxes,
-    isChosenCandidate,
-    isDiscardedCandidate,
+    isCandidateDiscarded,
+    isCandidateInferred,
     isSudokuReadyToBeSolved
 } from '../logic/sudoku-rules';
 import { BoxCandidate, Sudoku } from '../types/sudoku';
@@ -190,7 +190,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                               highlightAffectedCandidates &&
                                               !box.isLocked &&
                                               (!highlightInvalidNumbers ||
-                                                  !isDiscardedCandidate(
+                                                  !isCandidateDiscarded(
                                                       candidate,
                                                       solutionLevel
                                                   )) &&
@@ -233,7 +233,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           : ''
                                                   }${
                                                       highlightInvalidNumbers &&
-                                                      isDiscardedCandidate(candidate, solutionLevel)
+                                                      isCandidateDiscarded(candidate, solutionLevel)
                                                           ? ' discarded-candidate'
                                                           : ''
                                                   }${
@@ -244,17 +244,18 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           : ''
                                                   }${
                                                       highlightInferredNumbers &&
-                                                      isChosenCandidate(candidate, solutionLevel)
-                                                          ? ' chosen-candidate'
+                                                      isCandidateInferred(candidate, solutionLevel)
+                                                          ? ' inferred-candidate'
                                                           : ''
                                                   }${
                                                       highlightInferredNumbers &&
-                                                      candidate.isChosen === solutionLevel
-                                                          ? ' chosen-immediately-next'
+                                                      candidate.isInferred === solutionLevel
+                                                          ? ' inferred-immediately-next'
                                                           : ''
                                                   }`}
                                                   onClick={candidateClickHandler}
-                                                  data-discard-reason={candidate.discardedReason}
+                                                  data-discard-reason={candidate.discardReason}
+                                                  data-infer-reason={candidate.inferReason}
                                               >
                                                   {/* {displayCandidates &&
                                                           (candidatesDisplayMode === 'impact'
@@ -276,9 +277,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         onClick={() => props.resetSudoku(2)}
                         checked={sudokuComputedData.size === 4}
                     />{' '}
-                    4x4
-                </p>
-                <p>
+                    4x4{' '}
                     <input
                         type="radio"
                         onClick={() => props.resetSudoku(3)}
@@ -398,7 +397,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             disabled={!displayCandidates}
                         />{' '}
                         Inferred numbers (at solution level){' '}
-                        <span className="color-legend chosen-candidates"></span>
+                        <span className="color-legend inferred-candidates"></span>
                     </p>
                     <p>
                         <input

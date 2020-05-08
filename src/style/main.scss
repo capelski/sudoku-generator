@@ -1,6 +1,6 @@
 $candidateRestriction: #ffef99;
-$immediatelyChosenCandidates: #73be73;
-$chosenCandidates: mix(white, $immediatelyChosenCandidates, 45%);
+$immediatelyInferredCandidates: #73be73;
+$inferredCandidates: mix(white, $immediatelyInferredCandidates, 45%);
 $immediatelyDiscardedCandidates: lightcoral;
 $discardedCandidates: mix(white, $immediatelyDiscardedCandidates, 55%);
 $invalidGroups: #d8b2d8;
@@ -47,12 +47,12 @@ body {
                 font-size: 16px;
             }
 
-            &.chosen-candidate {
+            &.inferred-candidate {
                 font-style: italic;
-                background-color: $chosenCandidates;
+                background-color: $inferredCandidates;
 
-                &.chosen-immediately-next {
-                    background-color: $immediatelyChosenCandidates;
+                &.inferred-immediately-next {
+                    background-color: $immediatelyInferredCandidates;
                 }
             }
 
@@ -215,8 +215,8 @@ body {
             background-color: $candidateRestriction;
         }
 
-        &.chosen-candidates {
-            background-color: $chosenCandidates;
+        &.inferred-candidates {
+            background-color: $inferredCandidates;
         }
 
         &.discarded-candidates {

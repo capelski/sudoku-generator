@@ -12,8 +12,6 @@ import {
     SudokuComputedData
 } from '../types/sudoku';
 import {
-    choseOnlyBoxAvailableInGroupForNumber,
-    choseOnlyCandidateAvailableForBox,
     discardCandidatesCausedByLocks,
     discardCandidatesFromGroupBecauseOfRegionRestriction,
     discardNonOwnedCandidatesFromOwningBoxes,
@@ -23,7 +21,9 @@ import {
     getAllGroupsWithANumberAvailableInJustOneBox,
     getAllGroupsWithOwnedCandidates,
     getAllRegionsThatCauseSubsetRestrictions,
-    isDiscardedCandidate
+    inferOnlyBoxAvailableInGroupForNumber,
+    inferOnlyCandidateAvailableForBox,
+    isCandidateDiscarded
 } from './sudoku-rules';
 import { getRandomElement } from './utilities';
 
@@ -88,11 +88,11 @@ export const discardCandidatesByInferring = (
 
     if (isThereAnyDiscardToBeMade) {
         boxesWithOnlyOneCandidateAvailable.forEach((box) =>
-            choseOnlyCandidateAvailableForBox(box, iterationNumber)
+            inferOnlyCandidateAvailableForBox(box, iterationNumber)
         );
 
         groupsWithANumberAvailableInJustOneBox.forEach((group) =>
-            choseOnlyBoxAvailableInGroupForNumber(group, iterationNumber)
+            inferOnlyBoxAvailableInGroupForNumber(group, iterationNumber)
         );
 
         groupsWithOwnedCandidates.forEach((group) =>
@@ -196,7 +196,7 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
             !box.isLocked &&
             Object.values(box.candidates).find(
                 (candidate) =>
-                    !isDiscardedCandidate(candidate) && candidate.impact === sudoku.maximumImpact
+                    !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
             )
     );
 
@@ -205,7 +205,7 @@ export const getRandomMaximumImpactBox = (sudoku: SudokuComputedData): BoxCandid
 
         const maximumImpactCandidates = Object.values(randomBox.candidates).filter(
             (candidate) =>
-                !isDiscardedCandidate(candidate) && candidate.impact === sudoku.maximumImpact
+                !isCandidateDiscarded(candidate) && candidate.impact === sudoku.maximumImpact
         );
         const randomCandidate = getRandomElement(maximumImpactCandidates);
 
@@ -230,11 +230,11 @@ export const getSudokuComputedData = (sudoku: Sudoku): SudokuComputedData => {
                         candidates: [...Array(size)]
                             .map(
                                 (_z, candidateIndex): Candidate => ({
-                                    chosenReason: '',
-                                    discardedReason: '',
+                                    discardReason: '',
                                     impact: -2,
-                                    isChosen: -1,
+                                    inferReason: '',
                                     isDiscarded: -1,
+                                    isInferred: -1,
                                     number: candidateIndex + 1
                                 })
                             )
@@ -324,11 +324,11 @@ export const updateAllGroups = (groups: SudokuGroups) => {
 
 export const updateCandidateImpact = (box: Box, candidateIndex: number) => {
     const candidate = box.candidates[candidateIndex];
-    candidate.impact = isDiscardedCandidate(candidate)
+    candidate.impact = isCandidateDiscarded(candidate)
         ? -1
         : box.peerBoxes.filter(
               (peerBox) =>
-                  !peerBox.isLocked && !isDiscardedCandidate(peerBox.candidates[candidateIndex])
+                  !peerBox.isLocked && !isCandidateDiscarded(peerBox.candidates[candidateIndex])
           ).length;
 };
 
@@ -355,7 +355,7 @@ export const updateGroupAvailableBoxesPerNumber = (group: Group) => {
                 group.availableBoxesPerNumber[candidate.number] || [];
             if (
                 (box.isLocked && box.number === candidate.number) ||
-                (!box.isLocked && !isDiscardedCandidate(candidate))
+                (!box.isLocked && !isCandidateDiscarded(candidate))
             ) {
                 group.availableBoxesPerNumber[candidate.number].push(box);
             }
