@@ -3,7 +3,7 @@
     "name": "Sudoku generator",
     "icons": [
         {
-            "src": "/favicon.png?$modena=sudoku-generator",
+            "src": "/sudoku-generator/favicon.png",
             "sizes": "72x72 96x96 128x128 256x256 512x512",
             "type": "image/png"
         }
