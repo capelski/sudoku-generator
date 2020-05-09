@@ -231,10 +231,10 @@ export const getSudokuComputedData = (sudoku: Sudoku): SudokuComputedData => {
                             .map(
                                 (_z, candidateIndex): Candidate => ({
                                     discardReason: '',
+                                    discardRound: -1,
                                     impact: -2,
                                     inferReason: '',
-                                    isDiscarded: -1,
-                                    isInferred: -1,
+                                    inferRound: -1,
                                     number: candidateIndex + 1
                                 })
                             )

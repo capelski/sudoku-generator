@@ -31,10 +31,10 @@ export interface BoxGroups {
 
 export interface Candidate {
     discardReason: string;
+    discardRound: number;
     impact: number;
     inferReason: string;
-    isDiscarded: number;
-    isInferred: number;
+    inferRound: number;
     number: number;
 }
 

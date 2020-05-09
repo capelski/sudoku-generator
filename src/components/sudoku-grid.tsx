@@ -238,7 +238,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           : ''
                                                   }${
                                                       highlightInvalidNumbers &&
-                                                      candidate.isDiscarded === solutionLevel &&
+                                                      candidate.discardRound === solutionLevel &&
                                                       solutionLevel > 1
                                                           ? ' discarded-immediately-next'
                                                           : ''
@@ -249,7 +249,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           : ''
                                                   }${
                                                       highlightInferredNumbers &&
-                                                      candidate.isInferred === solutionLevel &&
+                                                      candidate.inferRound === solutionLevel &&
                                                       solutionLevel > 1
                                                           ? ' inferred-immediately-next'
                                                           : ''

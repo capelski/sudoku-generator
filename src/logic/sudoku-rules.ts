@@ -10,7 +10,7 @@ export const discardCandidatesCausedByLocks = (lockedBoxes: Box[]) => {
         lockedBox.peerBoxes
             .filter((peerBox) => !peerBox.isLocked)
             .forEach((peerBox) => {
-                peerBox.candidates[lockedBox.number!].isDiscarded = 1;
+                peerBox.candidates[lockedBox.number!].discardRound = 1;
                 peerBox.candidates[lockedBox.number!].discardReason = 'Locked peer box';
                 registerDiscardCause(lockedBox.causedDiscards, lockedBox.number!, peerBox.id, 1);
             });
@@ -47,7 +47,7 @@ export const discardCandidatesFromGroupBecauseOfRegionRestriction = (
                 );
                 groupBoxesOutsideRegion.forEach((box) => {
                     const candidate = box.candidates[number];
-                    candidate.isDiscarded = iterationNumber;
+                    candidate.discardRound = iterationNumber;
                     candidate.discardReason = 'Region subset';
 
                     numberBoxes.forEach((b) => {
@@ -68,7 +68,7 @@ export const discardNonOwnedCandidatesFromOwningBoxes = (group: Group, iteration
                         !isCandidateDiscarded(candidate)
                 )
                 .forEach((candidate) => {
-                    candidate.isDiscarded = iterationNumber;
+                    candidate.discardRound = iterationNumber;
                     candidate.discardReason = 'Owned candidate in a group';
 
                     ownedCandidatesSet.boxes.forEach((b) => {
@@ -206,10 +206,10 @@ export const inferOnlyBoxAvailableInGroupForNumber = (group: Group, iterationNum
 
         Object.values(targetBox.candidates).forEach((candidate) => {
             if (candidate === targetBox.candidates[number]) {
-                candidate.isInferred = iterationNumber;
+                candidate.inferRound = iterationNumber;
                 candidate.inferReason = 'This box must hold this number for a group';
             } else if (!isCandidateDiscarded(candidate)) {
-                candidate.isDiscarded = iterationNumber + 1;
+                candidate.discardRound = iterationNumber + 1;
                 candidate.discardReason = 'This box must hold another number for some group';
                 registerDiscardCause(
                     targetBox.causedDiscards,
@@ -229,7 +229,7 @@ export const inferOnlyBoxAvailableInGroupForNumber = (group: Group, iterationNum
             )
             .forEach((peerBox) => {
                 const candidate = peerBox.candidates[number];
-                candidate.isDiscarded = iterationNumber;
+                candidate.discardRound = iterationNumber;
                 candidate.discardReason = 'Peer box must hold this number for some group';
                 registerDiscardCause(targetBox.causedDiscards, number, peerBox.id, iterationNumber);
             });
@@ -247,7 +247,7 @@ export const inferOnlyCandidateAvailableForBox = (box: Box, iterationNumber: num
         );
 
     if (onlyNumberAvailable) {
-        box.candidates[onlyNumberAvailable].isInferred = iterationNumber;
+        box.candidates[onlyNumberAvailable].inferRound = iterationNumber;
         box.candidates[onlyNumberAvailable].inferReason = 'Only candidate left for this box';
         registerChoiceCause(box.causedChoices, onlyNumberAvailable, box.id, iterationNumber);
 
@@ -257,7 +257,7 @@ export const inferOnlyCandidateAvailableForBox = (box: Box, iterationNumber: num
             )
             .forEach((pb) => {
                 const candidate = pb.candidates[onlyNumberAvailable];
-                candidate.isDiscarded = iterationNumber + 1;
+                candidate.discardRound = iterationNumber + 1;
                 candidate.discardReason = 'Only candidate left for a peer box';
 
                 registerDiscardCause(
@@ -274,12 +274,12 @@ export const isBoxOutOfCandidates = (box: Box) =>
     !Object.values(box.candidates).some((candidate) => !isCandidateDiscarded(candidate));
 
 export const isCandidateInferred = (candidate: Candidate, maxIterations?: number) =>
-    candidate.isInferred > 0 &&
-    (maxIterations === undefined || candidate.isInferred <= maxIterations);
+    candidate.inferRound > 0 &&
+    (maxIterations === undefined || candidate.inferRound <= maxIterations);
 
 export const isCandidateDiscarded = (candidate: Candidate, maxIterations?: number) =>
-    candidate.isDiscarded > 0 &&
-    (maxIterations === undefined || candidate.isDiscarded <= maxIterations);
+    candidate.discardRound > 0 &&
+    (maxIterations === undefined || candidate.discardRound <= maxIterations);
 
 export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) =>
     !sudokuComputedData.boxes.some(
