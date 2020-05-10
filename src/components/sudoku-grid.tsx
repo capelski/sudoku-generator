@@ -4,6 +4,7 @@ import {
     arePeerBoxes,
     isCandidateDiscarded,
     isCandidateInferred,
+    isGroupInvalid,
     isSudokuReadyToBeSolved
 } from '../logic/sudoku-rules';
 import { BoxCandidate, Sudoku } from '../types/sudoku';
@@ -165,15 +166,18 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                         ? ' latest-filled-box'
                                         : ''
                                 }${
-                                    highlightInvalidGroups && !box.groups.column.isValid
+                                    highlightInvalidGroups &&
+                                    isGroupInvalid(box.groups.column, solutionLevel)
                                         ? ' inside-invalid-column'
                                         : ''
                                 }${
-                                    highlightInvalidGroups && !box.groups.region.isValid
+                                    highlightInvalidGroups &&
+                                    isGroupInvalid(box.groups.region, solutionLevel)
                                         ? ' inside-invalid-region'
                                         : ''
                                 }${
-                                    highlightInvalidGroups && !box.groups.row.isValid
+                                    highlightInvalidGroups &&
+                                    isGroupInvalid(box.groups.row, solutionLevel)
                                         ? ' inside-invalid-row'
                                         : ''
                                 }`}
@@ -353,7 +357,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             onClick={highlightInvalidGroupsHandler}
                             checked={highlightInvalidGroups}
                         />{' '}
-                        Invalid rows/columns/regions{' '}
+                        Invalid rows/columns/regions (at solution level){' '}
                         <span className="color-legend invalid-groups"></span>
                     </p>
                     {/* <p>

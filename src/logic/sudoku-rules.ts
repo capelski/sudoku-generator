@@ -93,9 +93,6 @@ export const doesBoxHaveAnInferredCandidate = (box: Box, maxIterations?: number)
         isCandidateInferred(candidate, maxIterations)
     );
 
-export const doesGroupHaveABoxWithoutCandidates = (group: Group) =>
-    group.boxes.some((box) => isBoxOutOfCandidates(box));
-
 export const doesGroupHaveTwoLockedBoxesWithSameNumber = (group: Group) => {
     const lockedBoxesNumbersOccurrences = group.boxes
         .filter((box) => box.isLocked)
@@ -181,6 +178,26 @@ export const getAllRegionsThatCauseSubsetRestrictions = (
                 );
             });
     });
+};
+
+export const getRoundForWhichGroupHasABoxWithoutCandidates = (group: Group) => {
+    const boxesWithoutCandidates = group.boxes.filter((box) =>
+        Object.values(box.candidates).every((candidate) => isCandidateDiscarded(candidate))
+    );
+
+    const soonerDiscardedCandidates = boxesWithoutCandidates.map((box) =>
+        Object.values(box.candidates).reduce(
+            (reduced, candidate) => Math.max(candidate.discardRound, reduced),
+            -1
+        )
+    );
+
+    return soonerDiscardedCandidates.length === 0
+        ? 0
+        : soonerDiscardedCandidates.reduce(
+              (reduced, candidate) => Math.max(candidate, reduced),
+              -1
+          );
 };
 
 export const inferOnlyBoxAvailableInGroupForNumber = (group: Group, iterationNumber: number) => {
@@ -270,9 +287,6 @@ export const inferOnlyCandidateAvailableForBox = (box: Box, iterationNumber: num
     }
 };
 
-export const isBoxOutOfCandidates = (box: Box) =>
-    !Object.values(box.candidates).some((candidate) => !isCandidateDiscarded(candidate));
-
 export const isCandidateInferred = (candidate: Candidate, maxIterations?: number) =>
     candidate.inferRound > 0 &&
     (maxIterations === undefined || candidate.inferRound <= maxIterations);
@@ -281,19 +295,22 @@ export const isCandidateDiscarded = (candidate: Candidate, maxIterations?: numbe
     candidate.discardRound > 0 &&
     (maxIterations === undefined || candidate.discardRound <= maxIterations);
 
+export const isGroupInvalid = (group: Group, maxIterations?: number) =>
+    group.validRounds > 0 && (maxIterations === undefined || group.validRounds <= maxIterations);
+
 export const isSudokuReadyToBeSolved = (sudokuComputedData: SudokuComputedData) =>
-    !sudokuComputedData.boxes.some(
+    sudokuComputedData.boxes.every(
         (box) =>
-            !box.isLocked &&
-            !Object.values(box.candidates).some((candidate) => isCandidateInferred(candidate))
+            box.isLocked ||
+            Object.values(box.candidates).some((candidate) => isCandidateInferred(candidate))
     );
 
-export const isSudokuValid = (sudokuComputedData: SudokuComputedData) => {
+export const isSudokuValid = (sudokuComputedData: SudokuComputedData, maxIterations?: number) => {
     const groups = Object.values(sudokuComputedData.groups.columns)
         .concat(Object.values(sudokuComputedData.groups.regions))
         .concat(Object.values(sudokuComputedData.groups.rows));
 
-    return !groups.some((g) => !g.isValid);
+    return groups.every((g) => !isGroupInvalid(g, maxIterations));
 };
 
 export const registerChoiceCause = (

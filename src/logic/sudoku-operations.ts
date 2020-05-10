@@ -15,12 +15,12 @@ import {
     discardCandidatesCausedByLocks,
     discardCandidatesFromGroupBecauseOfRegionRestriction,
     discardNonOwnedCandidatesFromOwningBoxes,
-    doesGroupHaveABoxWithoutCandidates,
     doesGroupHaveTwoLockedBoxesWithSameNumber,
     getAllBoxesWithOnlyOneCandidateAvailable,
     getAllGroupsWithANumberAvailableInJustOneBox,
     getAllGroupsWithOwnedCandidates,
     getAllRegionsThatCauseSubsetRestrictions,
+    getRoundForWhichGroupHasABoxWithoutCandidates,
     inferOnlyBoxAvailableInGroupForNumber,
     inferOnlyCandidateAvailableForBox,
     isCandidateDiscarded
@@ -158,24 +158,24 @@ export const getGroups = (boxes: Box[]): SudokuGroups => {
                 ({
                     availableBoxesPerNumber: {},
                     boxes: [],
-                    isValid: true,
-                    ownedCandidates: []
+                    ownedCandidates: [],
+                    validRounds: 0
                 } as Group);
             reduced.regions[box.region] =
                 reduced.regions[box.region] ||
                 ({
                     availableBoxesPerNumber: {},
                     boxes: [],
-                    isValid: true,
-                    ownedCandidates: []
+                    ownedCandidates: [],
+                    validRounds: 0
                 } as Group);
             reduced.rows[box.row] =
                 reduced.rows[box.row] ||
                 ({
                     availableBoxesPerNumber: {},
                     boxes: [],
-                    isValid: true,
-                    ownedCandidates: []
+                    ownedCandidates: [],
+                    validRounds: 0
                 } as Group);
 
             reduced.columns[box.column].boxes.push(box);
@@ -390,15 +390,14 @@ export const updateGroupOwnedCandidates = (group: Group) => {
 export const updateGroupsValidations = (groups: NumericDictionary<Group>) => {
     Object.values(groups).forEach((group) => {
         const hasTwoLockedBoxesWithSameNumber = doesGroupHaveTwoLockedBoxesWithSameNumber(group);
-        const hasAnyBoxWithoutCandidates = doesGroupHaveABoxWithoutCandidates(group);
-        const hasAnyNumberWithoutPotentialBoxes =
-            Object.values(group.availableBoxesPerNumber).find(
-                (boxesPerNumber) => boxesPerNumber.length === 0
-            ) !== undefined;
+        const roundForWhichGroupHasABoxWithoutCandidates = getRoundForWhichGroupHasABoxWithoutCandidates(
+            group
+        );
 
-        group.isValid =
-            !hasTwoLockedBoxesWithSameNumber &&
-            !hasAnyBoxWithoutCandidates &&
-            !hasAnyNumberWithoutPotentialBoxes;
+        group.validRounds = hasTwoLockedBoxesWithSameNumber
+            ? 1
+            : roundForWhichGroupHasABoxWithoutCandidates > 0
+            ? roundForWhichGroupHasABoxWithoutCandidates
+            : 0;
     });
 };

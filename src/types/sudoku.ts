@@ -39,10 +39,13 @@ export interface Candidate {
 }
 
 export interface Group {
+    // TODO Along with the Box, I should store until which round the Box is available too
+    // Then updateGroupsValidations can use this information to tell whether a group is missing
+    // a number for the current solution level
     availableBoxesPerNumber: NumericDictionary<Box[]>;
     boxes: Box[];
-    isValid: boolean;
     ownedCandidates: BoxesCandidatesSet[];
+    validRounds: number;
 }
 
 export type InferringMode = 'none' | 'direct' | 'all';
