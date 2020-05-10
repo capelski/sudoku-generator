@@ -231,4 +231,16 @@ body {
             background-color: $latestFilledBox;
         }
     }
+
+    .button {
+        cursor: pointer;
+        white-space: nowrap;
+        vertical-align: middle;
+        border: 0;
+        padding: 8px 12px;
+        font-size: 15px;
+        border-radius: 4px;
+        color: #fff;
+        background-color: #0069d9;
+    }
 }

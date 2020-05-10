@@ -299,31 +299,40 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     Hide candidates
                 </p>
                 <p>
-                    Can be solved in this page? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
+                    Can sudoku be solved? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
                 </p>
                 <div>{props.locksNumber} filled boxes</div>
                 <div>
                     <h3>Actions</h3>
                     <p>
-                        <button type="button" onClick={props.generateSolvableSudoku}>
+                        <button
+                            className="button"
+                            type="button"
+                            onClick={props.generateSolvableSudoku}
+                        >
                             Generate sudoku
                         </button>
                     </p>
                     <p>
-                        <button type="button" onClick={props.previousSudoku}>
+                        <button className="button" type="button" onClick={props.previousSudoku}>
                             Undo
                         </button>{' '}
-                        <button type="button" onClick={props.nextSudoku}>
+                        <button className="button" type="button" onClick={props.nextSudoku}>
                             Redo
                         </button>
                     </p>
                     <p>
-                        <button type="button" onClick={() => setSelectedBoxCandidate(undefined)}>
+                        <button
+                            className="button"
+                            type="button"
+                            onClick={() => setSelectedBoxCandidate(undefined)}
+                        >
                             Clear selection
                         </button>
                     </p>
                     <p>
                         <button
+                            className="button"
                             type="button"
                             onClick={() => props.resetSudoku(props.sudoku.regionSize)}
                         >
@@ -416,10 +425,15 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     </p>
                     <p>
                         (*) Solution level:{' ' + solutionLevel + ' '}
-                        <button type="button" onClick={() => setSolutionLevel(solutionLevel + 1)}>
+                        <button
+                            className="button"
+                            type="button"
+                            onClick={() => setSolutionLevel(solutionLevel + 1)}
+                        >
                             +
                         </button>{' '}
                         <button
+                            className="button"
                             type="button"
                             onClick={() => setSolutionLevel(Math.max(solutionLevel - 1, 1))}
                         >
