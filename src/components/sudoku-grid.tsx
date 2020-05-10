@@ -299,7 +299,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     Hide candidates
                 </p>
                 <p>
-                    Has single solution? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
+                    Can be solved in this page? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
                 </p>
                 <div>{props.locksNumber} filled boxes</div>
                 <div>
@@ -357,7 +357,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             onClick={highlightInvalidGroupsHandler}
                             checked={highlightInvalidGroups}
                         />{' '}
-                        Invalid rows/columns/regions (at solution level){' '}
+                        Invalid rows/columns/regions (*){' '}
                         <span className="color-legend invalid-groups"></span>
                     </p>
                     {/* <p>
@@ -391,7 +391,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             checked={highlightInvalidNumbers}
                             disabled={!displayCandidates}
                         />{' '}
-                        Invalid numbers (at solution level){' '}
+                        Invalid numbers (*){' '}
                         <span className="color-legend discarded-candidates"></span>
                     </p>
                     <p>
@@ -401,7 +401,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             checked={highlightInferredNumbers}
                             disabled={!displayCandidates}
                         />{' '}
-                        Inferred numbers (at solution level){' '}
+                        Inferred numbers (*){' '}
                         <span className="color-legend inferred-candidates"></span>
                     </p>
                     <p>
@@ -411,11 +411,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             checked={highlightCandidateRestrictions}
                             disabled={!displayCandidates}
                         />{' '}
-                        Invalid/inferred numbers reason (at solution level){' '}
+                        Invalid/inferred numbers reason (*){' '}
                         <span className="color-legend candidate-restriction"></span>
                     </p>
                     <p>
-                        Solution level:{' ' + solutionLevel + ' '}
+                        (*) Solution level:{' ' + solutionLevel + ' '}
                         <button type="button" onClick={() => setSolutionLevel(solutionLevel + 1)}>
                             +
                         </button>{' '}
