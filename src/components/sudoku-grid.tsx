@@ -8,6 +8,7 @@ import {
     isSudokuReadyToBeSolved
 } from '../logic/sudoku-rules';
 import { BoxCandidate, Sudoku } from '../types/sudoku';
+import { resources } from './resources';
 
 // type CandidateDisplayMode = 'number' | 'impact';
 
@@ -29,10 +30,11 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
     const [displayCandidates, setDisplayCandidates] = useState(true);
     const [highlightAffectedCandidates, setHighlightAffectedCandidates] = useState(true);
     const [highlightCandidateRestrictions, setHighlightCandidateRestrictions] = useState(false);
+    const [highlightDiscardedNumbers, setHighlightDiscardedNumbers] = useState(false);
     const [highlightInferredNumbers, setHighlightInferredNumbers] = useState(false);
     const [highlightInvalidGroups, setHighlightInvalidGroups] = useState(false);
-    const [highlightInvalidNumbers, setHighlightInvalidNumbers] = useState(false);
     const [highlightLatestFilledBox, setHighlightFilledBox] = useState(false);
+    const [language, setLanguage] = useState<'cat' | 'eng'>('eng');
     // const [highlightMaximumImpact, setHighlightMaximumImpact] = useState(false);
     const [selectedBoxCandidate, setSelectedBoxCandidate] = useState<BoxCandidate | undefined>(
         undefined
@@ -51,7 +53,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             setHighlightAffectedCandidates(false);
             setHighlightCandidateRestrictions(false);
             setHighlightInferredNumbers(false);
-            setHighlightInvalidNumbers(false);
+            setHighlightDiscardedNumbers(false);
             setSolutionLevel(1);
         }
         setDisplayCandidates(!displayCandidates);
@@ -77,8 +79,8 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
         setHighlightInferredNumbers(!highlightInferredNumbers);
     };
 
-    const highlightInvalidNumbersHandler = () => {
-        setHighlightInvalidNumbers(!highlightInvalidNumbers);
+    const highlightDiscardedNumbersHandler = () => {
+        setHighlightDiscardedNumbers(!highlightDiscardedNumbers);
     };
 
     const highlightInvalidGroupsHandler = () => {
@@ -193,7 +195,7 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                           const isAffectedCandidate =
                                               highlightAffectedCandidates &&
                                               !box.isLocked &&
-                                              (!highlightInvalidNumbers ||
+                                              (!highlightDiscardedNumbers ||
                                                   !isCandidateDiscarded(
                                                       candidate,
                                                       solutionLevel
@@ -236,12 +238,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                                                           ? ' affected-candidate'
                                                           : ''
                                                   }${
-                                                      highlightInvalidNumbers &&
+                                                      highlightDiscardedNumbers &&
                                                       isCandidateDiscarded(candidate, solutionLevel)
                                                           ? ' discarded-candidate'
                                                           : ''
                                                   }${
-                                                      highlightInvalidNumbers &&
+                                                      highlightDiscardedNumbers &&
                                                       candidate.discardRound === solutionLevel &&
                                                       solutionLevel > 1
                                                           ? ' discarded-immediately-next'
@@ -277,6 +279,37 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
             </div>
             <div className="options">
                 <p>
+                    <button className="button" type="button" onClick={props.generateSolvableSudoku}>
+                        {resources[language].generateSudoku}
+                    </button>
+                </p>
+                <p>
+                    <button className="button" type="button" onClick={props.previousSudoku}>
+                        {resources[language].undo}
+                    </button>{' '}
+                    <button className="button" type="button" onClick={props.nextSudoku}>
+                        {resources[language].redo}
+                    </button>
+                </p>
+                <p>
+                    <button
+                        className="button"
+                        type="button"
+                        onClick={() => setSelectedBoxCandidate(undefined)}
+                    >
+                        {resources[language].unselect}
+                    </button>
+                </p>
+                <p>
+                    <button
+                        className="button"
+                        type="button"
+                        onClick={() => props.resetSudoku(props.sudoku.regionSize)}
+                    >
+                        {resources[language].eraseSudoku}
+                    </button>
+                </p>
+                <p>
                     <input
                         type="radio"
                         onClick={() => props.resetSudoku(2)}
@@ -295,61 +328,39 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                         type="checkbox"
                         onClick={displayCandidatesHandler}
                         checked={!displayCandidates}
-                    />{' '}
-                    Hide candidates
+                    />
+                    {` ${resources[language].hideCandidates}`}
                 </p>
                 <p>
-                    Can sudoku be solved? <b>{isSudokuReady ? 'Yes' : 'No'}</b>
+                    {resources[language].canSudokuBeSolved}{' '}
+                    <b>{isSudokuReady ? resources[language].yes : resources[language].no}</b>
                 </p>
-                <div>{props.locksNumber} filled boxes</div>
-                <div>
-                    <h3>Actions</h3>
-                    <p>
-                        <button
-                            className="button"
-                            type="button"
-                            onClick={props.generateSolvableSudoku}
-                        >
-                            Generate sudoku
-                        </button>
-                    </p>
-                    <p>
-                        <button className="button" type="button" onClick={props.previousSudoku}>
-                            Undo
-                        </button>{' '}
-                        <button className="button" type="button" onClick={props.nextSudoku}>
-                            Redo
-                        </button>
-                    </p>
-                    <p>
-                        <button
-                            className="button"
-                            type="button"
-                            onClick={() => setSelectedBoxCandidate(undefined)}
-                        >
-                            Clear selection
-                        </button>
-                    </p>
-                    <p>
-                        <button
-                            className="button"
-                            type="button"
-                            onClick={() => props.resetSudoku(props.sudoku.regionSize)}
-                        >
-                            Clear sudoku
-                        </button>
-                    </p>
-                </div>
+                <p>{props.locksNumber + ' ' + resources[language].filledBoxes}</p>
+                <p>
+                    🌎{' '}
+                    <span
+                        className={`language ${language === 'cat' ? ' selected' : ''}`}
+                        onClick={() => setLanguage('cat')}
+                    >
+                        Català
+                    </span>
+                    <span
+                        className={`language ${language === 'eng' ? ' selected' : ''}`}
+                        onClick={() => setLanguage('eng')}
+                    >
+                        English
+                    </span>
+                </p>
 
                 <div>
-                    <h3>Highlight options</h3>
+                    <h3>{resources[language].highlighting}</h3>
                     <p>
                         <input
                             type="checkbox"
                             onClick={highlightAffectedCandidatesHandler}
                             checked={highlightAffectedCandidates}
-                        />{' '}
-                        Candidates affected by selection{' '}
+                        />
+                        {' ' + resources[language].affectedCandidates + ' '}
                         <span className="color-legend affected-candidates"></span>
                     </p>
                     <p>
@@ -357,16 +368,17 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             type="checkbox"
                             onClick={highlightLatestFilledBoxHandler}
                             checked={highlightLatestFilledBox}
-                        />{' '}
-                        Latest filled box <span className="color-legend latest-filled-box"></span>
+                        />
+                        {' ' + resources[language].latestFilledBox + ' '}
+                        <span className="color-legend latest-filled-box"></span>
                     </p>
                     <p>
                         <input
                             type="checkbox"
                             onClick={highlightInvalidGroupsHandler}
                             checked={highlightInvalidGroups}
-                        />{' '}
-                        Invalid rows/columns/regions (*){' '}
+                        />
+                        {' ' + resources[language].invalidGroups + ' (*) '}
                         <span className="color-legend invalid-groups"></span>
                     </p>
                     {/* <p>
@@ -396,12 +408,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                     <p>
                         <input
                             type="checkbox"
-                            onClick={highlightInvalidNumbersHandler}
-                            checked={highlightInvalidNumbers}
+                            onClick={highlightDiscardedNumbersHandler}
+                            checked={highlightDiscardedNumbers}
                             disabled={!displayCandidates}
-                        />{' '}
-                        Invalid numbers (*){' '}
-                        <span className="color-legend discarded-candidates"></span>
+                        />
+                        {' ' + resources[language].discardedNumbers + ' (*) '}
+                        <span className="color-legend discarded-numbers"></span>
                     </p>
                     <p>
                         <input
@@ -409,9 +421,9 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             onClick={highlightInferredNumbersHandler}
                             checked={highlightInferredNumbers}
                             disabled={!displayCandidates}
-                        />{' '}
-                        Inferred numbers (*){' '}
-                        <span className="color-legend inferred-candidates"></span>
+                        />
+                        {' ' + resources[language].inferredNumbers + ' (*) '}
+                        <span className="color-legend inferred-numbers"></span>
                     </p>
                     <p>
                         <input
@@ -419,12 +431,12 @@ export const SudokuGrid: React.FC<GridProps> = (props) => {
                             onClick={highlightCandidateRestrictionsHandler}
                             checked={highlightCandidateRestrictions}
                             disabled={!displayCandidates}
-                        />{' '}
-                        Invalid/inferred numbers reason (*){' '}
+                        />
+                        {' ' + resources[language].discardInferReason + ' (*) '}
                         <span className="color-legend candidate-restriction"></span>
                     </p>
                     <p>
-                        (*) Solution level:{' ' + solutionLevel + ' '}
+                        (*) {resources[language].solutionLevel + ': ' + solutionLevel + ' '}
                         <button
                             className="button"
                             type="button"

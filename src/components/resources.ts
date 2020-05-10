@@ -1,0 +1,42 @@
+export const resources = {
+    cat: {
+        affectedCandidates: 'Candidats afectats per la selecció',
+        canSudokuBeSolved: 'Es pot resoldre el sudoku?',
+        discardedNumbers: 'Números descartats',
+        discardInferReason: 'Raó descart/deducció del número seleccionat',
+        eraseSudoku: 'Esborrar sudoku',
+        filledBoxes: 'caselles omplertes',
+        generateSudoku: 'Generar sudoku',
+        hideCandidates: 'Amagar candidats',
+        highlighting: 'Ombrejat',
+        inferredNumbers: 'Números deduïts',
+        invalidGroups: 'Files/columnes/regions invàlides',
+        latestFilledBox: 'Última casella omplerta',
+        no: 'No',
+        redo: 'Refer',
+        solutionLevel: 'Nivell de solució',
+        undo: 'Desfer',
+        unselect: 'Deseleccionar',
+        yes: 'Si'
+    },
+    eng: {
+        affectedCandidates: 'Candidates affected by selection',
+        canSudokuBeSolved: 'Can sudoku be solved?',
+        discardedNumbers: 'Discarded numbers',
+        discardInferReason: 'Selected number discard/infer reason',
+        eraseSudoku: 'Erase sudoku',
+        filledBoxes: 'filled boxes',
+        generateSudoku: 'Generate sudoku',
+        hideCandidates: 'Hide candidates',
+        highlighting: 'Highlighting',
+        inferredNumbers: 'Inferred numbers',
+        invalidGroups: 'Invalid rows/columns/regions',
+        latestFilledBox: 'Latest filled box',
+        no: 'No',
+        redo: 'Redo',
+        solutionLevel: 'Solution level',
+        undo: 'Undo',
+        unselect: 'Unselect',
+        yes: 'Yes'
+    }
+};

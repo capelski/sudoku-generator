@@ -1,8 +1,8 @@
 $candidateRestriction: #ffef99;
-$immediatelyInferredCandidates: #73be73;
-$inferredCandidates: mix(white, $immediatelyInferredCandidates, 45%);
-$immediatelyDiscardedCandidates: lightcoral;
-$discardedCandidates: mix(white, $immediatelyDiscardedCandidates, 55%);
+$immediatelyInferredNumbers: #73be73;
+$inferredNumbers: mix(white, $immediatelyInferredNumbers, 45%);
+$immediatelyDiscardedNumbers: lightcoral;
+$discardedNumbers: mix(white, $immediatelyDiscardedNumbers, 55%);
 $invalidGroups: #d8b2d8;
 $latestFilledBox: #ffc04c;
 $selectionColor: #2e84d5;
@@ -49,19 +49,19 @@ body {
 
             &.inferred-candidate {
                 font-style: italic;
-                background-color: $inferredCandidates;
+                background-color: $inferredNumbers;
 
                 &.inferred-immediately-next {
-                    background-color: $immediatelyInferredCandidates;
+                    background-color: $immediatelyInferredNumbers;
                 }
             }
 
             &.discarded-candidate {
                 font-style: italic;
-                background-color: $discardedCandidates;
+                background-color: $discardedNumbers;
 
                 &.discarded-immediately-next {
-                    background-color: $immediatelyDiscardedCandidates;
+                    background-color: $immediatelyDiscardedNumbers;
                 }
             }
 
@@ -108,13 +108,7 @@ body {
         &.inside-invalid-row {
             background-color: $invalidGroups;
 
-            .sudoku-candidate
-                :not(.discarded-because-of-lock)
-                :not(.discarded-because-is-only-candidate-left-for-a-peer-box)
-                :not(.discarded-because-peer-box-must-hold-this-number-for-some-group)
-                :not(.discarded-because-this-box-must-hold-another-number-for-some-group)
-                :not(.discarded-because-of-owned-candidate-in-same-group)
-                :not(.discarded-because-of-region-subset) {
+            .sudoku-candidate {
                 background-color: $invalidGroups;
             }
         }
@@ -215,12 +209,12 @@ body {
             background-color: $candidateRestriction;
         }
 
-        &.inferred-candidates {
-            background-color: $inferredCandidates;
+        &.inferred-numbers {
+            background-color: $inferredNumbers;
         }
 
-        &.discarded-candidates {
-            background-color: $discardedCandidates;
+        &.discarded-numbers {
+            background-color: $discardedNumbers;
         }
 
         &.invalid-groups {
@@ -229,6 +223,15 @@ body {
 
         &.latest-filled-box {
             background-color: $latestFilledBox;
+        }
+    }
+
+    .language {
+        padding: 8px;
+        cursor: pointer;
+
+        &.selected {
+            text-decoration: underline;
         }
     }
 
