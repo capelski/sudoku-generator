@@ -6,7 +6,7 @@
     "scripts": {
         "build": "npm run clean:build && webpack --mode production",
         "build:ts": "tsc --noEmit -p tsconfig.json",
-        "clean:build": "rm -rf dist",
+        "clean:build": "rm -rf docs",
         "clean:dependencies": "rm -rf node_modules/ package-lock.json",
         "start": "node index.js",
         "start:dev": "webpack-dev-server --open --mode development"

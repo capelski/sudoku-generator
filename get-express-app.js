@@ -3,6 +3,6 @@ const { join } = require('path');
 
 module.exports = () => {
     const app = express();
-    app.use('/', express.static(join(__dirname, 'dist')));
+    app.use('/', express.static(join(__dirname, 'docs')));
     return app;
 };

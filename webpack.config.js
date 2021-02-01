@@ -1,4 +1,5 @@
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { join } = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
@@ -34,8 +35,9 @@ module.exports = {
         ]
     },
     output: {
-        filename: 'main.js?$modena=sudoku-generator',
-        publicPath: '/'
+        filename: 'main.js',
+        path: join(__dirname, 'docs'),
+        publicPath: '/sudoku-generator'
     },
     plugins: [
         new HtmlWebpackPlugin({
