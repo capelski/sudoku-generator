@@ -1,0 +1,16 @@
+{
+    "short_name": "Sudoku",
+    "name": "Sudoku generator",
+    "icons": [
+        {
+            "src": "/sudoku-generator/favicon.png",
+            "sizes": "72x72 96x96 128x128 256x256 512x512",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "/sudoku-generator",
+    "background_color": "#FFFFFF",
+    "display": "standalone",
+    "scope": "/sudoku-generator",
+    "theme_color": "#FFFFFF"
+}
